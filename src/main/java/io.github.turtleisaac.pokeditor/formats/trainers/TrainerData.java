@@ -183,6 +183,15 @@ public class TrainerData implements GenericFileData
             writer.writeShort((short) entry.getBallCapsule());
         }
 
+        if (trainerPartyEntries.isEmpty())
+        {
+            writer.writeByteNumTimes((byte) 0,8);
+        }
+
+        if (writer.getPosition() % 4 != 0) {
+            writer.writeShort((short) 0);
+        }
+
         byte[] trainerPokemonOutput = dataBuf.reader().getBuffer();
 
         HashMap<GameFiles, byte[]> map = new HashMap<>();
