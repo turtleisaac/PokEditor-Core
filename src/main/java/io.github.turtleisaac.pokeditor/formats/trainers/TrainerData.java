@@ -188,7 +188,8 @@ public class TrainerData implements GenericFileData
             writer.writeByteNumTimes((byte) 0,8);
         }
 
-        if (writer.getPosition() % 4 != 0) {
+        if (writer.getPosition() % 4 != 0)
+        {
             writer.writeShort((short) 0);
         }
 

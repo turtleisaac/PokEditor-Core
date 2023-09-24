@@ -23,6 +23,7 @@ import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class MoveData implements GenericFileData
@@ -91,7 +92,29 @@ public class MoveData implements GenericFileData
     @Override
     public Map<GameFiles, byte[]> save()
     {
-        return null;
+        MemBuf dataBuf = MemBuf.create();
+        MemBuf.MemBufWriter writer = dataBuf.writer();
+
+        writer.writeShort((short) effect);
+        writer.writeBytes(category, power, type, accuracy, pp, additionalEffect);
+
+        int composite = 0;
+        for (int i = 0; i < NUM_TARGET_FLAGS; i++)
+        {
+            composite |= ((target[i] ? 1 : 0) << i);
+        }
+        writer.writeShort((short) composite);
+
+        writer.writeBytes(priority);
+
+        composite = 0;
+        for (int i = 0; i < NUM_MOVE_FLAGS; i++)
+        {
+            composite |= ((flags[i] ? 1 : 0) << i);
+        }
+        writer.writeBytes(composite, contestEffect, contestType, 0, 0);
+
+        return Collections.singletonMap(GameFiles.MOVES, dataBuf.reader().getBuffer());
     }
 
     private static final int NUM_TARGET_FLAGS = 12;
