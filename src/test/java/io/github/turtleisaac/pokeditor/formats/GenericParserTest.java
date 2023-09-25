@@ -20,7 +20,7 @@ abstract class GenericParserTest<E extends GenericFileData>
     protected abstract GenericParser<E> createParser();
 
     @BeforeEach
-    public void setup()
+    protected void setup()
     {
         parser = createParser();
         rom = NintendoDsRom.fromFile("Platinum.nds");
