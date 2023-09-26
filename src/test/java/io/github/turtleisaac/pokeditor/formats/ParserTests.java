@@ -6,6 +6,7 @@ import io.github.turtleisaac.nds4j.NintendoDsRom;
 import io.github.turtleisaac.pokeditor.formats.encounters.JohtoEncounterData;
 import io.github.turtleisaac.pokeditor.formats.encounters.SinnohEncounterData;
 import io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData;
+import io.github.turtleisaac.pokeditor.formats.items.ItemData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
@@ -66,6 +67,15 @@ public class ParserTests
     {
         @Override
         protected GenericParser<SinnohEncounterData> createParser()
+        {
+            return injector.getInstance(Key.get(new TypeLiteral<>() {}));
+        }
+    }
+
+    public static class ItemsTests extends GenericParserTest<ItemData>
+    {
+        @Override
+        protected GenericParser<ItemData> createParser()
         {
             return injector.getInstance(Key.get(new TypeLiteral<>() {}));
         }

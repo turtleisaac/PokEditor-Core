@@ -4,6 +4,8 @@ import com.google.inject.*;
 import io.github.turtleisaac.pokeditor.formats.encounters.*;
 import io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData;
 import io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionParser;
+import io.github.turtleisaac.pokeditor.formats.items.ItemData;
+import io.github.turtleisaac.pokeditor.formats.items.ItemParser;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetParser;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
@@ -84,6 +86,16 @@ public class TestsInjector
                     .in(Scopes.SINGLETON);
         }
     }
+
+    static class ItemsModule extends AbstractModule {
+        @Override
+        protected void configure()
+        {
+            bind(new TypeLiteral<GenericParser<ItemData>>() {})
+                    .to(ItemParser.class)
+                    .in(Scopes.SINGLETON);
+        }
+    }
     
-    public static final Injector injector = Guice.createInjector(new PersonalModule(), new LearnsetsModule(), new EvolutionsModule(), new TrainersModule(), new MovesModule(), new SinnohEncountersModule(), new JohtoEncountersModule());
+    public static final Injector injector = Guice.createInjector(new PersonalModule(), new LearnsetsModule(), new EvolutionsModule(), new TrainersModule(), new MovesModule(), new SinnohEncountersModule(), new JohtoEncountersModule(), new ItemsModule());
 }
