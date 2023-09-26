@@ -8,9 +8,26 @@ import java.util.Map;
 
 public class SinnohEncounterData extends GenericEncounterData
 {
+    int[] swarmSpecies;
+    int[] daySpecies;
+    int[] nightSpecies;
+    int[] radarSpecies;
+    byte[] formProbability;
+
+    int[][] dualSlotSpecies;
+
     public SinnohEncounterData(Map<GameFiles, byte[]> files)
     {
         super(files);
+    }
+
+    private SinnohEncounterData() {
+        super();
+    }
+
+    public static SinnohEncounterData create()
+    {
+        return new SinnohEncounterData();
     }
 
     @Override
@@ -32,27 +49,49 @@ public class SinnohEncounterData extends GenericEncounterData
         for (int i = 0; i < NUM_BASE_FIELD_ENCOUNTER_SLOTS; i++)
         {
             fieldLevels[i] = reader.readInt();
-            fieldSpecies[0][i] = reader.readInt();
+            fieldSpecies[PLAT_FIELD_ENCOUNTER_SET_IDX][i] = reader.readInt();
         }
 
-        //swarm species, then day species, then night species (2 each)
-        for (int i = 0; i < NUM_MISC_ENCOUNTER_SLOTS; i += NUM_SWARM_DAY_NIGHT_SPECIES)
+        //swarm species
+        swarmSpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
         {
-            miscSpecies[i] = reader.readInt();
-            miscSpecies[i + 1] = reader.readInt();
+            swarmSpecies[i] = reader.readInt();
+        }
+
+        // day species
+        daySpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
+        {
+            daySpecies[i] = reader.readInt();
+        }
+
+        // night species
+        nightSpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
+        {
+            nightSpecies[i] = reader.readInt();
         }
 
         // four pokeradar mons
-        for (int i = 0; i < NUM_SPECIAL_ENCOUNTER_SLOTS; i++)
+        radarSpecies = new int[NUM_RADAR_ENCOUNTER_SLOTS];
+        for (int i = 0; i < NUM_RADAR_ENCOUNTER_SLOTS; i++)
         {
-            specialSpecies[i] = reader.readInt();
+            radarSpecies[i] = reader.readInt();
         }
 
         //todo really read the form probability table
-        byte[] formProbability = reader.readBytes(24);
+        formProbability = reader.readBytes(24);
 
         //todo really read the dual slot mons
-        byte[] dualSlot = reader.readBytes(4 * 2 * 5);
+        dualSlotSpecies = new int[NUM_DUAL_SLOT_GAMES][NUM_DUAL_SLOT_ENCOUNTER_SLOTS];
+        for (int game = 0; game < NUM_DUAL_SLOT_GAMES; game++)
+        {
+            for (int slot = 0; slot < NUM_DUAL_SLOT_ENCOUNTER_SLOTS; slot++)
+            {
+                dualSlotSpecies[game][slot] = reader.readInt();
+            }
+        }
 
         surfRate = reader.readInt();
         waterEncounters[0] = readWaterEncounterSet(reader);
@@ -72,11 +111,11 @@ public class SinnohEncounterData extends GenericEncounterData
 
     private WaterEncounterSet readWaterEncounterSet(MemBuf.MemBufReader reader)
     {
-        WaterEncounterSet set = new WaterEncounterSet();
-        for (int i = 0; i < WaterEncounterSet.NUM_SLOTS; i++)
+        WaterEncounterSet set = new WaterEncounterSet(WaterEncounterSet.NUM_WATER_SLOTS);
+        for (int i = 0; i < WaterEncounterSet.NUM_WATER_SLOTS; i++)
         {
-            set.maxLevels[i] = reader.readByte();
-            set.minLevels[i] = reader.readByte();
+            set.maxLevels[i] = reader.readUInt8();
+            set.minLevels[i] = reader.readUInt8();
             reader.skip(2);
             set.species[i] = reader.readInt();
         }
@@ -94,26 +133,42 @@ public class SinnohEncounterData extends GenericEncounterData
         for (int i = 0; i < NUM_BASE_FIELD_ENCOUNTER_SLOTS; i++)
         {
             writer.writeInt(fieldLevels[i]);
-            writer.writeInt(fieldSpecies[0][i]);
+            writer.writeInt(fieldSpecies[PLAT_FIELD_ENCOUNTER_SET_IDX][i]);
         }
 
         //swarm species, then day species, then night species (2 each)
-        for (int i = 0; i < NUM_MISC_ENCOUNTER_SLOTS; i++)
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
         {
-            writer.writeInt(miscSpecies[i]);
+            writer.writeInt(swarmSpecies[i]);
+        }
+
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
+        {
+            writer.writeInt(daySpecies[i]);
+        }
+
+        for (int i = 0; i < NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS; i++)
+        {
+            writer.writeInt(nightSpecies[i]);
         }
 
         // four pokeradar mons
-        for (int i = 0; i < NUM_SPECIAL_ENCOUNTER_SLOTS; i++)
+        for (int i = 0; i < NUM_RADAR_ENCOUNTER_SLOTS; i++)
         {
-            writer.writeInt(specialSpecies[i]);
+            writer.writeInt(radarSpecies[i]);
         }
 
         //todo really write the form probability table
-        writer.skip(24);
+        writer.write(formProbability);
 
         //todo really write the dual slot mons
-        writer.skip(2 * 4 * 5);
+        for (int game = 0; game < NUM_DUAL_SLOT_GAMES; game++)
+        {
+            for (int slot = 0; slot < NUM_DUAL_SLOT_ENCOUNTER_SLOTS; slot++)
+            {
+                writer.writeInt(dualSlotSpecies[game][slot]);
+            }
+        }
 
         writeWaterEncounterSet(writer, surfRate, waterEncounters[0]);
 
@@ -130,7 +185,7 @@ public class SinnohEncounterData extends GenericEncounterData
     private void writeWaterEncounterSet(MemBuf.MemBufWriter writer, int rate, WaterEncounterSet set)
     {
         writer.writeInt(rate);
-        for (int i = 0; i < WaterEncounterSet.NUM_SLOTS; i++)
+        for (int i = 0; i < set.getNumSlots(); i++)
         {
             writer.writeBytes(set.maxLevels[i], set.minLevels[i]);
             writer.skip(2);
@@ -138,5 +193,67 @@ public class SinnohEncounterData extends GenericEncounterData
         }
     }
 
-    private static final int NUM_SWARM_DAY_NIGHT_SPECIES = 2;
+    public int getFieldSpecies(int idx)
+    {
+        return fieldSpecies[PLAT_FIELD_ENCOUNTER_SET_IDX][idx];
+    }
+
+    public void setFieldSpecies(int idx, int species)
+    {
+        fieldSpecies[PLAT_FIELD_ENCOUNTER_SET_IDX][idx] = species;
+    }
+
+    public int getSwarmSpecies(int idx)
+    {
+        return swarmSpecies[idx];
+    }
+
+    public void setSwarmSpecies(int idx, int species)
+    {
+        this.swarmSpecies[idx] = species;
+    }
+
+    public int getDaySpecies(int idx)
+    {
+        return daySpecies[idx];
+    }
+
+    public void setDaySpecies(int idx, int species)
+    {
+        this.daySpecies[idx] = species;
+    }
+
+    public int getNightSpecies(int idx)
+    {
+        return nightSpecies[idx];
+    }
+
+    public void setNightSpecies(int idx, int species)
+    {
+        this.nightSpecies[idx] = species;
+    }
+
+    public int getRadarSpecies(int idx)
+    {
+        return radarSpecies[idx];
+    }
+
+    public void setRadarSpecies(int idx, int species)
+    {
+        this.radarSpecies[idx] = species;
+    }
+
+    private static final int NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS = 2;
+    private static final int NUM_RADAR_ENCOUNTER_SLOTS = 4;
+    private static final int NUM_DUAL_SLOT_ENCOUNTER_SLOTS = 2;
+    private static final int NUM_DUAL_SLOT_GAMES = 5;
+    private static final int PLAT_FIELD_ENCOUNTER_SET_IDX = 0;
+
+    enum DualSlot {
+        RUBY,
+        SAPPHIRE,
+        EMERALD,
+        FIRERED,
+        LEAFGREEN
+    }
 }

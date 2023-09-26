@@ -17,9 +17,6 @@ public abstract class GenericEncounterData implements GenericFileData
     int[] fieldLevels = new int[NUM_BASE_FIELD_ENCOUNTER_SLOTS];
     int[][] fieldSpecies; // [1][NUM_BASE_FIELD_ENCOUNTER_SLOTS] in Plat, [3][NUM_BASE_FIELD_ENCOUNTER_SLOTS] in HGSS
 
-    int[] miscSpecies = new int[NUM_MISC_ENCOUNTER_SLOTS];
-    int[] specialSpecies = new int[NUM_SPECIAL_ENCOUNTER_SLOTS];
-
     WaterEncounterSet[] waterEncounters = new WaterEncounterSet[NUM_WATER_ENCOUNTER_SETS];
 
 
@@ -27,6 +24,8 @@ public abstract class GenericEncounterData implements GenericFileData
     {
         setData(files);
     }
+
+    protected GenericEncounterData() {};
 
     @Override
     public abstract void setData(Map<GameFiles, byte[]> files);
@@ -94,56 +93,6 @@ public abstract class GenericEncounterData implements GenericFileData
         this.fieldLevels[idx] = level;
     }
 
-    public int getFieldSpecies(int set, int idx)
-    {
-        return fieldSpecies[set][idx];
-    }
-
-    public void setFieldSpecies(int set, int idx, int species)
-    {
-        fieldSpecies[set][idx] = species;
-    }
-
-    public int getPlatSwarmSpecies(int idx)
-    {
-        return miscSpecies[idx];
-    }
-
-    public void setPlatSwarmSpecies(int idx, int species)
-    {
-        miscSpecies[idx] = species;
-    }
-
-    public int getPlatDaySpecies(int idx)
-    {
-        return miscSpecies[idx + 2];
-    }
-
-    public void setPlatDaySpecies(int idx, int species)
-    {
-        miscSpecies[idx + 2] = species;
-    }
-
-    public int getPlatNightSpecies(int idx)
-    {
-        return miscSpecies[idx + 4];
-    }
-
-    public void setPlatNightSpecies(int idx, int species)
-    {
-        miscSpecies[idx + 4] = species;
-    }
-
-    public int getPlatRadarSpecies(int idx)
-    {
-        return specialSpecies[idx];
-    }
-
-    public void setPlatRadarSpecies(int idx, int species)
-    {
-        specialSpecies[idx] = species;
-    }
-
     public WaterEncounterSet getWaterEncounters(int idx)
     {
         return waterEncounters[idx];
@@ -155,15 +104,28 @@ public abstract class GenericEncounterData implements GenericFileData
     }
 
     protected static final int NUM_BASE_FIELD_ENCOUNTER_SLOTS = 12;
-    protected static final int NUM_MISC_ENCOUNTER_SLOTS = 6; // day/night/swarm in Plat, sinnoh/hoenn/smash in HGSS
-    protected static final int NUM_SPECIAL_ENCOUNTER_SLOTS = 4; // pokeradar in Plat, swarm in HGSS
     protected static final int NUM_WATER_ENCOUNTER_SETS = 4;
 
     public static class WaterEncounterSet {
-        int[] minLevels = new int[NUM_SLOTS];
-        int[] maxLevels = new int[NUM_SLOTS];
-        int[] species = new int[NUM_SLOTS];
+        private final int numSlots;
 
-        protected static final int NUM_SLOTS = 5;
+        int[] minLevels;
+        int[] maxLevels;
+        int[] species;
+
+        WaterEncounterSet(int numSlots)
+        {
+            this.numSlots = numSlots;
+            minLevels = new int[numSlots];
+            maxLevels = new int[numSlots];
+            species = new int[numSlots];
+        }
+
+        public int getNumSlots()
+        {
+            return numSlots;
+        }
+
+        protected static final int NUM_WATER_SLOTS = 5;
     }
 }
