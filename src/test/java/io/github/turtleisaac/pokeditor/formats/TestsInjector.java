@@ -12,6 +12,8 @@ import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveParser;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalParser;
+import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
+import io.github.turtleisaac.pokeditor.formats.text.TextBankParser;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerParser;
 
@@ -96,6 +98,16 @@ public class TestsInjector
                     .in(Scopes.SINGLETON);
         }
     }
+
+    static class TextBankModule extends AbstractModule {
+        @Override
+        protected void configure()
+        {
+            bind(new TypeLiteral<GenericParser<TextBankData>>() {})
+                    .to(TextBankParser.class)
+                    .in(Scopes.SINGLETON);
+        }
+    }
     
-    public static final Injector injector = Guice.createInjector(new PersonalModule(), new LearnsetsModule(), new EvolutionsModule(), new TrainersModule(), new MovesModule(), new SinnohEncountersModule(), new JohtoEncountersModule(), new ItemsModule());
+    public static final Injector injector = Guice.createInjector(new PersonalModule(), new LearnsetsModule(), new EvolutionsModule(), new TrainersModule(), new MovesModule(), new SinnohEncountersModule(), new JohtoEncountersModule(), new ItemsModule(), new TextBankModule());
 }

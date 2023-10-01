@@ -10,6 +10,7 @@ import io.github.turtleisaac.pokeditor.formats.items.ItemData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
+import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.project.Game;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,15 +73,6 @@ public class ParserTests
         }
     }
 
-    public static class ItemsTests extends GenericParserTest<ItemData>
-    {
-        @Override
-        protected GenericParser<ItemData> createParser()
-        {
-            return injector.getInstance(Key.get(new TypeLiteral<>() {}));
-        }
-    }
-
     public static class JohtoEncountersTests extends GenericParserTest<JohtoEncounterData>
     {
         @Override
@@ -96,6 +88,24 @@ public class ParserTests
             parser = createParser();
             rom = NintendoDsRom.fromFile("HeartGold.nds");
             GameFiles.initialize(Game.HeartGold);
+        }
+    }
+
+    public static class ItemsTests extends GenericParserTest<ItemData>
+    {
+        @Override
+        protected GenericParser<ItemData> createParser()
+        {
+            return injector.getInstance(Key.get(new TypeLiteral<>() {}));
+        }
+    }
+
+    public static class TextBankTests extends GenericParserTest<TextBankData>
+    {
+        @Override
+        protected GenericParser<TextBankData> createParser()
+        {
+            return injector.getInstance(Key.get(new TypeLiteral<>() {}));
         }
     }
 }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +29,9 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
     private static final InputStream inputStream = TextBankData.class.getResourceAsStream("/data/characters.json");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final JsonNode characters;
+
+    public static ArrayList<int[]> originalCompressed = new ArrayList<>();
+    public static ArrayList<ArrayList<Integer>> newCompressed = new ArrayList<>();
 
     static {
         try {
@@ -91,7 +93,6 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
 
             if (binaryStrings[messageIdx][0] == 0xf100)
             {
-                System.out.println(messageIdx);
                 compressed = true;
                 binaryStrings[messageIdx] = decompress(binaryStrings[messageIdx]);
                 sizes[messageIdx] = binaryStrings[messageIdx].length;
@@ -205,6 +206,7 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
             }
 
             if (msg.compressed) {
+//                tmpBinaryString.add(0xffff);
                 ArrayList<Integer> compressedBytes = compress(tmpBinaryString.toArray(new Integer[0]));
                 binaryStrings.add(compressedBytes);
             }
@@ -233,12 +235,12 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
         }
 
         // actually write the encoded strings
-        for (int i = 0; i < binaryStrings.size(); i++)
+        for (int messageIdx = 0; messageIdx < binaryStrings.size(); messageIdx++)
         {
-            key = (0x91bd3 * (i + 1)) & 0xffff;
-            for (int j = 0; j < binaryStrings.get(i).size(); j++)
+            key = (0x91bd3 * (messageIdx + 1)) & 0xffff;
+            for (int j = 0; j < binaryStrings.get(messageIdx).size(); j++)
             {
-                writer.writeShort((short) (binaryStrings.get(i).get(j) ^ key));
+                writer.writeShort((short) (binaryStrings.get(messageIdx).get(j) ^ key));
                 key = (key + 0x493d) & 0xffff;
             }
             writer.writeShort((short) (0xffff ^ key));
@@ -257,20 +259,22 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
      */
     protected static int[] decompress(int[] compressedString)
     {
+        originalCompressed.add(compressedString);
         // decompress string: characters are stored in 9 bits instead of 16
         int container = 0;
         int bitshift = 0;
         int index = 0;
+
+        int debugStringLength = 0;
 
         int maxDecompressedLength = (compressedString.length - 1) * 2; //remove the compression flag and the end
         int[] newBinaryString = new int[maxDecompressedLength];
 
         for (int i = 1; i < compressedString.length; i++)
         {
-            System.out.print("Adding << " + bitshift +  ": ");
-            printBinaryString(compressedString[i]);
+            debugStringLength += 16;
             container |= compressedString[i] << bitshift;
-            printBinaryString(container);
+//            printBinaryString(container, debugStringLength);
             bitshift += 0xf;
             while (bitshift >= 0x9)
             {
@@ -284,67 +288,74 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
                 }
 
                 container >>= 9;
-                System.out.println("Shifting >> 9");
-                printBinaryString(container);
+                debugStringLength -= 9;
+//                printBinaryString(container, debugStringLength);
             }
         }
 
         return newBinaryString;
     }
 
-    private static void printBinaryString(int num)
+    private static void printBinaryString(int num, int len)
     {
-        System.out.println(formatBinaryString(num));
+        System.out.println(formatBinaryString(num, len));
     }
 
-    private static String[] splitToFours(int num)
+    private static String[] splitToFours(String binaryString)
     {
-        String s = Integer.toBinaryString(num);
-        int r = s.length() % 4;
+        int r = binaryString.length() % 4;
 
         ArrayList<String> splits = new ArrayList<>();
 
-        String sb = "_".repeat(4 - r) + s.substring(0, r);
+        String sb = "_".repeat(4 - r) + binaryString.substring(0, r);
         splits.add(sb);
 
-        for (int i = r; i < s.length(); i += 4)
+        for (int i = r; i < binaryString.length(); i += 4)
         {
-            splits.add(s.substring(i, i + 4));
+            splits.add(binaryString.substring(i, i + 4));
         }
 
         return splits.toArray(String[]::new);
     }
 
-    private static String formatBinaryString(int num)
+    private static String formatBinaryString(int num, int len)
     {
-        String base = "____";
+        String base = "____ ";
         int numTimes = 8;
-        String[] holders = new String[numTimes];
-        Arrays.fill(holders, base);
 
-        String[] splits = splitToFours(num);
+        String binaryString = Integer.toBinaryString(num);
+        len -= binaryString.length();
+        String[] splits = splitToFours(binaryString);
 
         for (int i = 1; i <= splits.length; i++)
         {
-            if (splits[splits.length - i].length() == 4)
-            {
-                holders[holders.length - i] = splits[splits.length - i];
-            }
-            else
-            {
+            String c = splits[splits.length - i];
 
+            while (c.contains("_") && len > 0)
+            {
+                int idx = c.lastIndexOf('_');
+                c = c.substring(0, idx) + "0" + c.substring(idx + 1);
+                len--;
             }
+
+            splits[splits.length - i] = c;
         }
+
+        String[] filler = new String[0];
+        if (len > 0)
+            filler = splitToFours("0".repeat(len));
 
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < holders.length; i++)
-        {
-            sb.append(holders[i]);
-            if (i != holders.length - 1)
-            {
-                sb.append(" ");
-            }
+        sb.append(base.repeat(Math.max(0, numTimes - filler.length - splits.length)));
+
+        for (String f : filler) {
+            sb.append(f).append(" ");
         }
+
+
+        for (String s : splits)
+            sb.append(s).append(" ");
+
 
         return sb.toString();
     }
@@ -357,39 +368,48 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
      */
     protected static ArrayList<Integer> compress(Integer[] uncompressedString) throws RuntimeException
     {
+        int[] originalCompressed = TextBankData.originalCompressed.get(newCompressed.size());
         int container = 0;
         int bitshift = 0;
-        int index = 0;
+        int index = 1;
 
-        int maxCompressedLength = (uncompressedString.length / 2) + 3;
-        Integer[] newBinaryString = new Integer[maxCompressedLength];
-        Arrays.fill(newBinaryString, 0);
-        newBinaryString[0] = 0xf100;
+        int debugStringLength = 0;
+        ArrayList<Integer> compressed = new ArrayList<>();
+        compressed.add(0xf100);
 
-        for (int i = 1; i < newBinaryString.length; i++)
+        for (int i = 0; i < uncompressedString.length; i++)
         {
-            int c = uncompressedString[index];
-            if ((c >> 9) == 1) {
-                throw new RuntimeException(String.format("%04x cannot be compressed", c));
-            }
+            int c = uncompressedString[i] & 0x1ff;
+//            if ((c >> 9) == 1) {
+//                throw new RuntimeException(String.format("%04x cannot be compressed", c));
+//            }
 
 
+            debugStringLength += 9;
             container |= c << bitshift;
             bitshift += 9;
+            printBinaryString(container, debugStringLength);
 
-            while (bitshift >= 0xf)
+            while (bitshift >= 15)
             {
-                bitshift -= 0xf;
-                newBinaryString[++index] = container & 0xffff;
-                container >>= 0xf;
+                bitshift -= 15;
+                compressed.add(container & 0x7fff);
+                container >>= 15;
+                debugStringLength -= 15;
+                printBinaryString(container, debugStringLength);
             }
         }
-        container |= 0xffffffff << bitshift;
-        newBinaryString[++index] = container & 0xffff;
-        container >>= 9;
-        newBinaryString[++index] = container & 0xffff;
+        if (bitshift != 0) {
+            container |= 0xffff << bitshift;
+            printBinaryString(container, 16);
+            compressed.add(container & 0x7fff);
+            container >>= 15;
+            printBinaryString(container, 0);
+        }
 
-        return new ArrayList<>(Arrays.asList(newBinaryString));
+
+        newCompressed.add(compressed);
+        return compressed;
 
 
 //        ArrayList<Integer> newBinaryString = new ArrayList<>();
@@ -500,6 +520,26 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
         public String toString()
         {
             return (compressed ? "[Compressed]" : "") + text;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            Message message = (Message) o;
+            return compressed == message.compressed && text.equals(message.text);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(text, compressed);
         }
     }
 }
