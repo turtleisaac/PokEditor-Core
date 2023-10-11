@@ -1,9 +1,11 @@
 package io.github.turtleisaac.pokeditor.formats.personal;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -131,6 +133,63 @@ public class PersonalData implements GenericFileData
 
         return Collections.singletonMap(GameFiles.PERSONAL, dataBuf.reader().getBuffer());
     }
+
+//    @Override
+//    public void serialize(JsonGenerator jsonGenerator) throws IOException
+//    {
+//        jsonGenerator.writeObjectFieldStart("base_stats");
+//        jsonGenerator.writeObjectField("hp", hp);
+//        jsonGenerator.writeObjectField("attack", atk);
+//        jsonGenerator.writeObjectField("defense", def);
+//        jsonGenerator.writeObjectField("speed", speed);
+//        jsonGenerator.writeObjectField("special_attack", spAtk);
+//        jsonGenerator.writeObjectField("special_defense", spDef);
+//        jsonGenerator.writeEndObject();
+//
+//        jsonGenerator.writeArrayFieldStart("types");
+////        jsonGenerator.writeA;
+//        jsonGenerator.writeEndArray();
+//
+//        jsonGenerator.writeObjectField("catch_rate", catchRate);
+//        jsonGenerator.writeObjectField("base_exp_reward", baseExp);
+//
+//        jsonGenerator.writeObjectFieldStart("ev_yields");
+//        jsonGenerator.writeObjectField("hp", hpEvYield);
+//        jsonGenerator.writeObjectField("attack", atkEvYield);
+//        jsonGenerator.writeObjectField("defense", defEvYield);
+//        jsonGenerator.writeObjectField("speed", speedEvYield);
+//        jsonGenerator.writeObjectField("special_attack", spAtkEvYield);
+//        jsonGenerator.writeObjectField("special_defense", spDefEvYield);
+//        jsonGenerator.writeEndObject();
+//
+//        jsonGenerator.writeArrayFieldStart("held_items");
+//        jsonGenerator.writeEndArray();
+//
+//        jsonGenerator.writeObjectField("gender_ratio", genderRatio);
+//        jsonGenerator.writeObjectField("hatch_cycles", hatchMultiplier);
+//        jsonGenerator.writeObjectField("base_friendship", baseHappiness);
+//        jsonGenerator.writeObjectField("exp_rate", expRate);
+//
+//        jsonGenerator.writeArrayFieldStart("egg_groups");
+//        jsonGenerator.writeEndArray();
+//
+//        jsonGenerator.writeArrayFieldStart("abilities");
+//        jsonGenerator.writeEndArray();
+//
+//        jsonGenerator.writeObjectField("great_marsh_flee_rate", runChance);
+//
+//        jsonGenerator.writeObjectFieldStart("sprite");
+//        jsonGenerator.writeObjectField("color", dexColor);
+//        jsonGenerator.writeObjectField("flip_sprite", flip);
+//        jsonGenerator.writeEndObject();
+//
+//        jsonGenerator.writeObjectFieldStart("learnset");
+//
+//        jsonGenerator.writeArrayFieldStart("tms");
+//        jsonGenerator.writeEndArray();
+//
+//        jsonGenerator.writeEndObject();
+//    }
 
     private short getCombinedEvShort()
     {

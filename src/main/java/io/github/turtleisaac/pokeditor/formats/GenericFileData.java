@@ -19,10 +19,15 @@
 
 package io.github.turtleisaac.pokeditor.formats;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import java.io.IOException;
 import java.util.Map;
 
 public interface GenericFileData
 {
     void setData(Map<GameFiles, byte[]> files);
     Map<GameFiles, byte[]> save();
+
+//    void serialize(JsonGenerator jsonGenerator) throws IOException;
 }

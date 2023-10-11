@@ -6,14 +6,14 @@ import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 
-public class LearnsetData implements GenericFileData
+public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implements GenericFileData
 {
-    private ArrayList<LearnsetEntry> learnsetEntries;
-
     public LearnsetData(Map<GameFiles, byte[]> files)
     {
+        super();
         setData(files);
     }
 
@@ -49,12 +49,10 @@ public class LearnsetData implements GenericFileData
 //
 //        reader.setPosition(0);
 
-        learnsetEntries = new ArrayList<>();
-
         short combinedValue;
         while ((combinedValue = reader.readShort()) != (short) 0xFFFF)
         {
-            learnsetEntries.add(new LearnsetEntry(getMoveId(combinedValue), getLevelLearned(combinedValue)));
+            add(new LearnsetEntry(getMoveId(combinedValue), getLevelLearned(combinedValue)));
         }
     }
 
@@ -65,7 +63,7 @@ public class LearnsetData implements GenericFileData
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
         int idx = 0;
-        for(LearnsetEntry entry : learnsetEntries)
+        for(LearnsetEntry entry : this)
         {
             writer.writeShort((short) produceLearnData(entry));
             idx++;
@@ -99,20 +97,21 @@ public class LearnsetData implements GenericFileData
 
     public void sortLearnset()
     {
-        ArrayList<LearnsetEntry> sortedLearnset = new ArrayList<>();
-        for (int i = 0; i <= 100; i++)
-        {
-            for (LearnsetEntry entry : learnsetEntries)
-            {
-                if (entry.getLevel() == i)
-                {
-                    sortedLearnset.add(entry);
-                }
-            }
-        }
-
-        learnsetEntries.clear();
-        learnsetEntries.addAll(sortedLearnset);
+        super.sort(Comparator.comparingInt(m -> m.level));
+//        ArrayList<LearnsetEntry> sortedLearnset = new ArrayList<>();
+//        for (int i = 0; i <= 100; i++)
+//        {
+//            for (LearnsetEntry entry : this)
+//            {
+//                if (entry.getLevel() == i)
+//                {
+//                    sortedLearnset.add(entry);
+//                }
+//            }
+//        }
+//
+//        clear();
+//        addAll(sortedLearnset);
     }
 
     public static class LearnsetEntry

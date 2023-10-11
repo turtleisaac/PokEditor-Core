@@ -8,13 +8,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
-public class EvolutionData implements GenericFileData
+public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> implements GenericFileData
 {
-
-    private ArrayList<EvolutionEntry> evolutionEntries;
-
     public EvolutionData(Map<GameFiles, byte[]> files)
     {
+        super();
         setData(files);
     }
 
@@ -26,8 +24,6 @@ public class EvolutionData implements GenericFileData
             throw new RuntimeException("Evolutions narc not provided to editor");
         }
 
-        evolutionEntries = new ArrayList<>();
-
         byte[] file = files.get(GameFiles.EVOLUTIONS);
 
         MemBuf dataBuf = MemBuf.create(file);
@@ -35,7 +31,7 @@ public class EvolutionData implements GenericFileData
 
         for (int i = 0; i < file.length / 6; i++)
         {
-            evolutionEntries.add(new EvolutionEntry(reader.readShort(), reader.readShort(), reader.readShort()));
+            add(new EvolutionEntry(reader.readShort(), reader.readShort(), reader.readShort()));
         }
     }
 
@@ -45,7 +41,7 @@ public class EvolutionData implements GenericFileData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        for(EvolutionEntry entry : evolutionEntries)
+        for(EvolutionEntry entry : this)
         {
             writer.writeShort((short) entry.getMethod());
             writer.writeShort((short) entry.getRequirement());

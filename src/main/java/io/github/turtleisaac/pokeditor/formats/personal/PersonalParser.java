@@ -68,4 +68,23 @@ public class PersonalParser implements GenericParser<PersonalData>
     {
         return Collections.singletonList(GameFiles.PERSONAL);
     }
+
+//    public static class PersonalSerializer extends StdSerializer<PersonalData>
+//    {
+//        public PersonalSerializer() {
+//            this(null);
+//        }
+//
+//        public PersonalSerializer(Class<PersonalData> data) {
+//            super(data);
+//        }
+//
+//        @Override
+//        public void serialize(PersonalData personalData, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException
+//        {
+//            jsonGenerator.writeStartObject();
+//            personalData.serialize(jsonGenerator);
+//            jsonGenerator.writeEndObject();
+//        }
+//    }
 }
