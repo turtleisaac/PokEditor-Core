@@ -2,13 +2,10 @@ package io.github.turtleisaac.pokeditor.formats;
 
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.NintendoDsRom;
-import io.github.turtleisaac.nds4j.framework.BinaryWriter;
-import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.project.Game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +45,8 @@ abstract class GenericParserTest<E extends GenericFileData>
             Narc originalNarc = map.get(gameFile);
             Narc outputNarc = output.get(gameFile);
             for (int idx = 0; idx < originalNarc.getFiles().size(); idx++) {
-                assertThat(originalNarc.getFile(idx))
-                        .isEqualTo(outputNarc.getFile(idx));
+                assertThat(outputNarc.getFile(idx))
+                        .isEqualTo(originalNarc.getFile(idx));
             }
         }
     }

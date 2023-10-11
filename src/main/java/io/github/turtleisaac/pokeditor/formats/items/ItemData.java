@@ -42,7 +42,7 @@ public class ItemData implements GenericFileData
     boolean[] evYieldToggles; //hp, atk, def, speed, spatk, spdef
     boolean[] friendshipChangeToggles;
 
-    int[] evYields;
+    int[] evYields; //hp, atk, def, speed, spatk, spdef
 
     int hpRecoveryAmount;
     int ppRecoveryAmount;
@@ -162,9 +162,71 @@ public class ItemData implements GenericFileData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        
+        writer.writeShort((short) price);
+        writer.writeBytes(equipmentEffect, power, pluckEffect, flingEffect, flingPower, naturalGiftPower);
 
+        int composite = 0;
+        composite |= naturalGiftType & 0x1f;
+        composite |= (unableToDiscard ? 1 : 0) << 5;
+        composite |= (canRegister ? 1 : 0) << 6;
+        composite |= (fieldBag & 0xf) << 7;
+        composite |= (battleBag & 0x1f) << 11;
+        writer.writeShort((short) composite);
 
+        writer.writeBytes(fieldFunction, battleFunction, workType);
+        writer.skip(1);
+
+        composite = 0;
+        for (int i = 0; i < statusRecoveries.length; i++)
+        {
+            composite |= (statusRecoveries[i] ? 1 : 0) << i;
+        }
+        writer.writeBytes(composite);
+
+        composite = 0;
+        for (int i = 0; i < utilities.length; i++)
+        {
+            composite |= (utilities[i] ? 1 : 0) << i;
+        }
+        composite |= (statBoosts[0] & 0xf) << 4;
+        writer.writeBytes(composite);
+
+        for (int i = 1; i < 4; i += 2)
+        {
+            composite = (statBoosts[i] & 0xf) | ((statBoosts[i + 1] & 0x3) << 4);
+            writer.writeBytes(composite);
+        }
+
+        composite = (statBoosts[5] & 0xf) | ((statBoosts[6] & 0xf) << 4);
+        composite |= (ppUpEffects[0] ? 1 : 0) << 6;
+        composite |= (ppUpEffects[1] ? 1 : 0) << 7;
+        writer.writeBytes(composite);
+
+        composite = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            composite |= (recoveryToggles[i] ? 1 : 0) << i;
+        }
+
+        for(int i = 3; i < 8; i++)
+        {
+            composite |= (evYieldToggles[i - 3] ? 1 : 0) << i;
+        }
+        writer.writeBytes(composite);
+
+        composite = 0;
+        composite |= evYieldToggles[NUM_EV_YIELDS - 1] ? 1 : 0;
+        for (int i = 0; i < NUM_FRIENDSHIP_CHANGE_FIELDS; i++)
+        {
+            composite |= (friendshipChangeToggles[i] ? 1 : 0) << i + 1;
+        }
+        writer.writeBytes(composite);
+
+        writer.writeBytes(evYields);
+        writer.writeBytes(hpRecoveryAmount, ppRecoveryAmount);
+        writer.writeBytes(friendshipChangeAmounts);
+
+        writer.writeByteNumTimes((byte) 0, 2);
 
         return Collections.singletonMap(GameFiles.ITEMS, dataBuf.reader().getBuffer());
     }

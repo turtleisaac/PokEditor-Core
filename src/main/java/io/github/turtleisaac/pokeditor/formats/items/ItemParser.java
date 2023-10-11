@@ -55,9 +55,9 @@ public class ItemParser implements GenericParser<ItemData>
     public Map<GameFiles, Narc> processDataList(List<ItemData> data)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
-        for (ItemData personal : data)
+        for (ItemData item : data)
         {
-            subfiles.add(personal.save().get(GameFiles.ITEMS));
+            subfiles.add(item.save().get(GameFiles.ITEMS));
         }
 
         return Collections.singletonMap(GameFiles.ITEMS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
