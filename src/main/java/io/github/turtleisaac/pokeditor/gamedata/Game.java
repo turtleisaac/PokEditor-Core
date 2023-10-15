@@ -1,4 +1,4 @@
-package io.github.turtleisaac.pokeditor.project;
+package io.github.turtleisaac.pokeditor.gamedata;
 
 public enum Game
 {
@@ -28,5 +28,17 @@ public enum Game
     {
         this.sheetList= sheetList;
         this.editorList= editorList;
+    }
+
+    public static Game parseBaseRom(String baseRomGameCode)
+    {
+        return switch (baseRomGameCode.substring(0, 3)) {
+            case "ADA" -> Game.Diamond;
+            case "APA" -> Game.Pearl;
+            case "CPU" -> Game.Platinum;
+            case "IPK" -> Game.HeartGold;
+            case "IPG" -> Game.SoulSilver;
+            default -> throw new RuntimeException("Invalid game");
+        };
     }
 }

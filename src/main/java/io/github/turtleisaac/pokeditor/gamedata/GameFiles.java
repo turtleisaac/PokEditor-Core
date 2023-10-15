@@ -17,9 +17,9 @@
  * along with PokEditor. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.github.turtleisaac.pokeditor.formats;
+package io.github.turtleisaac.pokeditor.gamedata;
 
-import io.github.turtleisaac.pokeditor.project.Game;
+import io.github.turtleisaac.pokeditor.gamedata.Game;
 
 public enum GameFiles
 {
@@ -50,9 +50,8 @@ public enum GameFiles
 
     public static void initialize(Game baseROM)
     {
-        switch (baseROM)
-        {
-            case Platinum:
+        switch (baseROM) {
+            case Platinum -> {
                 PERSONAL.path = "poketool/personal/pl_personal.narc";
                 LEVEL_UP_LEARNSETS.path = "poketool/personal/wotbl.narc";
                 EVOLUTIONS.path = "poketool/personal/evo.narc";
@@ -69,10 +68,8 @@ public enum GameFiles
                 TRAINER_TEXT_OFFSET.path = "poketool/trmsg/trtblofs.narc";
                 PARTY_ICONS.path = "poketool/icongra/pl_poke_icon.narc";
                 BATTLE_SPRITES.path = "poketool/pokegra/pl_pokegra.narc";
-                break;
-
-            case HeartGold:
-            case SoulSilver:
+            }
+            case HeartGold, SoulSilver -> {
                 PERSONAL.path = "a/0/0/2";
                 LEVEL_UP_LEARNSETS.path = "a/0/3/3";
                 EVOLUTIONS.path = "a/0/3/4";
@@ -88,16 +85,13 @@ public enum GameFiles
                 TRAINER_TEXT_OFFSET.path = "a/1/3/1";
                 PARTY_ICONS.path = "a/0/5/8";
                 BATTLE_SPRITES.path = "a/0/0/4";
-
-                if (baseROM.equals(Game.HeartGold))
-                {
+                if (baseROM.equals(Game.HeartGold)) {
                     ENCOUNTERS.path = "a/0/3/7";
                 }
-                else
-                {
+                else {
                     ENCOUNTERS.path = "a/1/3/6";
                 }
-                break;
+            }
         }
     }
 }

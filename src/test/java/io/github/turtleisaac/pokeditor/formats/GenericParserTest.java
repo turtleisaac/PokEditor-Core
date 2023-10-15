@@ -2,7 +2,8 @@ package io.github.turtleisaac.pokeditor.formats;
 
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.NintendoDsRom;
-import io.github.turtleisaac.pokeditor.project.Game;
+import io.github.turtleisaac.pokeditor.gamedata.Game;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

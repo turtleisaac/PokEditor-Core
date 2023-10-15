@@ -20,7 +20,7 @@
 package io.github.turtleisaac.pokeditor.formats.moves;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
-import io.github.turtleisaac.pokeditor.formats.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
 import java.util.Collections;

@@ -20,6 +20,7 @@
 package io.github.turtleisaac.pokeditor.formats;
 
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.List;
 import java.util.Map;

@@ -1,11 +1,9 @@
 package io.github.turtleisaac.pokeditor.formats.personal;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
-import io.github.turtleisaac.pokeditor.formats.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 

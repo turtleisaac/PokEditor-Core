@@ -19,9 +19,8 @@
 
 package io.github.turtleisaac.pokeditor.formats;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
-import java.io.IOException;
 import java.util.Map;
 
 public interface GenericFileData

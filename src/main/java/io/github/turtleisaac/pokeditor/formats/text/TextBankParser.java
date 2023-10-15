@@ -22,7 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.text;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
-import io.github.turtleisaac.pokeditor.formats.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
 import java.util.ArrayList;

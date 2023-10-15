@@ -3,7 +3,7 @@ package io.github.turtleisaac.pokeditor.formats.text;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
-import io.github.turtleisaac.pokeditor.formats.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
 import java.io.IOException;

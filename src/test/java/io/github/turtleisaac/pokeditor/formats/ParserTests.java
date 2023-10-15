@@ -12,7 +12,8 @@ import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
-import io.github.turtleisaac.pokeditor.project.Game;
+import io.github.turtleisaac.pokeditor.gamedata.Game;
+import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import org.junit.jupiter.api.BeforeEach;
 
 import static io.github.turtleisaac.pokeditor.formats.TestsInjector.injector;
