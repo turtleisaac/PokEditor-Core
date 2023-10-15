@@ -19,8 +19,6 @@
 
 package io.github.turtleisaac.pokeditor.gamedata;
 
-import io.github.turtleisaac.pokeditor.gamedata.Game;
-
 public enum GameFiles
 {
     PERSONAL,
