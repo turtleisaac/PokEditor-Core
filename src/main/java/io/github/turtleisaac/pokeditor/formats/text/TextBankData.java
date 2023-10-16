@@ -409,6 +409,13 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
         seed = data.seed;
     }
 
+    public List<String> getStringList()
+    {
+        List<String> output = new ArrayList<>();
+        for (Message message : this)
+            output.add(message.text);
+        return output;
+    }
 
     public static class Message {
         String text;
