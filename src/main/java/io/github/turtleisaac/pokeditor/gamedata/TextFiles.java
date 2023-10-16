@@ -89,7 +89,7 @@ public enum TextFiles
 
         DP_TYPE_NAMES(0), //TODO change
         PLAT_TYPE_NAMES(624),
-        HGSS_TYPE_NAMES(0); //TODO change
+        HGSS_TYPE_NAMES(735);
 
         private final int value;
 
