@@ -62,18 +62,18 @@ public class PersonalData implements GenericFileData
         MemBuf dataBuf = MemBuf.create(files.get(GameFiles.PERSONAL));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
-        hp = reader.readByte();
-        atk = reader.readByte();
-        def = reader.readByte();
-        speed = reader.readByte();
-        spAtk = reader.readByte();
-        spDef = reader.readByte();
-        type1 = reader.readByte();
-        type2 = reader.readByte();
-        catchRate = reader.readByte();
-        baseExp = reader.readByte();
+        hp = reader.readUInt8();
+        atk = reader.readUInt8();
+        def = reader.readUInt8();
+        speed = reader.readUInt8();
+        spAtk = reader.readUInt8();
+        spDef = reader.readUInt8();
+        type1 = reader.readUInt8();
+        type2 = reader.readUInt8();
+        catchRate = reader.readUInt8();
+        baseExp = reader.readUInt8();
 
-        short evYields = reader.readShort();
+        int evYields = reader.readUInt16();
         hpEvYield = getHpEv(evYields);
         atkEvYield = getAtkEv(evYields);
         defEvYield = getDefEv(evYields);
@@ -81,21 +81,21 @@ public class PersonalData implements GenericFileData
         spAtkEvYield = getSpAtkEv(evYields);
         spDefEvYield = getSpDefEv(evYields);
 
-        uncommonItem = reader.readShort();
-        rareItem = reader.readShort();
+        uncommonItem = reader.readUInt16();
+        rareItem = reader.readUInt16();
 
-        genderRatio = reader.readByte();
-        hatchMultiplier = reader.readByte();
-        baseHappiness = reader.readByte();
-        expRate = reader.readByte();
-        eggGroup1 = reader.readByte();
-        eggGroup2 = reader.readByte();
-        ability1 = reader.readByte();
-        ability2 = reader.readByte();
+        genderRatio = reader.readUInt8();
+        hatchMultiplier = reader.readUInt8();
+        baseHappiness = reader.readUInt8();
+        expRate = reader.readUInt8();
+        eggGroup1 = reader.readUInt8();
+        eggGroup2 = reader.readUInt8();
+        ability1 = reader.readUInt8();
+        ability2 = reader.readUInt8();
 
-        runChance = reader.readByte();
+        runChance = reader.readUInt8();
 
-        int colorFlip = reader.readByte();
+        int colorFlip = reader.readUInt8();
         dexColor = colorFlip & 0x7F;
         flip = ((colorFlip & 0x80) >> 7) == 1;
 
@@ -527,32 +527,32 @@ public class PersonalData implements GenericFileData
 
     private static final int NUMBER_TMS_HMS = 128;
 
-    private static int getHpEv(short x)
+    private static int getHpEv(int x)
     {
         return x & 0x03;
     }
 
-    private static int getAtkEv(short x)
+    private static int getAtkEv(int x)
     {
         return (x >> 2) & 0x03;
     }
 
-    private static int getDefEv(short x)
+    private static int getDefEv(int x)
     {
         return (x >> 4) & 0x03;
     }
 
-    private static int getSpeedEv(short x)
+    private static int getSpeedEv(int x)
     {
         return (x >> 6) & 0x03;
     }
 
-    private static int getSpAtkEv(short x)
+    private static int getSpAtkEv(int x)
     {
         return (x >> 8) & 0x03;
     }
 
-    private static int getSpDefEv(short x)
+    private static int getSpDefEv(int x)
     {
         return (x >> 10) & 0x03;
     }
