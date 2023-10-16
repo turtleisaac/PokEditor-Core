@@ -1,8 +1,8 @@
 package io.github.turtleisaac.pokeditor.gamedata;
 
-import static io.github.turtleisaac.pokeditor.gamedata.TextBanks.SpecificTextBanks.*;
+import static io.github.turtleisaac.pokeditor.gamedata.TextFiles.SpecificTextBanks.*;
 
-public enum TextBanks
+public enum TextFiles
 {
     ITEM_NAMES,
     SPECIES_NAMES,
@@ -10,7 +10,8 @@ public enum TextBanks
     MOVE_NAMES,
     TRAINER_NAMES,
     TRAINER_CLASS_NAMES,
-    TRAINER_TEXT;
+    TRAINER_TEXT,
+    TYPE_NAMES;
 
     private int value;
 
@@ -27,6 +28,7 @@ public enum TextBanks
                 TRAINER_NAMES.value = DP_TRAINER_NAMES.value;
                 TRAINER_CLASS_NAMES.value = DP_TRAINER_CLASS_NAMES.value;
                 TRAINER_TEXT.value = DP_TRAINER_TEXT.value;
+                TYPE_NAMES.value = DP_TYPE_NAMES.value;
             }
             case Platinum -> {
                 ITEM_NAMES.value = PLAT_ITEM_NAMES.value;
@@ -36,6 +38,7 @@ public enum TextBanks
                 TRAINER_NAMES.value = PLAT_TRAINER_NAMES.value;
                 TRAINER_CLASS_NAMES.value = PLAT_TRAINER_CLASS_NAMES.value;
                 TRAINER_TEXT.value = PLAT_TRAINER_TEXT.value;
+                TYPE_NAMES.value = PLAT_TYPE_NAMES.value;
             }
             case HeartGold, SoulSilver -> {
                 ITEM_NAMES.value = HGSS_ITEM_NAMES.value;
@@ -45,6 +48,7 @@ public enum TextBanks
                 TRAINER_NAMES.value = HGSS_TRAINER_NAMES.value;
                 TRAINER_CLASS_NAMES.value = HGSS_TRAINER_CLASS_NAMES.value;
                 TRAINER_TEXT.value = HGSS_TRAINER_TEXT.value;
+                TYPE_NAMES.value = HGSS_TYPE_NAMES.value;
             }
         }
     }
@@ -81,7 +85,11 @@ public enum TextBanks
 
         DP_TRAINER_TEXT(0), //TODO change
         PLAT_TRAINER_TEXT(617), //TODO change
-        HGSS_TRAINER_TEXT(728);
+        HGSS_TRAINER_TEXT(728),
+
+        DP_TYPE_NAMES(0), //TODO change
+        PLAT_TYPE_NAMES(624),
+        HGSS_TYPE_NAMES(0); //TODO change
 
         private final int value;
 
