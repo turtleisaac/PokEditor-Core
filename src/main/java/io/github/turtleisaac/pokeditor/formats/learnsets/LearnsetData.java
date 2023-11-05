@@ -121,8 +121,8 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
 
         public LearnsetEntry()
         {
-            moveID = 1;
-            level = 1;
+            moveID = 0;
+            level = 0;
         }
 
         public LearnsetEntry(int moveID, int level)
