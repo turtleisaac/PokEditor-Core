@@ -151,4 +151,6 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
             this.level = level;
         }
     }
+
+    public static final int MAX_NUM_ENTRIES = 20;
 }

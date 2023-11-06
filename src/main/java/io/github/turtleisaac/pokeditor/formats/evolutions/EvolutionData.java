@@ -103,4 +103,6 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
             this.resultSpecies = resultSpecies;
         }
     }
+
+    public static final int MAX_NUM_ENTRIES = 7;
 }
