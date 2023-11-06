@@ -120,7 +120,7 @@ public class ItemData implements GenericFileData
 
         recoveryToggles = new boolean[NUM_RECOVERY_TOGGLES];
         recovery = reader.readUInt8();
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < NUM_RECOVERY_TOGGLES; i++)
         {
             recoveryToggles[i] = ((recovery >> i) & 1) == 1;
         }
@@ -238,4 +238,264 @@ public class ItemData implements GenericFileData
     private static final int NUM_RECOVERY_TOGGLES = 3;
     private static final int NUM_EV_YIELDS = 6;
     private static final int NUM_FRIENDSHIP_CHANGE_FIELDS = 3;
+
+    public int getPrice()
+    {
+        return price;
+    }
+
+    public void setPrice(int price)
+    {
+        this.price = price;
+    }
+
+    public int getEquipmentEffect()
+    {
+        return equipmentEffect;
+    }
+
+    public void setEquipmentEffect(int equipmentEffect)
+    {
+        this.equipmentEffect = equipmentEffect;
+    }
+
+    public int getPower()
+    {
+        return power;
+    }
+
+    public void setPower(int power)
+    {
+        this.power = power;
+    }
+
+    public int getPluckEffect()
+    {
+        return pluckEffect;
+    }
+
+    public void setPluckEffect(int pluckEffect)
+    {
+        this.pluckEffect = pluckEffect;
+    }
+
+    public int getFlingEffect()
+    {
+        return flingEffect;
+    }
+
+    public void setFlingEffect(int flingEffect)
+    {
+        this.flingEffect = flingEffect;
+    }
+
+    public int getFlingPower()
+    {
+        return flingPower;
+    }
+
+    public void setFlingPower(int flingPower)
+    {
+        this.flingPower = flingPower;
+    }
+
+    public int getNaturalGiftPower()
+    {
+        return naturalGiftPower;
+    }
+
+    public void setNaturalGiftPower(int naturalGiftPower)
+    {
+        this.naturalGiftPower = naturalGiftPower;
+    }
+
+    public int getNaturalGiftType()
+    {
+        return naturalGiftType;
+    }
+
+    public void setNaturalGiftType(int naturalGiftType)
+    {
+        this.naturalGiftType = naturalGiftType;
+    }
+
+    public boolean isUnableToDiscard()
+    {
+        return unableToDiscard;
+    }
+
+    public void setUnableToDiscard(boolean unableToDiscard)
+    {
+        this.unableToDiscard = unableToDiscard;
+    }
+
+    public boolean isCanRegister()
+    {
+        return canRegister;
+    }
+
+    public void setCanRegister(boolean canRegister)
+    {
+        this.canRegister = canRegister;
+    }
+
+    public int getFieldBag()
+    {
+        return fieldBag;
+    }
+
+    public void setFieldBag(int fieldBag)
+    {
+        this.fieldBag = fieldBag;
+    }
+
+    public int getBattleBag()
+    {
+        return battleBag;
+    }
+
+    public void setBattleBag(int battleBag)
+    {
+        this.battleBag = battleBag;
+    }
+
+    public int getFieldFunction()
+    {
+        return fieldFunction;
+    }
+
+    public void setFieldFunction(int fieldFunction)
+    {
+        this.fieldFunction = fieldFunction;
+    }
+
+    public int getBattleFunction()
+    {
+        return battleFunction;
+    }
+
+    public void setBattleFunction(int battleFunction)
+    {
+        this.battleFunction = battleFunction;
+    }
+
+    public int getWorkType()
+    {
+        return workType;
+    }
+
+    public void setWorkType(int workType)
+    {
+        this.workType = workType;
+    }
+
+    public boolean[] getStatusRecoveries()
+    {
+        return statusRecoveries;
+    }
+
+    public void setStatusRecoveries(boolean[] statusRecoveries)
+    {
+        this.statusRecoveries = statusRecoveries;
+    }
+
+    public boolean[] getUtilities()
+    {
+        return utilities;
+    }
+
+    public void setUtilities(boolean[] utilities)
+    {
+        this.utilities = utilities;
+    }
+
+    public int[] getStatBoosts()
+    {
+        return statBoosts;
+    }
+
+    public void setStatBoosts(int[] statBoosts)
+    {
+        this.statBoosts = statBoosts;
+    }
+
+    public boolean[] getPpUpEffects()
+    {
+        return ppUpEffects;
+    }
+
+    public void setPpUpEffects(boolean[] ppUpEffects)
+    {
+        this.ppUpEffects = ppUpEffects;
+    }
+
+    public boolean[] getRecoveryToggles()
+    {
+        return recoveryToggles;
+    }
+
+    public void setRecoveryToggles(boolean[] recoveryToggles)
+    {
+        this.recoveryToggles = recoveryToggles;
+    }
+
+    public boolean[] getEvYieldToggles()
+    {
+        return evYieldToggles;
+    }
+
+    public void setEvYieldToggles(boolean[] evYieldToggles)
+    {
+        this.evYieldToggles = evYieldToggles;
+    }
+
+    public boolean[] getFriendshipChangeToggles()
+    {
+        return friendshipChangeToggles;
+    }
+
+    public void setFriendshipChangeToggles(boolean[] friendshipChangeToggles)
+    {
+        this.friendshipChangeToggles = friendshipChangeToggles;
+    }
+
+    public int[] getEvYields()
+    {
+        return evYields;
+    }
+
+    public void setEvYields(int[] evYields)
+    {
+        this.evYields = evYields;
+    }
+
+    public int getHpRecoveryAmount()
+    {
+        return hpRecoveryAmount;
+    }
+
+    public void setHpRecoveryAmount(int hpRecoveryAmount)
+    {
+        this.hpRecoveryAmount = hpRecoveryAmount;
+    }
+
+    public int getPpRecoveryAmount()
+    {
+        return ppRecoveryAmount;
+    }
+
+    public void setPpRecoveryAmount(int ppRecoveryAmount)
+    {
+        this.ppRecoveryAmount = ppRecoveryAmount;
+    }
+
+    public int[] getFriendshipChangeAmounts()
+    {
+        return friendshipChangeAmounts;
+    }
+
+    public void setFriendshipChangeAmounts(int[] friendshipChangeAmounts)
+    {
+        this.friendshipChangeAmounts = friendshipChangeAmounts;
+    }
 }
