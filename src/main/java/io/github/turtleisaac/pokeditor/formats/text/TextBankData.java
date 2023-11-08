@@ -3,6 +3,7 @@ package io.github.turtleisaac.pokeditor.formats.text;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -41,21 +42,21 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
 
     private int seed;
 
-    public TextBankData(Map<GameFiles, byte[]> files)
+    public TextBankData(BytesDataContainer files)
     {
         super();
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.TEXT))
         {
             throw new RuntimeException("Text file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TEXT));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TEXT, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         int numEntries = reader.readUInt16();
@@ -135,7 +136,7 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -240,7 +241,7 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
             writer.writeShort((short) (0xffff ^ key));
         }
 
-        return Collections.singletonMap(GameFiles.TEXT, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.TEXT, null, dataBuf.reader().getBuffer());
     }
 
 

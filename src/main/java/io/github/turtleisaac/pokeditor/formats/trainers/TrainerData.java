@@ -20,6 +20,7 @@
 package io.github.turtleisaac.pokeditor.formats.trainers;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -45,13 +46,13 @@ public class TrainerData implements GenericFileData
 
     ArrayList<TrainerPartyEntry> trainerPartyEntries;
 
-    public TrainerData(Map<GameFiles, byte[]> files)
+    public TrainerData(BytesDataContainer files)
     {
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.TRAINER_DATA))
         {
@@ -65,7 +66,7 @@ public class TrainerData implements GenericFileData
 
         trainerPartyEntries = new ArrayList<>();
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TRAINER_DATA));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TRAINER_DATA, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
 
@@ -100,7 +101,7 @@ public class TrainerData implements GenericFileData
 
 
         // trpoke
-        dataBuf = MemBuf.create(files.get(GameFiles.TRAINER_POKEMON));
+        dataBuf = MemBuf.create(files.get(GameFiles.TRAINER_POKEMON, null));
         reader = dataBuf.reader();
 
         for (int i = 0; i < numPokemon; i++)
@@ -134,7 +135,7 @@ public class TrainerData implements GenericFileData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -195,11 +196,11 @@ public class TrainerData implements GenericFileData
 
         byte[] trainerPokemonOutput = dataBuf.reader().getBuffer();
 
-        HashMap<GameFiles, byte[]> map = new HashMap<>();
-        map.put(GameFiles.TRAINER_DATA, trainerDataOutput);
-        map.put(GameFiles.TRAINER_POKEMON, trainerPokemonOutput);
+        BytesDataContainer container = new BytesDataContainer();
+        container.insert(GameFiles.TRAINER_DATA, null, trainerDataOutput);
+        container.insert(GameFiles.TRAINER_POKEMON, null, trainerPokemonOutput);
 
-        return map;
+        return container;
     }
 
     public boolean isMovesEnabled()

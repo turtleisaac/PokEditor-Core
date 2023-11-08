@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.items;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -45,7 +46,7 @@ public class ItemParser implements GenericParser<ItemData>
 
         for (byte[] subfile : personal.getFiles())
         {
-            data.add(new ItemData(Collections.singletonMap(GameFiles.ITEMS, subfile)));
+            data.add(new ItemData(new BytesDataContainer(GameFiles.ITEMS, null, subfile)));
         }
 
         return data;
@@ -57,7 +58,7 @@ public class ItemParser implements GenericParser<ItemData>
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (ItemData item : data)
         {
-            subfiles.add(item.save().get(GameFiles.ITEMS));
+            subfiles.add(item.save().get(GameFiles.ITEMS, null));
         }
 
         return Collections.singletonMap(GameFiles.ITEMS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));

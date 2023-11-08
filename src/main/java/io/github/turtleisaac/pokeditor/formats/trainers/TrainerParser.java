@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.trainers;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -48,10 +49,10 @@ public class TrainerParser implements GenericParser<TrainerData>
 
         for (int i = 0; i < trainerData.getFiles().size(); i++)
         {
-            HashMap<GameFiles, byte[]> map = new HashMap<>();
-            map.put(GameFiles.TRAINER_DATA, trainerData.getFile(i));
-            map.put(GameFiles.TRAINER_POKEMON, trainerPokemon.getFile(i));
-            data.add(new TrainerData(map));
+            BytesDataContainer container = new BytesDataContainer();
+            container.insert(GameFiles.TRAINER_DATA, null, trainerData.getFile(i));
+            container.insert(GameFiles.TRAINER_POKEMON, null, trainerPokemon.getFile(i));
+            data.add(new TrainerData(container));
         }
 
         return data;
@@ -64,10 +65,10 @@ public class TrainerParser implements GenericParser<TrainerData>
         ArrayList<byte[]> trainerPokemonSubfiles = new ArrayList<>();
 
         for(TrainerData trainer : data) {
-            Map<GameFiles, byte[]> saveResults = trainer.save();
+            BytesDataContainer saveResults = trainer.save();
 
-            trainerDataSubfiles.add(saveResults.get(GameFiles.TRAINER_DATA));
-            trainerPokemonSubfiles.add(saveResults.get(GameFiles.TRAINER_POKEMON));
+            trainerDataSubfiles.add(saveResults.get(GameFiles.TRAINER_DATA, null));
+            trainerPokemonSubfiles.add(saveResults.get(GameFiles.TRAINER_POKEMON, null));
         }
 
         HashMap<GameFiles, Narc> map = new HashMap<>();

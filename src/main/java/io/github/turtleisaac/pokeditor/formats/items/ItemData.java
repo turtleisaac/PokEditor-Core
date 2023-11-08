@@ -1,6 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.items;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -49,20 +50,20 @@ public class ItemData implements GenericFileData
 
     int[] friendshipChangeAmounts;
 
-    public ItemData(Map<GameFiles, byte[]> files)
+    public ItemData(BytesDataContainer files)
     {
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.ITEMS))
         {
             throw new RuntimeException("Items file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.ITEMS));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.ITEMS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         price = reader.readUInt16();
@@ -157,7 +158,7 @@ public class ItemData implements GenericFileData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -228,7 +229,7 @@ public class ItemData implements GenericFileData
 
         writer.writeByteNumTimes((byte) 0, 2);
 
-        return Collections.singletonMap(GameFiles.ITEMS, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.ITEMS, null, dataBuf.reader().getBuffer());
     }
 
     private static final int NUM_STATUS_RECOVERIES = 8;

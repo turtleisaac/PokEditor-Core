@@ -36,7 +36,8 @@ public enum GameFiles
     TRAINER_TEXT_ASSIGNMENT,
     TRAINER_TEXT_OFFSET,
     PARTY_ICONS,
-    BATTLE_SPRITES
+    BATTLE_SPRITES,
+    TRAINER_SPRITES
     ;
 
     private String path;
@@ -66,6 +67,7 @@ public enum GameFiles
                 TRAINER_TEXT_OFFSET.path = "poketool/trmsg/trtblofs.narc";
                 PARTY_ICONS.path = "poketool/icongra/pl_poke_icon.narc";
                 BATTLE_SPRITES.path = "poketool/pokegra/pl_pokegra.narc";
+//   todo             TRAINER_SPRITES.path =
             }
             case HeartGold, SoulSilver -> {
                 PERSONAL.path = "a/0/0/2";
@@ -81,8 +83,9 @@ public enum GameFiles
                 BATTLE_SPRITE_HEIGHT.path = "a/0/0/5";
                 TRAINER_TEXT_ASSIGNMENT.path = "a/0/5/7";
                 TRAINER_TEXT_OFFSET.path = "a/1/3/1";
-                PARTY_ICONS.path = "a/0/5/8";
+                PARTY_ICONS.path = "a/0/2/0";
                 BATTLE_SPRITES.path = "a/0/0/4";
+                TRAINER_SPRITES.path = "a/0/5/8";
                 if (baseROM.equals(Game.HeartGold)) {
                     ENCOUNTERS.path = "a/0/3/7";
                 }

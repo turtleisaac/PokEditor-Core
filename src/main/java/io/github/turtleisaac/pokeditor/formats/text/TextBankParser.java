@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.text;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -45,7 +46,7 @@ public class TextBankParser implements GenericParser<TextBankData>
 
         for (byte[] subfile : personal.getFiles())
         {
-            data.add(new TextBankData(Collections.singletonMap(GameFiles.TEXT, subfile)));
+            data.add(new TextBankData(new BytesDataContainer(GameFiles.TEXT, null, subfile)));
         }
 
         return data;
@@ -57,7 +58,7 @@ public class TextBankParser implements GenericParser<TextBankData>
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (TextBankData personal : data)
         {
-            subfiles.add(personal.save().get(GameFiles.TEXT));
+            subfiles.add(personal.save().get(GameFiles.TEXT, null));
         }
 
         return Collections.singletonMap(GameFiles.TEXT, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));

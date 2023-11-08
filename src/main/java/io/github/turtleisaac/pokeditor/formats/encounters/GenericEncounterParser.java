@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.encounters;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -32,7 +33,7 @@ import java.util.Map;
 
 public abstract class GenericEncounterParser<E extends GenericEncounterData> implements GenericParser<E>
 {
-    abstract E createEncounterData(Map<GameFiles, byte[]> files);
+    abstract E createEncounterData(BytesDataContainer files);
 
     @Override
     public List<E> generateDataList(Map<GameFiles, Narc> narcs)
@@ -47,7 +48,7 @@ public abstract class GenericEncounterParser<E extends GenericEncounterData> imp
 
         for (byte[] subfile : encounters.getFiles())
         {
-            data.add(createEncounterData(Collections.singletonMap(GameFiles.ENCOUNTERS, subfile)));
+            data.add(createEncounterData(new BytesDataContainer(GameFiles.ENCOUNTERS,null, subfile)));
         }
 
         return data;
@@ -59,7 +60,7 @@ public abstract class GenericEncounterParser<E extends GenericEncounterData> imp
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (GenericEncounterData encounters : data)
         {
-            subfiles.add(encounters.save().get(GameFiles.ENCOUNTERS));
+            subfiles.add(encounters.save().get(GameFiles.ENCOUNTERS, null));
         }
 
         return Collections.singletonMap(GameFiles.ENCOUNTERS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));

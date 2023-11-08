@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.learnsets;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -46,7 +47,7 @@ public class LearnsetParser implements GenericParser<LearnsetData>
 
         for (byte[] subfile : learnsets.getFiles())
         {
-            data.add(new LearnsetData(Collections.singletonMap(GameFiles.LEVEL_UP_LEARNSETS, subfile)));
+            data.add(new LearnsetData(new BytesDataContainer(GameFiles.LEVEL_UP_LEARNSETS, null, subfile)));
         }
 
         return data;
@@ -60,7 +61,7 @@ public class LearnsetParser implements GenericParser<LearnsetData>
         {
             //todo figure out if this should be here realistically
 //            learnset.sortLearnset();
-            subfiles.add(learnset.save().get(GameFiles.LEVEL_UP_LEARNSETS));
+            subfiles.add(learnset.save().get(GameFiles.LEVEL_UP_LEARNSETS, null));
         }
 
         return Collections.singletonMap(GameFiles.LEVEL_UP_LEARNSETS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));

@@ -19,14 +19,10 @@
 
 package io.github.turtleisaac.pokeditor.formats;
 
-import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
-
-import java.util.Map;
-
 public interface GenericFileData
 {
-    void setData(Map<GameFiles, byte[]> files);
-    Map<GameFiles, byte[]> save();
+    void setData(BytesDataContainer files);
+    BytesDataContainer save();
 
 //    void serialize(JsonGenerator jsonGenerator) throws IOException;
 }

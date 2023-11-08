@@ -20,6 +20,7 @@
 package io.github.turtleisaac.pokeditor.formats.babies;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -32,20 +33,20 @@ public class BabyFormData implements GenericFileData
     // u16[number of species]
     private ArrayList<Integer> babyFormList;
 
-    public BabyFormData(Map<GameFiles, byte[]> files)
+    public BabyFormData(BytesDataContainer files)
     {
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.BABY_FORMS))
         {
             throw new RuntimeException("Baby forms file not provided to editor");
         }
 
-        byte[] file = files.get(GameFiles.BABY_FORMS);
+        byte[] file = files.get(GameFiles.BABY_FORMS, null);
 
         if (file.length % 2 != 0)
         {
@@ -64,7 +65,7 @@ public class BabyFormData implements GenericFileData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -74,7 +75,7 @@ public class BabyFormData implements GenericFileData
             writer.writeShort(species.shortValue());
         }
 
-        return Collections.singletonMap(GameFiles.BABY_FORMS, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.BABY_FORMS, null, dataBuf.reader().getBuffer());
     }
 
     public ArrayList<Integer> getBabyFormList()

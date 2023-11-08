@@ -1,6 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.learnsets;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -11,21 +12,21 @@ import java.util.Map;
 
 public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implements GenericFileData
 {
-    public LearnsetData(Map<GameFiles, byte[]> files)
+    public LearnsetData(BytesDataContainer files)
     {
         super();
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.LEVEL_UP_LEARNSETS))
         {
             throw new RuntimeException("Level-up learnsets narc not provided to editor");
         }
 
-        byte[] file = files.get(GameFiles.LEVEL_UP_LEARNSETS);
+        byte[] file = files.get(GameFiles.LEVEL_UP_LEARNSETS, null);
 
 //        int numMoves;
         MemBuf dataBuf = MemBuf.create(file);
@@ -57,7 +58,7 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -77,7 +78,7 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
             writer.writeShort((short) 0xFFFF);
         }
 
-        return Collections.singletonMap(GameFiles.LEVEL_UP_LEARNSETS, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.LEVEL_UP_LEARNSETS, null, dataBuf.reader().getBuffer());
     }
 
     private static int getMoveId(short x)

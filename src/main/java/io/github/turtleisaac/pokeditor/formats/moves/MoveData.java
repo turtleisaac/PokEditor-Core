@@ -20,6 +20,7 @@
 package io.github.turtleisaac.pokeditor.formats.moves;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
@@ -64,20 +65,20 @@ public class MoveData implements GenericFileData
         contestType = 0;
     }
 
-    public MoveData(Map<GameFiles, byte[]> files)
+    public MoveData(BytesDataContainer files)
     {
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.MOVES))
         {
             throw new RuntimeException("Moves narc not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.MOVES));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.MOVES, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         effect = reader.readUInt16();
@@ -105,7 +106,7 @@ public class MoveData implements GenericFileData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -124,7 +125,7 @@ public class MoveData implements GenericFileData
         }
         writer.writeBytes(composite, contestEffect, contestType, 0, 0);
 
-        return Collections.singletonMap(GameFiles.MOVES, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.MOVES, null, dataBuf.reader().getBuffer());
     }
 
     private static final int NUM_TARGET_FLAGS = 12;

@@ -1,6 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.evolutions;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -10,21 +11,21 @@ import java.util.Map;
 
 public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> implements GenericFileData
 {
-    public EvolutionData(Map<GameFiles, byte[]> files)
+    public EvolutionData(BytesDataContainer files)
     {
         super();
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.EVOLUTIONS))
         {
             throw new RuntimeException("Evolutions narc not provided to editor");
         }
 
-        byte[] file = files.get(GameFiles.EVOLUTIONS);
+        byte[] file = files.get(GameFiles.EVOLUTIONS, null);
 
         MemBuf dataBuf = MemBuf.create(file);
         MemBuf.MemBufReader reader = dataBuf.reader();
@@ -36,7 +37,7 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -50,7 +51,7 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
 
         writer.writeShort((short) 0);
 
-        return Collections.singletonMap(GameFiles.EVOLUTIONS, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.EVOLUTIONS, null, dataBuf.reader().getBuffer());
     }
 
     public static class EvolutionEntry

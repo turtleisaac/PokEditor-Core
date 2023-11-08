@@ -1,6 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.personal;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -79,20 +80,20 @@ public class PersonalData implements GenericFileData
         flip = false;
     }
 
-    public PersonalData(Map<GameFiles, byte[]> files)
+    public PersonalData(BytesDataContainer files)
     {
         setData(files);
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.PERSONAL))
         {
             throw new RuntimeException("Personal file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.PERSONAL));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.PERSONAL, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         hp = reader.readUInt8();
@@ -143,7 +144,7 @@ public class PersonalData implements GenericFileData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -162,7 +163,7 @@ public class PersonalData implements GenericFileData
         }
         writer.writeBytes(tmLearnsetData);
 
-        return Collections.singletonMap(GameFiles.PERSONAL, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.PERSONAL, null, dataBuf.reader().getBuffer());
     }
 
 //    @Override

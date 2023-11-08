@@ -1,6 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.encounters;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.Collections;
@@ -16,7 +17,7 @@ public class SinnohEncounterData extends GenericEncounterData
 
     int[][] dualSlotSpecies;
 
-    public SinnohEncounterData(Map<GameFiles, byte[]> files)
+    public SinnohEncounterData(BytesDataContainer files)
     {
         super(files);
     }
@@ -31,14 +32,14 @@ public class SinnohEncounterData extends GenericEncounterData
     }
 
     @Override
-    public void setData(Map<GameFiles, byte[]> files)
+    public void setData(BytesDataContainer files)
     {
         if (!files.containsKey(GameFiles.ENCOUNTERS))
         {
             throw new RuntimeException("Encounters narc not provided to editor");
         }
 
-        byte[] file = files.get(GameFiles.ENCOUNTERS);
+        byte[] file = files.get(GameFiles.ENCOUNTERS, null);
 
         MemBuf dataBuf = MemBuf.create(file);
         MemBuf.MemBufReader reader = dataBuf.reader();
@@ -123,7 +124,7 @@ public class SinnohEncounterData extends GenericEncounterData
     }
 
     @Override
-    public Map<GameFiles, byte[]> save()
+    public BytesDataContainer save()
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
@@ -179,7 +180,7 @@ public class SinnohEncounterData extends GenericEncounterData
         writeWaterEncounterSet(writer, goodRodRate, waterEncounters[2]);
         writeWaterEncounterSet(writer, superRodRate, waterEncounters[3]);
 
-        return Collections.singletonMap(GameFiles.ENCOUNTERS, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.ENCOUNTERS, null, dataBuf.reader().getBuffer());
     }
 
     private void writeWaterEncounterSet(MemBuf.MemBufWriter writer, int rate, WaterEncounterSet set)

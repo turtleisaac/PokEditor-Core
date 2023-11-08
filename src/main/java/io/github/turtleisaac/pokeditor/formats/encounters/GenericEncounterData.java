@@ -1,5 +1,6 @@
 package io.github.turtleisaac.pokeditor.formats.encounters;
 
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -20,7 +21,7 @@ public abstract class GenericEncounterData implements GenericFileData
     WaterEncounterSet[] waterEncounters = new WaterEncounterSet[NUM_WATER_ENCOUNTER_SETS];
 
 
-    public GenericEncounterData(Map<GameFiles, byte[]> files)
+    public GenericEncounterData(BytesDataContainer files)
     {
         setData(files);
     }
@@ -28,10 +29,10 @@ public abstract class GenericEncounterData implements GenericFileData
     protected GenericEncounterData() {};
 
     @Override
-    public abstract void setData(Map<GameFiles, byte[]> files);
+    public abstract void setData(BytesDataContainer files);
 
     @Override
-    public abstract Map<GameFiles, byte[]> save();
+    public abstract BytesDataContainer save();
 
     public int getFieldRate()
     {

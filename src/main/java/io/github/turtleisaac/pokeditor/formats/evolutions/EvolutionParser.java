@@ -22,6 +22,7 @@ package io.github.turtleisaac.pokeditor.formats.evolutions;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -45,7 +46,7 @@ public class EvolutionParser implements GenericParser<EvolutionData>
 
         for (byte[] subfile : learnsets.getFiles())
         {
-            data.add(new EvolutionData(Collections.singletonMap(GameFiles.EVOLUTIONS, subfile)));
+            data.add(new EvolutionData(new BytesDataContainer(GameFiles.EVOLUTIONS, null, subfile)));
         }
 
         return data;
@@ -57,7 +58,7 @@ public class EvolutionParser implements GenericParser<EvolutionData>
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (EvolutionData evolutions : data)
         {
-            subfiles.add(evolutions.save().get(GameFiles.EVOLUTIONS));
+            subfiles.add(evolutions.save().get(GameFiles.EVOLUTIONS, null));
         }
 
         return Collections.singletonMap(GameFiles.EVOLUTIONS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
