@@ -1,16 +1,17 @@
 package io.github.turtleisaac.pokeditor.formats.pokemon_sprites;
 
+import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.nds4j.images.Palette;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData.BattleSpriteNarcPattern.*;
+//import static io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData.BattleSpriteNarcPattern.*;
 
 public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 {
@@ -46,27 +47,29 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 
         Palette partyIconPalette = new Palette(partyIcons.getFile(0), 4);
 
-        PokemonSpriteData.BattleSpriteNarcPattern[] pattern = values();
-        for (int i = 0; i < sprites.getFiles().size() / pattern.length; i++)
+        MemBuf spriteMetadataBuffer = MemBuf.create(spriteMetadata.getFile(0));
+        MemBuf.MemBufReader spriteMetadataReader = spriteMetadataBuffer.reader();
+
+        PokemonSpriteData.BattleSpriteNarcPattern[] spritesNarcPattern = PokemonSpriteData.BattleSpriteNarcPattern.values();
+        PokemonSpriteData.BattleSpriteHeightOffsetsPattern[] spriteHeightOffsetsPattern = PokemonSpriteData.BattleSpriteHeightOffsetsPattern.values();
+        for (int i = 0; i < sprites.getFiles().size() / spritesNarcPattern.length; i++)
         {
-            System.out.println(i);
             BytesDataContainer container = new BytesDataContainer();
-            for (PokemonSpriteData.BattleSpriteNarcPattern entry : pattern)
+            for (PokemonSpriteData.BattleSpriteNarcPattern entry : spritesNarcPattern)
             {
-                container.insert(GameFiles.BATTLE_SPRITES, entry, sprites.getFile((i*pattern.length) + entry.getIndex()));
+                container.insert(GameFiles.BATTLE_SPRITES, entry, sprites.getFile((i*spritesNarcPattern.length) + entry.getIndex()));
             }
             container.insert(GameFiles.PARTY_ICONS, null, partyIcons.getFile(i + 7));
+            container.insert(GameFiles.BATTLE_SPRITE_METADATA, null, spriteMetadataReader.readBytes(89));
+            for (PokemonSpriteData.BattleSpriteHeightOffsetsPattern entry : spriteHeightOffsetsPattern)
+            {
+                container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, entry, spriteHeights.getFile(i*spriteHeightOffsetsPattern.length + entry.getIndex()));
+            }
 
             PokemonSpriteData species = new PokemonSpriteData(container);
             species.getPartyIcon().setPalette(partyIconPalette);
 
             data.add(species);
-
-
-//            HashMap<GameFiles, byte[]> map = new HashMap<>();
-//            map.put(GameFiles.TRAINER_DATA, trainerData.getFile(i));
-//            map.put(GameFiles.TRAINER_POKEMON, trainerPokemon.getFile(i));
-//            data.add(new TrainerData(map));
         }
 
         return data;
@@ -75,12 +78,50 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
     @Override
     public Map<GameFiles, Narc> processDataList(List<PokemonSpriteData> data)
     {
-        return null;
+        ArrayList<byte[]> spritesSubfiles = new ArrayList<>();
+        ArrayList<byte[]> heightsSubfiles = new ArrayList<>();
+        ArrayList<byte[]> metadataSubfiles = new ArrayList<>();
+        ArrayList<byte[]> partyIconSubfiles = new ArrayList<>();
+
+        MemBuf spriteMetadataBuffer = MemBuf.create();
+        MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
+
+        for (PokemonSpriteData entry : data)
+        {
+            BytesDataContainer saveResults = entry.save();
+
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_BACK));
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_BACK));
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_FRONT));
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_FRONT));
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.PALETTE));
+            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.SHINY_PALETTE));
+
+            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_BACK_Y));
+            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_BACK_Y));
+            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y));
+            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y));
+
+            spriteMetadataWriter.write(saveResults.get(GameFiles.BATTLE_SPRITE_METADATA, null));
+
+            //todo work on party palette idx
+            partyIconSubfiles.add(saveResults.get(GameFiles.PARTY_ICONS, null));
+        }
+
+        metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
+
+        HashMap<GameFiles, Narc> map = new HashMap<>();
+        map.put(GameFiles.BATTLE_SPRITES, Narc.fromContentsAndNames(spritesSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        map.put(GameFiles.BATTLE_SPRITE_METADATA, Narc.fromContentsAndNames(metadataSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        map.put(GameFiles.BATTLE_SPRITE_HEIGHT, Narc.fromContentsAndNames(heightsSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+//        map.put(GameFiles.PARTY_ICONS, Narc.fromContentsAndNames(partyIconSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+
+        return map;
     }
 
     @Override
     public List<GameFiles> getRequirements()
     {
-        return null;
+        return Arrays.asList(GameFiles.BATTLE_SPRITES, GameFiles.BATTLE_SPRITE_HEIGHT, GameFiles.BATTLE_SPRITE_METADATA, GameFiles.PARTY_ICONS);
     }
 }

@@ -64,7 +64,7 @@ public class TrainerParser implements GenericParser<TrainerData>
         ArrayList<byte[]> trainerDataSubfiles = new ArrayList<>();
         ArrayList<byte[]> trainerPokemonSubfiles = new ArrayList<>();
 
-        for(TrainerData trainer : data) {
+        for (TrainerData trainer : data) {
             BytesDataContainer saveResults = trainer.save();
 
             trainerDataSubfiles.add(saveResults.get(GameFiles.TRAINER_DATA, null));
