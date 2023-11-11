@@ -16,6 +16,8 @@ import java.util.*;
 public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 {
 
+    private static List<byte[]> partyIconStartingFiles;
+
     @Override
     public List<PokemonSpriteData> generateDataList(Map<GameFiles, Narc> narcs)
     {
@@ -46,6 +48,11 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         ArrayList<PokemonSpriteData> data = new ArrayList<>();
 
         Palette partyIconPalette = new Palette(partyIcons.getFile(0), 4);
+        partyIconStartingFiles = new ArrayList<>();
+        for (int i = 0; i < 7; i++)
+        {
+            partyIconStartingFiles.add(partyIcons.getFile(i));
+        }
 
         MemBuf spriteMetadataBuffer = MemBuf.create(spriteMetadata.getFile(0));
         MemBuf.MemBufReader spriteMetadataReader = spriteMetadataBuffer.reader();
@@ -86,6 +93,9 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         MemBuf spriteMetadataBuffer = MemBuf.create();
         MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
 
+        if (partyIconStartingFiles != null)
+            partyIconSubfiles.addAll(partyIconStartingFiles);
+
         for (PokemonSpriteData entry : data)
         {
             BytesDataContainer saveResults = entry.save();
@@ -114,7 +124,7 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         map.put(GameFiles.BATTLE_SPRITES, Narc.fromContentsAndNames(spritesSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
         map.put(GameFiles.BATTLE_SPRITE_METADATA, Narc.fromContentsAndNames(metadataSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
         map.put(GameFiles.BATTLE_SPRITE_HEIGHT, Narc.fromContentsAndNames(heightsSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
-//        map.put(GameFiles.PARTY_ICONS, Narc.fromContentsAndNames(partyIconSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        map.put(GameFiles.PARTY_ICONS, Narc.fromContentsAndNames(partyIconSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
 
         return map;
     }

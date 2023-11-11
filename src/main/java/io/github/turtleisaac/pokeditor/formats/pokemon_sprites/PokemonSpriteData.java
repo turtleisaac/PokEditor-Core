@@ -38,8 +38,6 @@ public class PokemonSpriteData implements GenericFileData
     private int shadowXOffset;
     private int shadowSize;
 
-    private boolean displayingShiny;
-
     public PokemonSpriteData(BytesDataContainer files)
     {
         setData(files);
@@ -96,8 +94,6 @@ public class PokemonSpriteData implements GenericFileData
         shadowSize = reader.readUInt8(); //byte 88
 
         partyIcon = new IndexedImage(partyIconFile, 4, 0, 1, 1, true);
-
-        toggleShinyPalette(false);
     }
 
     @Override
@@ -128,39 +124,16 @@ public class PokemonSpriteData implements GenericFileData
         MemBuf buffer = MemBuf.create();
         MemBuf.MemBufWriter writer = buffer.writer();
 
-//        unknownByte = reader.readByte(); //byte 0
-//        movement = reader.readUInt8(); //byte 1
-//        unknownSection1 = reader.readBytes(42); //bytes 2-43
-//        backMovement = reader.readUInt8(); //byte 44
-//        unknownSection2 = reader.readBytes(41); //bytes 45-85
-//        globalFrontYOffset = reader.readByte(); //byte 86
-//        shadowXOffset = reader.readByte(); //byte 87
-//        shadowSize = reader.readUInt8(); //byte 88
-
-        writer.write((byte) unknownByte, (byte) movement);
-        writer.write(unknownSection1);
-        writer.write((byte) backMovement);
-        writer.write(unknownSection2);
-        writer.write((byte) globalFrontYOffset, (byte) shadowXOffset, (byte) shadowSize);
+        writer.write((byte) unknownByte, (byte) movement); //bytes 0, 1
+        writer.write(unknownSection1); //bytes 2-43
+        writer.write((byte) backMovement); //byte 44
+        writer.write(unknownSection2); //bytes 45-85
+        writer.write((byte) globalFrontYOffset, (byte) shadowXOffset, (byte) shadowSize); //bytes 86, 87, 88
 
         //todo work on party icon palette idx
         container.insert(GameFiles.BATTLE_SPRITE_METADATA, null, buffer.reader().getBuffer());
 
         return container;
-    }
-
-    public void toggleShinyPalette(boolean mode)
-    {
-        displayingShiny = mode;
-        Palette palette = mode ? shinyPalette : this.palette;
-        if (femaleBack != null)
-            femaleBack.setPalette(palette);
-        if (maleBack != null)
-            maleBack.setPalette(palette);
-        if (femaleFront != null)
-            femaleFront.setPalette(palette);
-        if (maleFront != null)
-            maleFront.setPalette(palette);
     }
 
 
