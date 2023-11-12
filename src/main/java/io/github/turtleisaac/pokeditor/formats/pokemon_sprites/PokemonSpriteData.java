@@ -38,6 +38,8 @@ public class PokemonSpriteData implements GenericFileData
     private int shadowXOffset;
     private int shadowSize;
 
+    private int partyIconPaletteIndex = 0;
+
     public PokemonSpriteData(BytesDataContainer files)
     {
         setData(files);
@@ -295,6 +297,16 @@ public class PokemonSpriteData implements GenericFileData
     public void setShadowSize(int shadowSize)
     {
         this.shadowSize = shadowSize;
+    }
+
+    public int getPartyIconPaletteIndex()
+    {
+        return partyIconPaletteIndex;
+    }
+
+    public void setPartyIconPaletteIndex(int partyIconPaletteIndex)
+    {
+        this.partyIconPaletteIndex = partyIconPaletteIndex;
     }
 
     public enum BattleSpriteNarcPattern implements BytesDataContainer.PatternIndex

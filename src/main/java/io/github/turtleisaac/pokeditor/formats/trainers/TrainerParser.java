@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.trainers;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -31,7 +33,7 @@ import java.util.*;
 public class TrainerParser implements GenericParser<TrainerData>
 {
     @Override
-    public List<TrainerData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<TrainerData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.TRAINER_DATA))
         {
@@ -59,7 +61,7 @@ public class TrainerParser implements GenericParser<TrainerData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<TrainerData> data)
+    public Map<GameFiles, Narc> processDataList(List<TrainerData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> trainerDataSubfiles = new ArrayList<>();
         ArrayList<byte[]> trainerPokemonSubfiles = new ArrayList<>();
@@ -82,6 +84,12 @@ public class TrainerParser implements GenericParser<TrainerData>
     public List<GameFiles> getRequirements()
     {
         return Arrays.asList(GameFiles.TRAINER_DATA, GameFiles.TRAINER_POKEMON);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return Collections.emptyList();
     }
 
     public enum TrainerSheets {

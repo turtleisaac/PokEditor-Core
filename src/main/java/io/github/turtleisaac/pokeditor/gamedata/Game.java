@@ -24,15 +24,22 @@ public enum Game
     public final String[] sheetList;
     public final String[] editorList;
 
+    private Region region;
+
     Game(String[] sheetList, String[] editorList)
     {
         this.sheetList= sheetList;
         this.editorList= editorList;
     }
 
+    public Region getRegion()
+    {
+        return region;
+    }
+
     public static Game parseBaseRom(String baseRomGameCode)
     {
-        return switch (baseRomGameCode.substring(0, 3)) {
+        Game game = switch (baseRomGameCode.substring(0, 3)) {
             case "ADA" -> Game.Diamond;
             case "APA" -> Game.Pearl;
             case "CPU" -> Game.Platinum;
@@ -40,5 +47,36 @@ public enum Game
             case "IPG" -> Game.SoulSilver;
             default -> throw new RuntimeException("Invalid game");
         };
+
+        game.region = Region.getRegion(baseRomGameCode.charAt(3));
+        return game;
+    }
+
+    public enum Region
+    {
+        USA,
+        GERMANY,
+        FRANCE,
+        ITALY,
+        JAPAN,
+        KOREA,
+        EUROPE,
+        SPAIN;
+
+        static Region getRegion(char c)
+        {
+            return switch (c)
+            {
+                case 'D' -> GERMANY;
+                case 'E' -> USA;
+                case 'F' -> FRANCE;
+                case 'I' -> ITALY;
+                case 'J' -> JAPAN;
+                case 'K' -> KOREA;
+                case 'P' -> EUROPE;
+                case 'S' -> SPAIN;
+                default -> throw new IllegalStateException("Unexpected game code region: " + c);
+            };
+        }
     }
 }

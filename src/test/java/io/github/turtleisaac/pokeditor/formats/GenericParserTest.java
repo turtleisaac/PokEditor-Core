@@ -2,8 +2,8 @@ package io.github.turtleisaac.pokeditor.formats;
 
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.NintendoDsRom;
-import io.github.turtleisaac.pokeditor.gamedata.Game;
-import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
+import io.github.turtleisaac.pokeditor.gamedata.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +23,11 @@ abstract class GenericParserTest<E extends GenericFileData>
     {
         parser = createParser();
         rom = NintendoDsRom.fromFile("Platinum.nds");
-        GameFiles.initialize(Game.Platinum);
+        Game game = Game.parseBaseRom(rom.getGameCode());
+        GameFiles.initialize(game);
+        TextFiles.initialize(game);
+        GameCodeBinaries.initialize(game);
+        Tables.initialize(game);
     }
 
     @Test
@@ -39,8 +43,11 @@ abstract class GenericParserTest<E extends GenericFileData>
             map.put(gameFile, new Narc(rom.getFileByName(gameFile.getPath())));
         }
 
-        List<E> data = parser.generateDataList(map);
-        Map<GameFiles, Narc> output = parser.processDataList(data);
+        HashMap<GameCodeBinaries, CodeBinary> codeBinaries = new HashMap<>();
+        codeBinaries.put(GameCodeBinaries.ARM9, rom.loadArm9());
+
+        List<E> data = parser.generateDataList(map, codeBinaries);
+        Map<GameFiles, Narc> output = parser.processDataList(data, codeBinaries);
 
         for (GameFiles gameFile : parser.getRequirements()) {
             Narc originalNarc = map.get(gameFile);

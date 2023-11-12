@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.encounters;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -36,7 +38,7 @@ public abstract class GenericEncounterParser<E extends GenericEncounterData> imp
     abstract E createEncounterData(BytesDataContainer files);
 
     @Override
-    public List<E> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<E> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.ENCOUNTERS))
         {
@@ -55,7 +57,7 @@ public abstract class GenericEncounterParser<E extends GenericEncounterData> imp
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<E> data)
+    public Map<GameFiles, Narc> processDataList(List<E> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (GenericEncounterData encounters : data)
@@ -70,5 +72,11 @@ public abstract class GenericEncounterParser<E extends GenericEncounterData> imp
     public List<GameFiles> getRequirements()
     {
         return Collections.singletonList(GameFiles.ENCOUNTERS);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return Collections.emptyList();
     }
 }

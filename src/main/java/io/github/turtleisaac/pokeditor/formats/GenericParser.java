@@ -20,6 +20,8 @@
 package io.github.turtleisaac.pokeditor.formats;
 
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.List;
@@ -27,10 +29,12 @@ import java.util.Map;
 
 public interface GenericParser<E extends GenericFileData>
 {
-    List<E> generateDataList(Map<GameFiles, Narc> narcs);
+    List<E> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries);
 
-    Map<GameFiles, Narc> processDataList(List<E> data);
+    Map<GameFiles, Narc> processDataList(List<E> data, Map<GameCodeBinaries, CodeBinary> codeBinaries);
 
     List<GameFiles> getRequirements();
+
+    List<GameCodeBinaries> getRequiredBinaries();
 }
 

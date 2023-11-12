@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.items;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -34,7 +36,7 @@ import java.util.Map;
 public class ItemParser implements GenericParser<ItemData>
 {
     @Override
-    public List<ItemData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<ItemData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.ITEMS))
         {
@@ -53,7 +55,7 @@ public class ItemParser implements GenericParser<ItemData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<ItemData> data)
+    public Map<GameFiles, Narc> processDataList(List<ItemData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (ItemData item : data)
@@ -68,5 +70,11 @@ public class ItemParser implements GenericParser<ItemData>
     public List<GameFiles> getRequirements()
     {
         return Collections.singletonList(GameFiles.ITEMS);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return List.of(GameCodeBinaries.ARM9);
     }
 }

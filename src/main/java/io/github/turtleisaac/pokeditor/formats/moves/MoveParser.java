@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.moves;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -34,7 +36,7 @@ import java.util.Map;
 public class MoveParser implements GenericParser<MoveData>
 {
     @Override
-    public List<MoveData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<MoveData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.MOVES))
         {
@@ -53,7 +55,7 @@ public class MoveParser implements GenericParser<MoveData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<MoveData> data)
+    public Map<GameFiles, Narc> processDataList(List<MoveData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (MoveData move : data)
@@ -68,5 +70,11 @@ public class MoveParser implements GenericParser<MoveData>
     public List<GameFiles> getRequirements()
     {
         return Collections.singletonList(GameFiles.MOVES);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return Collections.emptyList();
     }
 }

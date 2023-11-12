@@ -12,8 +12,7 @@ import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
-import io.github.turtleisaac.pokeditor.gamedata.Game;
-import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.*;
 import org.junit.jupiter.api.BeforeEach;
 
 import static io.github.turtleisaac.pokeditor.formats.TestsInjector.injector;
@@ -88,7 +87,11 @@ public class ParserTests
         {
             parser = createParser();
             rom = NintendoDsRom.fromFile("HeartGold.nds");
-            GameFiles.initialize(Game.HeartGold);
+            Game game = Game.parseBaseRom(rom.getGameCode());
+            GameFiles.initialize(game);
+            TextFiles.initialize(game);
+            GameCodeBinaries.initialize(game);
+            Tables.initialize(game);
         }
     }
 

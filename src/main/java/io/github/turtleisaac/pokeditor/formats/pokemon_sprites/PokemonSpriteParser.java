@@ -2,12 +2,16 @@ package io.github.turtleisaac.pokeditor.formats.pokemon_sprites;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
+import io.github.turtleisaac.nds4j.binaries.MainCodeFile;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.nds4j.images.Palette;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
+import io.github.turtleisaac.pokeditor.gamedata.Tables;
 
 import java.util.*;
 
@@ -16,10 +20,12 @@ import java.util.*;
 public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 {
 
+    private static final int MAX_PARTY_ICON_PALETTE_VALUE = 2;
+
     private static List<byte[]> partyIconStartingFiles;
 
     @Override
-    public List<PokemonSpriteData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<PokemonSpriteData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.BATTLE_SPRITES))
         {
@@ -40,6 +46,23 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         {
             throw new RuntimeException("Pokemon party icons narc not provided to editor");
         }
+
+        if (codeBinaries == null)
+        {
+            throw new RuntimeException("Code binaries not provided to editor");
+        }
+
+        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
+        {
+            throw new RuntimeException("Arm9 not provided to editor");
+        }
+
+        MainCodeFile arm9 = (MainCodeFile) codeBinaries.get(GameCodeBinaries.ARM9);
+        MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
+        arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
+        int offset = arm9Reader.readInt();
+        arm9Reader.setPosition(offset - arm9.getRamStartAddress());
+
 
         Narc sprites = narcs.get(GameFiles.BATTLE_SPRITES);
         Narc spriteHeights = narcs.get(GameFiles.BATTLE_SPRITE_HEIGHT);
@@ -75,6 +98,9 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 
             PokemonSpriteData species = new PokemonSpriteData(container);
             species.getPartyIcon().setPalette(partyIconPalette);
+            int val = arm9Reader.readUInt8();
+            if (val <= MAX_PARTY_ICON_PALETTE_VALUE)
+                species.setPartyIconPaletteIndex(val);
 
             data.add(species);
         }
@@ -83,8 +109,26 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<PokemonSpriteData> data)
+    public Map<GameFiles, Narc> processDataList(List<PokemonSpriteData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
+        if (codeBinaries == null)
+        {
+            throw new RuntimeException("Code binaries not provided to editor");
+        }
+
+        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
+        {
+            throw new RuntimeException("Arm9 not provided to editor");
+        }
+
+        MainCodeFile arm9 = (MainCodeFile) codeBinaries.get(GameCodeBinaries.ARM9);
+        MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
+        arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
+        int offset = arm9Reader.readInt();
+        MemBuf.MemBufWriter arm9Writer = arm9.getPhysicalAddressBuffer().writer();
+        int writerPos = arm9Writer.getPosition();
+        arm9Writer.setPosition(offset - arm9.getRamStartAddress());
+
         ArrayList<byte[]> spritesSubfiles = new ArrayList<>();
         ArrayList<byte[]> heightsSubfiles = new ArrayList<>();
         ArrayList<byte[]> metadataSubfiles = new ArrayList<>();
@@ -116,7 +160,10 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 
             //todo work on party palette idx
             partyIconSubfiles.add(saveResults.get(GameFiles.PARTY_ICONS, null));
+            arm9Writer.writeBytes(entry.getPartyIconPaletteIndex());
         }
+
+        arm9Writer.setPosition(writerPos);
 
         metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
 
@@ -133,5 +180,11 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
     public List<GameFiles> getRequirements()
     {
         return Arrays.asList(GameFiles.BATTLE_SPRITES, GameFiles.BATTLE_SPRITE_HEIGHT, GameFiles.BATTLE_SPRITE_METADATA, GameFiles.PARTY_ICONS);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return List.of(GameCodeBinaries.ARM9);
     }
 }

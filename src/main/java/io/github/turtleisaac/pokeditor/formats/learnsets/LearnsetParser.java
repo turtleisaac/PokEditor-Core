@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.learnsets;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -35,7 +37,7 @@ public class LearnsetParser implements GenericParser<LearnsetData>
 {
 
     @Override
-    public List<LearnsetData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<LearnsetData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.LEVEL_UP_LEARNSETS))
         {
@@ -54,7 +56,7 @@ public class LearnsetParser implements GenericParser<LearnsetData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<LearnsetData> data)
+    public Map<GameFiles, Narc> processDataList(List<LearnsetData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (LearnsetData learnset : data)
@@ -71,5 +73,11 @@ public class LearnsetParser implements GenericParser<LearnsetData>
     public List<GameFiles> getRequirements()
     {
         return Collections.singletonList(GameFiles.LEVEL_UP_LEARNSETS);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return Collections.emptyList();
     }
 }

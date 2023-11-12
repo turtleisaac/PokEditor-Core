@@ -21,8 +21,10 @@ package io.github.turtleisaac.pokeditor.formats.personal;
 
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 
@@ -34,7 +36,7 @@ import java.util.Map;
 public class PersonalParser implements GenericParser<PersonalData>
 {
     @Override
-    public List<PersonalData> generateDataList(Map<GameFiles, Narc> narcs)
+    public List<PersonalData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         if (!narcs.containsKey(GameFiles.PERSONAL))
         {
@@ -53,7 +55,7 @@ public class PersonalParser implements GenericParser<PersonalData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<PersonalData> data)
+    public Map<GameFiles, Narc> processDataList(List<PersonalData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (PersonalData personal : data)
@@ -68,6 +70,12 @@ public class PersonalParser implements GenericParser<PersonalData>
     public List<GameFiles> getRequirements()
     {
         return Collections.singletonList(GameFiles.PERSONAL);
+    }
+
+    @Override
+    public List<GameCodeBinaries> getRequiredBinaries()
+    {
+        return List.of(GameCodeBinaries.ARM9);
     }
 
 //    public static class PersonalSerializer extends StdSerializer<PersonalData>
