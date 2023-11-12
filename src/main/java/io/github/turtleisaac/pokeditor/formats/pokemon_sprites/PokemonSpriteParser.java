@@ -121,59 +121,62 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
             throw new RuntimeException("Arm9 not provided to editor");
         }
 
+        HashMap<GameFiles, Narc> outputMap = new HashMap<>();
+
         MainCodeFile arm9 = (MainCodeFile) codeBinaries.get(GameCodeBinaries.ARM9);
-        MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
-        arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
-        int offset = arm9Reader.readInt();
-        MemBuf.MemBufWriter arm9Writer = arm9.getPhysicalAddressBuffer().writer();
-        int writerPos = arm9Writer.getPosition();
-        arm9Writer.setPosition(offset - arm9.getRamStartAddress());
+        arm9.lock();
+        try {
+            MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
+            arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
+            int offset = arm9Reader.readInt();
+            MemBuf.MemBufWriter arm9Writer = arm9.getPhysicalAddressBuffer().writer();
+            arm9Writer.setPosition(offset - arm9.getRamStartAddress());
 
-        ArrayList<byte[]> spritesSubfiles = new ArrayList<>();
-        ArrayList<byte[]> heightsSubfiles = new ArrayList<>();
-        ArrayList<byte[]> metadataSubfiles = new ArrayList<>();
-        ArrayList<byte[]> partyIconSubfiles = new ArrayList<>();
+            ArrayList<byte[]> spritesSubfiles = new ArrayList<>();
+            ArrayList<byte[]> heightsSubfiles = new ArrayList<>();
+            ArrayList<byte[]> metadataSubfiles = new ArrayList<>();
+            ArrayList<byte[]> partyIconSubfiles = new ArrayList<>();
 
-        MemBuf spriteMetadataBuffer = MemBuf.create();
-        MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
+            MemBuf spriteMetadataBuffer = MemBuf.create();
+            MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
 
-        if (partyIconStartingFiles != null)
-            partyIconSubfiles.addAll(partyIconStartingFiles);
+            if (partyIconStartingFiles != null)
+                partyIconSubfiles.addAll(partyIconStartingFiles);
 
-        for (PokemonSpriteData entry : data)
-        {
-            BytesDataContainer saveResults = entry.save();
+            for (PokemonSpriteData entry : data)
+            {
+                BytesDataContainer saveResults = entry.save();
 
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_BACK));
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_BACK));
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_FRONT));
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_FRONT));
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.PALETTE));
-            spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.SHINY_PALETTE));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_BACK));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_BACK));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_FRONT));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.MALE_FRONT));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.PALETTE));
+                spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.SHINY_PALETTE));
 
-            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_BACK_Y));
-            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_BACK_Y));
-            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y));
-            heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y));
+                heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_BACK_Y));
+                heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_BACK_Y));
+                heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y));
+                heightsSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITE_HEIGHT, PokemonSpriteData.BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y));
 
-            spriteMetadataWriter.write(saveResults.get(GameFiles.BATTLE_SPRITE_METADATA, null));
+                spriteMetadataWriter.write(saveResults.get(GameFiles.BATTLE_SPRITE_METADATA, null));
 
-            //todo work on party palette idx
-            partyIconSubfiles.add(saveResults.get(GameFiles.PARTY_ICONS, null));
-            arm9Writer.writeBytes(entry.getPartyIconPaletteIndex());
+                partyIconSubfiles.add(saveResults.get(GameFiles.PARTY_ICONS, null));
+                arm9Writer.writeBytes(entry.getPartyIconPaletteIndex());
+            }
+
+            metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
+
+            outputMap.put(GameFiles.BATTLE_SPRITES, Narc.fromContentsAndNames(spritesSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+            outputMap.put(GameFiles.BATTLE_SPRITE_METADATA, Narc.fromContentsAndNames(metadataSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+            outputMap.put(GameFiles.BATTLE_SPRITE_HEIGHT, Narc.fromContentsAndNames(heightsSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+            outputMap.put(GameFiles.PARTY_ICONS, Narc.fromContentsAndNames(partyIconSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        }
+        finally {
+            arm9.unlock();
         }
 
-        arm9Writer.setPosition(writerPos);
-
-        metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
-
-        HashMap<GameFiles, Narc> map = new HashMap<>();
-        map.put(GameFiles.BATTLE_SPRITES, Narc.fromContentsAndNames(spritesSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
-        map.put(GameFiles.BATTLE_SPRITE_METADATA, Narc.fromContentsAndNames(metadataSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
-        map.put(GameFiles.BATTLE_SPRITE_HEIGHT, Narc.fromContentsAndNames(heightsSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
-        map.put(GameFiles.PARTY_ICONS, Narc.fromContentsAndNames(partyIconSubfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
-
-        return map;
+        return outputMap;
     }
 
     @Override

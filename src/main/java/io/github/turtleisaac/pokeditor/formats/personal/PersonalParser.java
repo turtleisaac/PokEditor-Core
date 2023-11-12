@@ -75,7 +75,7 @@ public class PersonalParser implements GenericParser<PersonalData>
     @Override
     public List<GameCodeBinaries> getRequiredBinaries()
     {
-        return List.of(GameCodeBinaries.ARM9);
+        return Collections.emptyList();
     }
 
 //    public static class PersonalSerializer extends StdSerializer<PersonalData>
