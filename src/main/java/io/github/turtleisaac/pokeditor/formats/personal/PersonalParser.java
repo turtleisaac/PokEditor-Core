@@ -23,10 +23,12 @@ import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.nds4j.framework.Endianness;
+import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
+import io.github.turtleisaac.pokeditor.gamedata.Tables;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +37,9 @@ import java.util.Map;
 
 public class PersonalParser implements GenericParser<PersonalData>
 {
+    public static final int[] tmMoveIdNumbers = new int[PersonalData.NUMBER_TMS_HMS];
+    private static boolean hasReadTmMoveIds = false;
+
     @Override
     public List<PersonalData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
@@ -43,8 +48,34 @@ public class PersonalParser implements GenericParser<PersonalData>
             throw new RuntimeException("Personal narc not provided to editor");
         }
 
+        if (codeBinaries == null)
+        {
+            throw new RuntimeException("Code binaries not provided to editor");
+        }
+
+        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
+        {
+            throw new RuntimeException("Arm9 not provided to editor");
+        }
+
         Narc personal = narcs.get(GameFiles.PERSONAL);
         ArrayList<PersonalData> data = new ArrayList<>();
+
+        CodeBinary arm9 = codeBinaries.get(GameCodeBinaries.ARM9);
+        arm9.lock();
+        try {
+            MemBuf.MemBufReader reader = arm9.getPhysicalAddressBuffer().reader();
+            reader.setPosition(Tables.TM_HM_MOVES.getPointerOffset());
+            int offset = reader.readInt();
+            reader.setPosition(offset - arm9.getRamStartAddress());
+            for (int i = 0; i < PersonalData.NUMBER_TMS_HMS; i++)
+            {
+                tmMoveIdNumbers[i] = reader.readUInt16();
+            }
+            hasReadTmMoveIds = true;
+        } finally {
+            arm9.unlock();
+        }
 
         for (byte[] subfile : personal.getFiles())
         {
@@ -57,6 +88,35 @@ public class PersonalParser implements GenericParser<PersonalData>
     @Override
     public Map<GameFiles, Narc> processDataList(List<PersonalData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
+        if (codeBinaries == null)
+        {
+            throw new RuntimeException("Code binaries not provided to editor");
+        }
+
+        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
+        {
+            throw new RuntimeException("Arm9 not provided to editor");
+        }
+
+        if (hasReadTmMoveIds)
+        {
+            CodeBinary arm9 = codeBinaries.get(GameCodeBinaries.ARM9);
+            arm9.lock();
+            try {
+                MemBuf.MemBufReader reader = arm9.getPhysicalAddressBuffer().reader();
+                reader.setPosition(Tables.TM_HM_MOVES.getPointerOffset());
+                int offset = reader.readInt();
+                MemBuf.MemBufWriter writer = arm9.getPhysicalAddressBuffer().writer();
+                writer.setPosition(offset - arm9.getRamStartAddress());
+                for (int i = 0; i < PersonalData.NUMBER_TMS_HMS; i++)
+                {
+                    writer.writeShort((short) tmMoveIdNumbers[i]);
+                }
+            } finally {
+                arm9.unlock();
+            }
+        }
+
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (PersonalData personal : data)
         {
@@ -75,7 +135,7 @@ public class PersonalParser implements GenericParser<PersonalData>
     @Override
     public List<GameCodeBinaries> getRequiredBinaries()
     {
-        return Collections.emptyList();
+        return List.of(GameCodeBinaries.ARM9);
     }
 
 //    public static class PersonalSerializer extends StdSerializer<PersonalData>

@@ -5,9 +5,6 @@ import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
-import java.util.Collections;
-import java.util.Map;
-
 public class PersonalData implements GenericFileData
 {
     private int hp; // u8
@@ -45,7 +42,7 @@ public class PersonalData implements GenericFileData
     private int dexColor; // u8:7
     private boolean flip;  // u8:1
 
-    private boolean[] tmLearnset; // u8[16], each TM is a single bit
+    private boolean[] tmCompatibility; // u8[16], each TM is a single bit
 
     public PersonalData()
     {
@@ -136,10 +133,10 @@ public class PersonalData implements GenericFileData
         reader.skip(2); // 2 bytes padding
         byte[] tmLearnset = reader.readBytes(16);
 
-        this.tmLearnset = new boolean[NUMBER_TMS_HMS];
-        for (int i = 0; i < NUMBER_TMS_HMS; i++)
+        this.tmCompatibility = new boolean[NUMBER_TM_HM_BITS];
+        for (int i = 0; i < NUMBER_TM_HM_BITS; i++)
         {
-            this.tmLearnset[i] = (tmLearnset[i / 8] & 1 << (i % 8)) != 0;
+            this.tmCompatibility[i] = (tmLearnset[i / 8] & 1 << (i % 8)) != 0;
         }
     }
 
@@ -157,9 +154,9 @@ public class PersonalData implements GenericFileData
         writer.skip(2);
 
         int[] tmLearnsetData = new int[16];
-        for (int i = 0; i < NUMBER_TMS_HMS; i++)
+        for (int i = 0; i < NUMBER_TM_HM_BITS; i++)
         {
-            tmLearnsetData[i / 8] |= ((tmLearnset[i] ? 1 : 0) << (i % 8));
+            tmLearnsetData[i / 8] |= ((tmCompatibility[i] ? 1 : 0) << (i % 8));
         }
         writer.writeBytes(tmLearnsetData);
 
@@ -559,7 +556,18 @@ public class PersonalData implements GenericFileData
         this.flip = flip;
     }
 
-    private static final int NUMBER_TMS_HMS = 128;
+    public boolean[] getTmCompatibility()
+    {
+        return tmCompatibility;
+    }
+
+    public void setTmCompatibility(boolean[] tmCompatibility)
+    {
+        this.tmCompatibility = tmCompatibility;
+    }
+
+    private static final int NUMBER_TM_HM_BITS = 128;
+    protected static final int NUMBER_TMS_HMS = 100;
 
     private static int getHpEv(int x)
     {

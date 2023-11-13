@@ -5,7 +5,8 @@ public enum Tables
     PARTY_ICON_PALETTE,
     TRAINER_CLASS_GENDER,
     TRAINER_CLASS_PRIZE_MONEY,
-    ITEMS
+    ITEMS,
+    TM_HM_MOVES
     ;
 
     private GameCodeBinaries pointerLocation;
@@ -28,12 +29,14 @@ public enum Tables
                 PARTY_ICON_PALETTE.pointerLocation = GameCodeBinaries.ARM9;
                 TRAINER_CLASS_GENDER.pointerLocation = GameCodeBinaries.ARM9;
                 TRAINER_CLASS_PRIZE_MONEY.pointerLocation = GameCodeBinaries.BATTLE;
+                TM_HM_MOVES.pointerLocation = GameCodeBinaries.ARM9;
                 ITEMS.pointerLocation = GameCodeBinaries.ARM9;
                 switch (baseROM.getRegion()) {
                     case USA -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x079f80;
                         TRAINER_CLASS_PRIZE_MONEY.pointerOffset = 0x816c;
                         TRAINER_CLASS_GENDER.pointerOffset = 0x793b4;
+                        TM_HM_MOVES.pointerOffset = 0x07d288;
                     }
                     case GERMANY -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x07a020;
@@ -75,10 +78,12 @@ public enum Tables
             case HeartGold -> {
                 PARTY_ICON_PALETTE.pointerLocation = GameCodeBinaries.ARM9;
                 TRAINER_CLASS_GENDER.pointerLocation = GameCodeBinaries.ARM9;
+                TM_HM_MOVES.pointerLocation = GameCodeBinaries.ARM9;
                 switch (baseROM.getRegion()) {
                     case USA -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x074408;
                         TRAINER_CLASS_GENDER.pointerOffset = 0x073600;
+                        TM_HM_MOVES.pointerOffset = 0x078020;
                     }
                     case GERMANY -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x074408;
