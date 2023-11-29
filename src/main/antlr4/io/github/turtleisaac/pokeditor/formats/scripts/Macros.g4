@@ -13,7 +13,7 @@ argument_definition : NAME ('=' number_or_argument)? ',' ;
 id_line : WHITESPACE*? SHORT WHITESPACE NUMBER NEWLINE ;
 
 write_line : WHITESPACE*? write NEWLINE;
-call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input_2 ','))* (WHITESPACE (input_2 NEWLINE))? ;
+call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input_2 ','))* (WHITESPACE (input_2 NEWLINE))? NEWLINE? ;
 else_line : WHITESPACE*? ELSE NEWLINE ;
 if_line : WHITESPACE*? IF WHITESPACE*? compare NEWLINE ;
 endif_line : WHITESPACE*? ENDIF NEWLINE ;
@@ -23,7 +23,7 @@ else_block : else_line (write_line | call_line | if_block)*? endif_line ;
 
 end : WHITESPACE*? END_MACRO NEWLINE?? ;
 
-write : (BYTE | SHORT | WORD) WHITESPACE input_2 ;
+write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? input_2 ',')* (WHITESPACE*? input_2) ;
 
 number_or_argument : (ARGUMENT_USAGE | NUMBER | CURRENT_OFFSET | NAME) ;
 bare_input : algebra | number_or_argument ;
@@ -33,11 +33,10 @@ wrapped_input : (number_or_argument | '(' algebra ')') ;
 //comparator
 algebra : algebra WHITESPACE*? ALGEBRAIC_OPERATOR WHITESPACE*? algebra | number_or_argument ;
 
-bare_compare : bare_compare WHITESPACE*? COMPARATOR WHITESPACE*? bare_compare
-             | bare_compare WHITESPACE*? AND_OR WHITESPACE*? bare_compare
+compare : '(' compare ')'
+             | compare WHITESPACE*? COMPARATOR WHITESPACE*? compare
+             | compare WHITESPACE*? AND_OR WHITESPACE*? compare
              | number_or_argument ;
-
-compare : ('(' compare ')' | bare_compare ) ;
 
 /*
  * Lexer Rules
