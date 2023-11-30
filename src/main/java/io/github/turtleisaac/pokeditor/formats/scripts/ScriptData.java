@@ -75,6 +75,50 @@ public class ScriptData extends GenericScriptData
             readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), true);
         }
 
+        for (CommandMacro commandMacro : ScriptParser.convenienceCommands)
+        {
+            boolean matchFound = true;
+            CommandMacro.ConvenienceCommandMacro convenienceCommand = (CommandMacro.ConvenienceCommandMacro) commandMacro;
+            int startIdx = 0;
+            for (; startIdx < size() - convenienceCommand.getCommands().length; startIdx++)
+            {
+                matchFound = true;
+                int convenienceIdx = 0;
+                for (String commandName : convenienceCommand.getCommands())
+                {
+                    ScriptComponent component = get(startIdx + convenienceIdx++);
+                    if (component instanceof ScriptCommand command)
+                    {
+                        if (!commandName.equals(command.getName()))
+                        {
+                            matchFound = false;
+                        }
+                    }
+                    else
+                    {
+                        matchFound = false;
+                    }
+                }
+
+                if (matchFound)
+                {
+                    break;
+                }
+            }
+
+            if (matchFound)
+            {
+                for (int i = 0; i < convenienceCommand.getCommands().length; i++)
+                {
+                    remove(startIdx);
+                }
+                ScriptCommand convenience = new ScriptCommand(convenienceCommand);
+                convenience.name = "*" + convenienceCommand.getName();
+                add(startIdx, convenience);
+                break;
+            }
+        }
+
         for (ScriptComponent component : this) {
             if (component instanceof ScriptCommand command)
                 System.out.println("\t\t" + command.contextualToString(labelOffsets));

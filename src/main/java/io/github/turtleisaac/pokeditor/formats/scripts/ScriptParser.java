@@ -30,7 +30,6 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
-import io.github.turtleisaac.pokeditor.gamedata.Tables;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -41,22 +40,12 @@ public class ScriptParser implements GenericParser<GenericScriptData>
 {
     protected static List<CommandMacro> commandMacros;
     protected static HashMap<Integer, CommandMacro> nativeCommands;
+    protected static List<CommandMacro> convenienceCommands;
 
     static {
-        MacrosLexer lexer = null;
-        try {
-            lexer = new MacrosLexer(CharStreams.fromFileName("HgScriptRaw.txt"));
-        }
-        catch(IOException e) {
-            throw new RuntimeException(e);
-        }
 
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        MacrosParser parser = new MacrosParser(tokens);
-
-        MacrosParser.EntriesContext entryContext = parser.entries();
+        MacrosParser.EntriesContext entryContext = prepareMacros("/data/Scrcmd_Hg.txt");
         CommandDiscoverer visitor = new CommandDiscoverer();
-
         commandMacros = visitor.discoverAllCommands(entryContext);
 
         nativeCommands = new HashMap<>();
@@ -65,6 +54,26 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             if (commandMacro.getId() >= 0)
                 nativeCommands.put(commandMacro.getId(), commandMacro);
         });
+
+        entryContext = prepareMacros("/data/Convenience_Hg.txt");
+        visitor = new CommandDiscoverer.ConvenienceCommandDiscoverer();
+        convenienceCommands = visitor.discoverAllCommands(entryContext);
+    }
+
+    private static MacrosParser.EntriesContext prepareMacros(String path)
+    {
+        MacrosLexer lexer;
+        try {
+            lexer = new MacrosLexer(CharStreams.fromStream(ScriptParser.class.getResourceAsStream(path)));
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        MacrosParser parser = new MacrosParser(tokens);
+
+        return parser.entries();
     }
 
     @Override

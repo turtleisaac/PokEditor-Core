@@ -90,4 +90,19 @@ public class CommandMacro
             return name + " " + Arrays.toString(parameters);
         return name;
     }
+
+    public static class ConvenienceCommandMacro extends CommandMacro
+    {
+        String[] commands;
+
+        public void setCommands(String[] commands)
+        {
+            this.commands = commands;
+        }
+
+        public String[] getCommands()
+        {
+            return commands;
+        }
+    }
 }

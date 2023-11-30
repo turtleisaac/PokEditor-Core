@@ -33,6 +33,8 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
     {
         CommandMacro macro = null;
 
+        ArrayList<String> commandList = new ArrayList<>();
+
         for (ParseTree child : ctx.children)
         {
             if (child instanceof MacrosParser.DefinitionContext)
@@ -52,6 +54,35 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
                     }
                 }));
             }
+            else if (child instanceof MacrosParser.Call_lineContext) {
+                CommandMacro finalMacro = macro;
+                child.accept(new CommandMacroVisitor<Void>()
+                {
+                    @Override
+                    public Void visitCall_line(MacrosParser.Call_lineContext ctx)
+                    {
+                        if (finalMacro instanceof CommandMacro.ConvenienceCommandMacro)
+                        {
+                            for (ParseTree child : ctx.children)
+                            {
+                                if (child instanceof TerminalNodeImpl terminalNode)
+                                {
+                                    if (terminalNode.symbol.getType() == MacrosLexer.NAME) {
+                                        commandList.add(terminalNode.getText());
+                                    }
+                                }
+                            }
+
+                        }
+                        return null;
+                    }
+                });
+            }
+        }
+
+        if (macro instanceof CommandMacro.ConvenienceCommandMacro convenienceMacro)
+        {
+            convenienceMacro.setCommands(commandList.toArray(String[]::new));
         }
 
         return macro;
@@ -60,7 +91,7 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
     @Override
     public CommandMacro visitDefinition(MacrosParser.DefinitionContext ctx)
     {
-        CommandMacro macro = new CommandMacro();
+        CommandMacro macro = getDefault();
         ArrayList<String> parameters = new ArrayList<>();
 
         for (int i = 0; i < ctx.getChildCount(); i++)
@@ -108,26 +139,32 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
         return macro;
     }
 
-    public static void main(String[] args) throws IOException
+    CommandMacro getDefault()
     {
-        MacrosLexer lexer = new MacrosLexer(CharStreams.fromFileName("HgScriptRaw.txt"));
+        return new CommandMacro();
+    }
 
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        MacrosParser parser = new MacrosParser(tokens);
-//        ParseTree parseTree = parser.entry();
-
-        MacrosParser.EntriesContext entryContext = parser.entries();
-        CommandDiscoverer visitor = new CommandDiscoverer();
-
-        List<CommandMacro> commandMacros = visitor.discoverAllCommands(entryContext);
-
-        HashMap<Integer, CommandMacro> commands = new HashMap<>();
-        commandMacros.forEach(commandMacro ->
+    public static class ConvenienceCommandDiscoverer extends CommandDiscoverer
+    {
+        @Override
+        CommandMacro getDefault()
         {
-            if (commandMacro.getId() >= 0)
-                commands.put(commandMacro.getId(), commandMacro);
-        });
+            return new CommandMacro.ConvenienceCommandMacro();
+        }
 
-        System.currentTimeMillis();
+        @Override
+        public CommandMacro visitCall_line(MacrosParser.Call_lineContext ctx)
+        {
+            for (ParseTree child : ctx.children)
+            {
+                if (child instanceof TerminalNodeImpl terminalNode)
+                {
+                    if (terminalNode.symbol.getType() == MacrosLexer.NAME) {
+
+                    }
+                }
+            }
+            return super.visitCall_line(ctx);
+        }
     }
 }
