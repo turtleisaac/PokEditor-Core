@@ -13,7 +13,7 @@ argument_definition : NAME ('=' number_or_argument)? ',' ;
 id_line : WHITESPACE*? SHORT WHITESPACE NUMBER NEWLINE ;
 
 write_line : WHITESPACE*? write NEWLINE;
-call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input_2 ','))* (WHITESPACE (input_2 NEWLINE))? NEWLINE? ;
+call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input ','))* (WHITESPACE (input NEWLINE))? NEWLINE? ;
 else_line : WHITESPACE*? ELSE NEWLINE ;
 if_line : WHITESPACE*? IF WHITESPACE*? compare NEWLINE ;
 endif_line : WHITESPACE*? ENDIF NEWLINE ;
@@ -23,15 +23,18 @@ else_block : else_line (write_line | call_line | if_block)*? endif_line ;
 
 end : WHITESPACE*? END_MACRO NEWLINE?? ;
 
-write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? input_2 ',')* (WHITESPACE*? input_2) ;
+write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? input ',')* (WHITESPACE*? input) ;
 
 number_or_argument : (ARGUMENT_USAGE | NUMBER | CURRENT_OFFSET | NAME) ;
-bare_input : algebra | number_or_argument ;
-input_2 : ('(' input_2 ')' | bare_input ) ;
-wrapped_input : (number_or_argument | '(' algebra ')') ;
+
+input : '(' input ')'
+           | algebra
+           | number_or_argument ;
 
 //comparator
-algebra : algebra WHITESPACE*? ALGEBRAIC_OPERATOR WHITESPACE*? algebra | number_or_argument ;
+algebra : algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
+        | algebra WHITESPACE*? ADD_SUBTRACT WHITESPACE*? algebra
+        | number_or_argument ;
 
 compare : '(' compare ')'
              | compare WHITESPACE*? COMPARATOR WHITESPACE*? compare
@@ -83,7 +86,8 @@ fragment SUBSTRACT : '-' ;
 fragment MULTIPLY : '*' ;
 fragment DIVIDE : '/' ;
 
-ALGEBRAIC_OPERATOR : (ADD | SUBSTRACT | MULTIPLY | DIVIDE) ;
+MULT_DIV : (MULTIPLY | DIVIDE) ;
+ADD_SUBTRACT :  (ADD | SUBSTRACT) ;
 
 CURRENT_OFFSET : '.' ;
 

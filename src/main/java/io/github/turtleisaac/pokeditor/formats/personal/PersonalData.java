@@ -46,35 +46,36 @@ public class PersonalData implements GenericFileData
 
     public PersonalData()
     {
-        hp = 0;
-        atk = 0;
-        def = 0;
-        speed = 0;
-        spAtk = 0;
-        spDef = 0;
-        type1 = 0;
-        type2 = 0;
-        catchRate = 0;
-        baseExp = 0;
-        hpEvYield = 0;
-        atkEvYield = 0;
-        defEvYield = 0;
-        speedEvYield = 0;
-        spAtkEvYield = 0;
-        spDefEvYield = 0;
-        uncommonItem = 0;
-        rareItem = 0;
-        genderRatio = 0;
-        hatchMultiplier = 0;
-        baseHappiness = 0;
-        expRate = 0;
-        eggGroup1 = 0;
-        eggGroup2 = 0;
-        ability1 = 0;
-        ability2 = 0;
-        runChance = 0;
-        dexColor = 0;
-        flip = false;
+//        hp = 0;
+//        atk = 0;
+//        def = 0;
+//        speed = 0;
+//        spAtk = 0;
+//        spDef = 0;
+//        type1 = 0;
+//        type2 = 0;
+//        catchRate = 0;
+//        baseExp = 0;
+//        hpEvYield = 0;
+//        atkEvYield = 0;
+//        defEvYield = 0;
+//        speedEvYield = 0;
+//        spAtkEvYield = 0;
+//        spDefEvYield = 0;
+//        uncommonItem = 0;
+//        rareItem = 0;
+//        genderRatio = 0;
+//        hatchMultiplier = 0;
+//        baseHappiness = 0;
+//        expRate = 0;
+//        eggGroup1 = 0;
+//        eggGroup2 = 0;
+//        ability1 = 0;
+//        ability2 = 0;
+//        runChance = 0;
+//        dexColor = 0;
+//        flip = false;
+        tmCompatibility = new boolean[NUMBER_TMS_HMS];
     }
 
     public PersonalData(BytesDataContainer files)

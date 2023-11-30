@@ -1,0 +1,10 @@
+	; Movement commands
+
+	.macro step type, length
+	.short \type
+	.short \length
+	.endm
+
+	.macro step_end
+	.short 254, 0
+	.endm
