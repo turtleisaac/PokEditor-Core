@@ -28,7 +28,7 @@ public class LevelScriptData extends GenericScriptData
 
         ArrayList<Integer> temp = new ArrayList<>();
 
-        boolean isLevelScript;
+        boolean isLevelScript = true;
         try {
             isLevelScript = isLevelScript(reader, temp);
         }
@@ -36,7 +36,7 @@ public class LevelScriptData extends GenericScriptData
         {
             // in theory should only happen if the file is not a level script?
             // Now this may appear in a few level scripts that don't have a 4-byte aligned "00 00 00 00"
-            throw new RuntimeException(e);
+//            throw new RuntimeException(e);
         }
 
         if (!isLevelScript) {

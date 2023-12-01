@@ -39,7 +39,7 @@ algebra : algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
 compare : '(' compare ')'
              | compare WHITESPACE*? COMPARATOR WHITESPACE*? compare
              | compare WHITESPACE*? AND_OR WHITESPACE*? compare
-             | number_or_argument ;
+             | input ;
 
 /*
  * Lexer Rules

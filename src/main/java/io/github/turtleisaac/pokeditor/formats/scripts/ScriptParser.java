@@ -97,7 +97,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             if (testFileIsLevelScript(subfile))
             {
                 System.out.println(" (Level)");
-//                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
+                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
             }
             else
             {

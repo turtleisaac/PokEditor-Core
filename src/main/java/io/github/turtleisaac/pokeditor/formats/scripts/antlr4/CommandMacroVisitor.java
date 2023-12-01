@@ -97,31 +97,4 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
     protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType) {
         return null;
     }
-
-    @Override
-    public T visitIf_block(MacrosParser.If_blockContext ctx)
-    {
-        boolean result = false;
-        for (ParseTree child : ctx.children)
-        {
-            if (child instanceof MacrosParser.If_lineContext)
-            {
-                result = child.accept(new CommandMacroVisitor<>()
-                {
-                    @Override
-                    public Boolean visitIf_line(MacrosParser.If_lineContext ctx)
-                    {
-                        return super.visitIf_line(ctx);
-                    }
-                });
-            }
-        }
-        return super.visitIf_block(ctx);
-    }
-
-    @Override
-    public T visitCompare(MacrosParser.CompareContext ctx)
-    {
-        return super.visitCompare(ctx);
-    }
 }
