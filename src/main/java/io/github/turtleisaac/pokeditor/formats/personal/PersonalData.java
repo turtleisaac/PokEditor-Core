@@ -75,7 +75,7 @@ public class PersonalData implements GenericFileData
 //        runChance = 0;
 //        dexColor = 0;
 //        flip = false;
-        tmCompatibility = new boolean[NUMBER_TMS_HMS];
+        tmCompatibility = new boolean[NUMBER_TM_HM_BITS];
     }
 
     public PersonalData(BytesDataContainer files)
@@ -246,7 +246,8 @@ public class PersonalData implements GenericFileData
 
     public void setHp(int hp)
     {
-        assert hp < 256;
+        if (hp >= 256)
+            throw new RuntimeException("Maximum HP value is 255. Provided: " + hp);
         this.hp = hp;
     }
 
@@ -257,7 +258,8 @@ public class PersonalData implements GenericFileData
 
     public void setAtk(int atk)
     {
-        assert atk < 256;
+        if (atk >= 256)
+            throw new RuntimeException("Maximum Attack value is 255. Provided: " + atk);
         this.atk = atk;
     }
 
@@ -268,7 +270,8 @@ public class PersonalData implements GenericFileData
 
     public void setDef(int def)
     {
-        assert def < 256;
+        if (def >= 256)
+            throw new RuntimeException("Maximum Defense value is 255. Provided: " + def);
         this.def = def;
     }
 
@@ -279,7 +282,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpeed(int speed)
     {
-        assert speed < 256;
+        if (speed >= 256)
+            throw new RuntimeException("Maximum Speed value is 255. Provided: " + speed);
         this.speed = speed;
     }
 
@@ -290,7 +294,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpAtk(int spAtk)
     {
-        assert spAtk < 256;
+        if (spAtk >= 256)
+            throw new RuntimeException("Maximum Special Attack value is 255. Provided: " + spAtk);
         this.spAtk = spAtk;
     }
 
@@ -301,7 +306,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpDef(int spDef)
     {
-        assert spDef < 256;
+        if (spDef >= 256)
+            throw new RuntimeException("Maximum Special Defense value is 255. Provided: " + spDef);
         this.spDef = spDef;
     }
 
@@ -312,7 +318,8 @@ public class PersonalData implements GenericFileData
 
     public void setType1(int type1)
     {
-        assert type1 < 256; // TODO have a way to know for certain the number of types
+        if (type1 >= 19)  // TODO have a way to know for certain the number of types
+            throw new RuntimeException("Maximum type value is 18. Provided: " + type1);
         this.type1 = type1;
     }
 
@@ -323,7 +330,8 @@ public class PersonalData implements GenericFileData
 
     public void setType2(int type2)
     {
-        assert type2 < 256; // TODO have a way to know for certain the number of types
+        if (type2 >= 19)  // TODO have a way to know for certain the number of types
+            throw new RuntimeException("Maximum type value is 18. Provided: " + type2);
         this.type2 = type2;
     }
 
@@ -334,7 +342,8 @@ public class PersonalData implements GenericFileData
 
     public void setCatchRate(int catchRate)
     {
-        assert catchRate < 256;
+        if (catchRate >= 256)
+            throw new RuntimeException("Maximum catch rate value is 255. Provided: " + catchRate);
         this.catchRate = catchRate;
     }
 
@@ -345,7 +354,8 @@ public class PersonalData implements GenericFileData
 
     public void setBaseExp(int baseExp)
     {
-        assert baseExp < 256;
+        if (baseExp >= 256)
+            throw new RuntimeException("Maximum exp yield value is 255. Provided: " + baseExp);
         this.baseExp = baseExp;
     }
 
@@ -356,7 +366,8 @@ public class PersonalData implements GenericFileData
 
     public void setHpEvYield(int hpEvYield)
     {
-        assert hpEvYield < 4;
+        if (hpEvYield >= 5)
+            throw new RuntimeException("Maximum HP EV yield value is 4. Provided: " + hpEvYield);
         this.hpEvYield = hpEvYield;
     }
 
@@ -367,7 +378,8 @@ public class PersonalData implements GenericFileData
 
     public void setAtkEvYield(int atkEvYield)
     {
-        assert atkEvYield < 4;
+        if (atkEvYield >= 5)
+            throw new RuntimeException("Maximum Attack EV yield value is 4. Provided: " + atkEvYield);
         this.atkEvYield = atkEvYield;
     }
 
@@ -378,7 +390,8 @@ public class PersonalData implements GenericFileData
 
     public void setDefEvYield(int defEvYield)
     {
-        assert defEvYield < 4;
+        if (defEvYield >= 5)
+            throw new RuntimeException("Maximum Defense EV yield value is 4. Provided: " + defEvYield);
         this.defEvYield = defEvYield;
     }
 
@@ -389,7 +402,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpeedEvYield(int speedEvYield)
     {
-        assert speedEvYield < 4;
+        if (speedEvYield >= 5)
+            throw new RuntimeException("Maximum Speed EV yield value is 4. Provided: " + speedEvYield);
         this.speedEvYield = speedEvYield;
     }
 
@@ -400,7 +414,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpAtkEvYield(int spAtkEvYield)
     {
-        assert spAtkEvYield < 4;
+        if (spAtkEvYield >= 5)
+            throw new RuntimeException("Maximum Special Attack EV yield value is 4. Provided: " + spAtkEvYield);
         this.spAtkEvYield = spAtkEvYield;
     }
 
@@ -411,7 +426,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpDefEvYield(int spDefEvYield)
     {
-        assert spDefEvYield < 4;
+        if (spDefEvYield >= 5)
+            throw new RuntimeException("Maximum Special Defense EV yield value is 4. Provided: " + spDefEvYield);
         this.spDefEvYield = spDefEvYield;
     }
 
@@ -422,7 +438,8 @@ public class PersonalData implements GenericFileData
 
     public void setUncommonItem(int uncommonItem)
     {
-        assert uncommonItem < 65535;
+        if (uncommonItem >= 65536)
+            throw new RuntimeException("Maximum uncommon held item value is 65535. Provided: " + uncommonItem);
         this.uncommonItem = uncommonItem;
     }
 
@@ -433,7 +450,8 @@ public class PersonalData implements GenericFileData
 
     public void setRareItem(int rareItem)
     {
-        assert rareItem < 65535;
+        if (rareItem >= 65536)
+            throw new RuntimeException("Maximum rare held item value is 65535. Provided: " + rareItem);
         this.rareItem = rareItem;
     }
 
@@ -444,7 +462,8 @@ public class PersonalData implements GenericFileData
 
     public void setGenderRatio(int genderRatio)
     {
-        assert genderRatio < 256;
+        if (genderRatio >= 256)
+            throw new RuntimeException("Maximum gender ratio value is 255. Provided: " + genderRatio);
         this.genderRatio = genderRatio;
     }
 
@@ -455,7 +474,8 @@ public class PersonalData implements GenericFileData
 
     public void setHatchMultiplier(int hatchMultiplier)
     {
-        assert hatchMultiplier < 256;
+        if (hatchMultiplier >= 256)
+            throw new RuntimeException("Maximum hatch multiplier value is 255. Provided: " + hatchMultiplier);
         this.hatchMultiplier = hatchMultiplier;
     }
 
@@ -466,7 +486,8 @@ public class PersonalData implements GenericFileData
 
     public void setBaseHappiness(int baseHappiness)
     {
-        assert baseHappiness < 256;
+        if (baseHappiness >= 256)
+            throw new RuntimeException("Maximum base happiness value is 255. Provided: " + baseHappiness);
         this.baseHappiness = baseHappiness;
     }
 
@@ -477,7 +498,8 @@ public class PersonalData implements GenericFileData
 
     public void setExpRate(int expRate)
     {
-        assert expRate < 256;
+        if (expRate >= 256)
+            throw new RuntimeException("Maximum exp rate value is 255. Provided: " + expRate);
         this.expRate = expRate;
     }
 
@@ -488,7 +510,8 @@ public class PersonalData implements GenericFileData
 
     public void setEggGroup1(int eggGroup1)
     {
-        assert eggGroup1 < 256;
+        if (eggGroup1 >= 256)
+            throw new RuntimeException("Maximum egg group value is 255. Provided: " + eggGroup1);
         this.eggGroup1 = eggGroup1;
     }
 
@@ -499,7 +522,8 @@ public class PersonalData implements GenericFileData
 
     public void setEggGroup2(int eggGroup2)
     {
-        assert eggGroup2 < 256;
+        if (eggGroup2 >= 256)
+            throw new RuntimeException("Maximum egg group value is 255. Provided: " + eggGroup2);
         this.eggGroup2 = eggGroup2;
     }
 
@@ -510,7 +534,8 @@ public class PersonalData implements GenericFileData
 
     public void setAbility1(int ability1)
     {
-        assert ability1 < 256;
+        if (ability1 >= 256)
+            throw new RuntimeException("Maximum ability value is 255. Provided: " + ability1);
         this.ability1 = ability1;
     }
 
@@ -521,7 +546,8 @@ public class PersonalData implements GenericFileData
 
     public void setAbility2(int ability2)
     {
-        assert ability2 < 256;
+        if (ability2 >= 256)
+            throw new RuntimeException("Maximum ability value is 255. Provided: " + ability2);
         this.ability2 = ability2;
     }
 
@@ -532,7 +558,8 @@ public class PersonalData implements GenericFileData
 
     public void setRunChance(int runChance)
     {
-        assert runChance < 256;
+        if (runChance >= 256)
+            throw new RuntimeException("Maximum run chance value is 255. Provided: " + runChance);
         this.runChance = runChance;
     }
 
@@ -543,7 +570,8 @@ public class PersonalData implements GenericFileData
 
     public void setDexColor(int dexColor)
     {
-        assert dexColor < 256;
+        if (dexColor >= 129)
+            throw new RuntimeException("Maximum dex color value is 128. Provided: " + dexColor);
         this.dexColor = dexColor;
     }
 
