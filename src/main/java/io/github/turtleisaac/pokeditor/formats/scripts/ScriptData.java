@@ -6,13 +6,17 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.function.IntPredicate;
 
 public class ScriptData extends GenericScriptData
 {
     private static final IntPredicate isCallCommand = commandID -> commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B;
     private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x16 || commandId == 0x1B;
+
+    private ArrayList<ScriptLabel> scripts;
+    private ArrayList<ScriptLabel> labels;
 
     public ScriptData(BytesDataContainer files)
     {
@@ -26,6 +30,9 @@ public class ScriptData extends GenericScriptData
         {
             throw new RuntimeException("Script file not provided to editor");
         }
+
+        scripts = new ArrayList<>();
+        labels = new ArrayList<>();
 
         MemBuf dataBuf = MemBuf.create(files.get(GameFiles.SCRIPTS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
@@ -50,20 +57,40 @@ public class ScriptData extends GenericScriptData
         ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
         ArrayList<Integer> visitedOffsets = new ArrayList<>();
 
+        HashMap<Integer, ScriptLabel> labelMap = new HashMap<>();
+
         int lastSize;
         do {
             lastSize = labelOffsets.size();
             for (int i = 0; i < labelOffsets.size(); i++)
             {
-                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), false);
+                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
             }
         }
         while (lastSize != labelOffsets.size());
 
-//        labelOffsets.sort(Comparator.naturalOrder());
+        labelOffsets.sort(Comparator.naturalOrder());
         for (int i = 0; i < labelOffsets.size(); i++)
         {
-            readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), true);
+            readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+        }
+
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof ScriptCommand command)
+            {
+                if (command.parameters != null)
+                {
+                    for (int i = 0; i < command.parameters.length; i++)
+                    {
+                        String paramName = command.commandMacro.getParameters()[i];
+                        if (paramName.contains("dest") || paramName.contains("sub"))
+                        {
+                            command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
+                        }
+                    }
+                }
+            }
         }
 
 //        findAndReplaceSequencesWithConvenienceCommands();
@@ -76,7 +103,7 @@ public class ScriptData extends GenericScriptData
 //        }
     }
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> visitedOffsets, int offset, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -87,13 +114,22 @@ public class ScriptData extends GenericScriptData
 
         while (reader.getPosition() < dataBuf.writer().getPosition())
         {
-            if (finalRun)
+            if (finalRun && !visitedOffsets.contains(reader.getPosition()))
             {
                 visitedOffsets.add(reader.getPosition());
                 if (globalScriptOffsets.contains(reader.getPosition())) {
-                    add(new ScriptLabel("script(" + globalScriptOffsets.indexOf(reader.getPosition()) + ") label_" + Integer.toHexString(reader.getPosition())));
+                    ScriptLabel scriptLabel = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
+                    scripts.add(scriptLabel);
+                    labels.add(scriptLabel);
+                    scriptLabel.name = "label_" + scripts.indexOf(scriptLabel);
+                    labelMap.put(reader.getPosition(), scriptLabel);
+//                    add(new ScriptLabel("script(" + globalScriptOffsets.indexOf(reader.getPosition()) + ") label_" + Integer.toHexString(reader.getPosition())));
+                    add(scriptLabel);
                 } else if (labelOffsets.contains(reader.getPosition())) {
-                    add(new ScriptLabel("label_" + Integer.toHexString(reader.getPosition())));
+                    ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
+                    labels.add(label);
+                    labelMap.put(reader.getPosition(), label);
+                    add(label);
                 }
             }
 
@@ -192,11 +228,21 @@ public class ScriptData extends GenericScriptData
         return new BytesDataContainer(GameFiles.SCRIPTS, null, dataBuf.reader().getBuffer());
     }
 
-    interface ScriptComponent {
+    public ArrayList<ScriptLabel> getScripts()
+    {
+        return scripts;
+    }
+
+    public ArrayList<ScriptLabel> getLabels()
+    {
+        return labels;
+    }
+
+    public interface ScriptComponent {
         String getName();
     }
 
-    static class ScriptLabel implements ScriptComponent {
+    public static class ScriptLabel implements ScriptComponent {
         private String name;
 
         public ScriptLabel(String name)
@@ -217,9 +263,9 @@ public class ScriptData extends GenericScriptData
         }
     }
 
-    static class ScriptCommand implements ScriptComponent {
+    public static class ScriptCommand implements ScriptComponent {
         String name;
-        Number[] parameters;
+        Object[] parameters;
 
         private CommandMacro commandMacro;
 
@@ -236,12 +282,16 @@ public class ScriptData extends GenericScriptData
             StringBuilder builder = new StringBuilder(name).append(" [");
             for (int i = 0; i < parameters.length; i++)
             {
-                if ((int) parameters[i] >= 0x4000)
+                if (parameters[i] instanceof Integer val)
                 {
-                    if (parameters[i] == null) {
-                        System.currentTimeMillis();
+                    if (val >= 0x4000)
+                    {
+                        builder.append("0x").append(Integer.toHexString((int) parameters[i]));
                     }
-                    builder.append("0x").append(Integer.toHexString((int) parameters[i]));
+                    else
+                    {
+                        builder.append(parameters[i]);
+                    }
                 }
                 else
                 {
@@ -257,42 +307,72 @@ public class ScriptData extends GenericScriptData
             return builder.append("]").toString();
         }
 
-        public String contextualToString(List<Integer> offsets)
-        {
-            if (!isCallCommand.test(commandMacro.getId())) {
-                return toString();
-            }
-
-            StringBuilder builder = new StringBuilder(name).append(" [");
-            for (int i = 0; i < parameters.length; i++)
-            {
-                String paramName = commandMacro.getParameters()[i];
-                if ((int) parameters[i] >= 0x4000)
-                {
-                    builder.append("0x").append(Integer.toHexString((int) parameters[i]));
-                }
-                else if (paramName.contains("dest") || paramName.contains("sub"))
-                {
-                    builder.append("label_").append(Integer.toHexString((int) parameters[i]));
-                }
-                else
-                {
-                    builder.append(parameters[i]);
-                }
-
-                if (i != parameters.length - 1)
-                {
-                    builder.append(", ");
-                }
-            }
-
-            return builder.append("]").toString();
-        }
+//        public String contextualToString(List<Integer> offsets)
+//        {
+//            if (!isCallCommand.test(commandMacro.getId())) {
+//                return toString();
+//            }
+//
+//            StringBuilder builder = new StringBuilder(name).append(" [");
+//            for (int i = 0; i < parameters.length; i++)
+//            {
+//                String paramName = commandMacro.getParameters()[i];
+//                if ((int) parameters[i] >= 0x4000)
+//                {
+//                    builder.append("0x").append(Integer.toHexString((int) parameters[i]));
+//                }
+//                else if (paramName.contains("dest") || paramName.contains("sub"))
+//                {
+//                    builder.append("label_").append(Integer.toHexString((int) parameters[i]));
+//                }
+//                else
+//                {
+//                    builder.append(parameters[i]);
+//                }
+//
+//                if (i != parameters.length - 1)
+//                {
+//                    builder.append(", ");
+//                }
+//            }
+//
+//            return builder.append("]").toString();
+//        }
 
         @Override
         public String getName()
         {
             return name;
+        }
+
+        public String[] getParameterStrings()
+        {
+            if (parameters == null)
+                return new String[] {};
+
+            String[] parameterStrings = new String[parameters.length];
+
+//            StringBuilder builder = new StringBuilder(name).append(" [");
+            for (int i = 0; i < parameters.length; i++)
+            {
+                if (parameters[i] instanceof Integer val)
+                {
+                    if (val >= 0x4000)
+                    {
+                        parameterStrings[i] = "0x" + Integer.toHexString((int) parameters[i]);
+                    }
+                    else
+                    {
+                        parameterStrings[i] = String.valueOf(parameters[i]);
+                    }
+                }
+                else
+                {
+                    parameterStrings[i] = String.valueOf(parameters[i]);
+                }
+            }
+
+            return parameterStrings;
         }
     }
 

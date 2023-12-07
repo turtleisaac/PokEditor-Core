@@ -14,14 +14,14 @@ public class CommandMacro
     private MacrosParser.EntryContext entryContext;
 
 
-    public Number[] readParameters(MemBuf.MemBufReader reader)
+    public Object[] readParameters(MemBuf.MemBufReader reader)
     {
         CommandReader commandReader = new CommandReader(reader, this);
         commandReader.visitEntry(entryContext);
 
         if (parameters.length != 0)
         {
-            Number[] arr = new Number[parameters.length];
+            Object[] arr = new Object[parameters.length];
 
             int idx = 0;
             for (String parameter : parameters) {

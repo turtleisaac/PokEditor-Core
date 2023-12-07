@@ -38,9 +38,9 @@ import java.util.*;
 
 public class ScriptParser implements GenericParser<GenericScriptData>
 {
-    protected static List<CommandMacro> commandMacros;
-    protected static HashMap<Integer, CommandMacro> nativeCommands;
-    protected static List<CommandMacro> convenienceCommands;
+    public static List<CommandMacro> commandMacros;
+    public static HashMap<Integer, CommandMacro> nativeCommands;
+    public static List<CommandMacro> convenienceCommands;
 
     static {
 
@@ -90,18 +90,18 @@ public class ScriptParser implements GenericParser<GenericScriptData>
         int i = 0;
         for (byte[] subfile : scripts.getFiles())
         {
-            System.out.print(i);
+//            System.out.print(i);
             if (i == 266) {
                 System.currentTimeMillis();
             }
             if (testFileIsLevelScript(subfile))
             {
-                System.out.println(" (Level)");
+//                System.out.println(" (Level)");
                 data.add(new LevelScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
             }
             else
             {
-                System.out.println(" (Normal)");
+//                System.out.println(" (Normal)");
                 data.add(new ScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
             }
             i++;
