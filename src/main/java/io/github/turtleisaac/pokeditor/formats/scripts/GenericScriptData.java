@@ -3,7 +3,6 @@ package io.github.turtleisaac.pokeditor.formats.scripts;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
-import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,13 @@ import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIP
 
 public abstract class GenericScriptData extends ArrayList<ScriptData.ScriptComponent> implements GenericFileData
 {
+    private ArrayList<ScriptComponent> components = new ArrayList<>();
+
+    public GenericScriptData()
+    {
+
+    }
+
     public GenericScriptData(BytesDataContainer files)
     {
         setData(files);
@@ -40,5 +46,44 @@ public abstract class GenericScriptData extends ArrayList<ScriptData.ScriptCompo
                 globalScriptOffsets.add(offsetFromStart);
             }
         }
+    }
+
+//    public void add(ScriptComponent scriptComponent)
+//    {
+//        components.add(scriptComponent);
+//    }
+//
+//    public void add(int index, ScriptComponent scriptComponent)
+//    {
+//        components.add(index, scriptComponent);
+//    }
+//
+//    public ScriptComponent get(int index)
+//    {
+//        return components.get(index);
+//    }
+//
+//    public ScriptComponent remove(int index)
+//    {
+//        return components.remove(index);
+//    }
+//
+//    public int size()
+//    {
+//        return components.size();
+//    }
+//
+//    public Iterable<ScriptComponent> iterable()
+//    {
+//        return components;
+//    }
+//
+//    public boolean isEmpty()
+//    {
+//        return components.isEmpty();
+//    }
+
+    public interface ScriptComponent {
+        String getName();
     }
 }

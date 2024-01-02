@@ -88,6 +88,59 @@
 	call_if 0, \dest
 	.endm
 
+	.macro item_vars item, quantity=1
+	.if \item < 0x4000
+	setvar VAR_SPECIAL_x8004, \item
+	.else
+	copyvar VAR_SPECIAL_x8004, \item
+	.endif
+	.if \quantity < 0x4000
+	setvar VAR_SPECIAL_x8005, \quantity
+	.else
+	copyvar VAR_SPECIAL_x8005, \quantity
+	.endif
+	.endm
+
+	.macro goto_if_no_item_space item, quantity, target
+	item_vars \item, \quantity
+	hasspaceforitem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT
+	compare VAR_SPECIAL_RESULT, 0
+	goto_if eq, \target
+	.endm
+
+	.macro goto_if_no_item_space_2 item, quantity, target
+	item_vars \item, \quantity
+	hasspaceforitem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT
+	compare VAR_SPECIAL_RESULT, 1
+	goto_if ne, \target
+	.endm
+
+	.macro giveitem_no_check item, quantity
+	item_vars \item, \quantity
+	callstd std_give_item_verbose
+	.endm
+
+	.macro takeitem_no_check item, quantity
+	item_vars \item, \quantity
+	takeitem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT
+	.endm
+
+	.macro switch var
+	copyvar VAR_SPECIAL_x8008, \var
+	.endm
+
+	.macro case value, target
+	compare VAR_SPECIAL_x8008, \value
+	goto_if eq, \target
+	.endm
+
+	.macro phone_call who, b, c
+	setvar VAR_SPECIAL_x8004, \who
+	setvar VAR_SPECIAL_x8005, \b
+	setvar VAR_SPECIAL_x8006, \c
+	callstd std_phone_call
+	.endm
+
 	.macro simple_npc_msg msgid
 	play_se SEQ_SE_DP_SELECT
 	lockall

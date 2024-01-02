@@ -19,6 +19,9 @@
 
 package io.github.turtleisaac.pokeditor.formats.scripts;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.turtleisaac.nds4j.Fnt;
 import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.binaries.CodeBinary;
@@ -28,12 +31,15 @@ import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
+import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ScriptParser implements GenericParser<GenericScriptData>
@@ -41,6 +47,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     public static List<CommandMacro> commandMacros;
     public static HashMap<Integer, CommandMacro> nativeCommands;
     public static List<CommandMacro> convenienceCommands;
+    public static HashMap<Integer, String> movementNames;
 
     static {
 
@@ -48,16 +55,50 @@ public class ScriptParser implements GenericParser<GenericScriptData>
         CommandDiscoverer visitor = new CommandDiscoverer();
         commandMacros = visitor.discoverAllCommands(entryContext);
 
+        String[] alternateNames;
+        try {
+            alternateNames = new String(ScriptParser.class.getResourceAsStream("/data/AlternateNames_Hg.txt").readAllBytes()).split("\n");
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+
         nativeCommands = new HashMap<>();
         commandMacros.forEach(commandMacro ->
         {
             if (commandMacro.getId() >= 0)
+            {
                 nativeCommands.put(commandMacro.getId(), commandMacro);
+                String name = alternateNames[commandMacro.getId()];
+                if (!name.isEmpty())
+                    commandMacro.setName(name);
+            }
         });
 
         entryContext = prepareMacros("/data/Convenience_Hg.txt");
         visitor = new CommandDiscoverer.ConvenienceCommandDiscoverer();
         convenienceCommands = visitor.discoverAllCommands(entryContext);
+
+        InputStream inputStream = TextBankData.class.getResourceAsStream("/data/Movements_Hg.json");
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+        JsonNode movements;
+
+        try {
+            movements = objectMapper.readTree(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
+            inputStream.close();
+        }
+        catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        movementNames = new HashMap<>();
+        for (int i = 0; i < 255; i++)
+        {
+            JsonNode node = movements.get(String.valueOf(i));
+            if (node != null)
+                movementNames.put(i, node.asText());
+        }
     }
 
     private static MacrosParser.EntriesContext prepareMacros(String path)

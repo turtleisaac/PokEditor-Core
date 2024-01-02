@@ -33,10 +33,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     @Override
     protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType)
     {
-        if (macro.getName().contains("goto"))
-        {
-            System.currentTimeMillis();
-        }
         parameterType = dataType;
         Integer ret = inputContext.accept(this);
 
@@ -115,11 +111,8 @@ public class CommandReader extends CommandMacroVisitor<Integer>
                 return (int) parameterToValueMap.get(terminalNode.getText().substring(1));
             }
         } else if (terminalNode.symbol.getType() == MacrosLexer.NUMBER) {
-            int val = Integer.parseInt(terminalNode.getText());
-//            System.out.println("read value: " + val);
             return Integer.parseInt(terminalNode.getText());
         } else if (terminalNode.symbol.getType() == MacrosLexer.CURRENT_OFFSET) {
-//            System.out.println("current pos: " + reader.getPosition());
             return reader.getPosition() - 4;
         }
 

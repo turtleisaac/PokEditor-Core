@@ -8,19 +8,39 @@ import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.IntPredicate;
 
 public class ScriptData extends GenericScriptData
 {
     private static final IntPredicate isCallCommand = commandID -> commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B;
     private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x16 || commandId == 0x1B;
+    private static final IntPredicate isDoIfCommand = commandID -> commandID == 28 || commandID == 29 || commandID == 225;
+    private static final IntPredicate isMovementCommand = commandID -> commandID == 0x5E;
+    private static final IntPredicate isEndMovementCommand = commandID -> commandID == 0xFE;
+//    private static final IntPredicate isOverworldObjectCommand
+
+    private static final Map<Integer, String> overworldNames = new HashMap<>();
+
+    static {
+        overworldNames.put(250, "Daycare1");
+        overworldNames.put(251, "Daycare2");
+        overworldNames.put(253, "Follower");
+        overworldNames.put(255, "Player");
+    }
 
     private ArrayList<ScriptLabel> scripts;
     private ArrayList<ScriptLabel> labels;
+    private ArrayList<ActionLabel> actions;
 
     public ScriptData(BytesDataContainer files)
     {
         super(files);
+    }
+
+    public ScriptData()
+    {
+        super();
     }
 
     @Override
@@ -33,6 +53,7 @@ public class ScriptData extends GenericScriptData
 
         scripts = new ArrayList<>();
         labels = new ArrayList<>();
+        actions = new ArrayList<>();
 
         MemBuf dataBuf = MemBuf.create(files.get(GameFiles.SCRIPTS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
@@ -55,16 +76,19 @@ public class ScriptData extends GenericScriptData
         }
 
         ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
+        ArrayList<Integer> actionOffsets = new ArrayList<>();
         ArrayList<Integer> visitedOffsets = new ArrayList<>();
 
         HashMap<Integer, ScriptLabel> labelMap = new HashMap<>();
+        HashMap<Integer, ActionLabel> actionMap = new HashMap<>();
 
         int lastSize;
         do {
             lastSize = labelOffsets.size();
             for (int i = 0; i < labelOffsets.size(); i++)
             {
-                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
+                if (!actionOffsets.contains(labelOffsets.get(i)))
+                    readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
             }
         }
         while (lastSize != labelOffsets.size());
@@ -72,7 +96,10 @@ public class ScriptData extends GenericScriptData
         labelOffsets.sort(Comparator.naturalOrder());
         for (int i = 0; i < labelOffsets.size(); i++)
         {
-            readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+            if (!actionOffsets.contains(labelOffsets.get(i)))
+                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+            else
+                readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
 
         for (ScriptComponent component : this)
@@ -81,12 +108,35 @@ public class ScriptData extends GenericScriptData
             {
                 if (command.parameters != null)
                 {
-                    for (int i = 0; i < command.parameters.length; i++)
+                    if (isCallCommand.test(command.commandMacro.getId()))
                     {
-                        String paramName = command.commandMacro.getParameters()[i];
-                        if (paramName.contains("dest") || paramName.contains("sub"))
+                        for (int i = 0; i < command.parameters.length; i++)
                         {
-                            command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
+                            String paramName = command.commandMacro.getParameters()[i];
+                            if ((paramName.contains("dest") || paramName.contains("sub")))
+                            {
+                                command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
+                            }
+                        }
+                    }
+                    else if (isMovementCommand.test(command.commandMacro.getId()))
+                    {
+                        for (int i = 0; i < command.parameters.length; i++)
+                        {
+                            String paramName = command.commandMacro.getParameters()[i];
+                            if ((paramName.contains("dest") || paramName.contains("sub")))
+                            {
+                                command.parameters[i] = "action_" + actions.indexOf(actionMap.get((Integer) command.parameters[i]));
+                            }
+                            else if (paramName.contains("overworld"))
+                            {
+                                if ((int) command.parameters[i] < 0x4000)
+                                {
+                                    String valueName = overworldNames.get((int) command.parameters[i]);
+                                    command.parameters[i] = "Overworld." + (valueName != null ? valueName : command.parameters[i]);
+                                }
+
+                            }
                         }
                     }
                 }
@@ -103,7 +153,7 @@ public class ScriptData extends GenericScriptData
 //        }
     }
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -121,7 +171,7 @@ public class ScriptData extends GenericScriptData
                     ScriptLabel scriptLabel = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
                     scripts.add(scriptLabel);
                     labels.add(scriptLabel);
-                    scriptLabel.name = "label_" + scripts.indexOf(scriptLabel);
+                    scriptLabel.name = "label_" + labels.indexOf(scriptLabel);
                     labelMap.put(reader.getPosition(), scriptLabel);
 //                    add(new ScriptLabel("script(" + globalScriptOffsets.indexOf(reader.getPosition()) + ") label_" + Integer.toHexString(reader.getPosition())));
                     add(scriptLabel);
@@ -129,7 +179,13 @@ public class ScriptData extends GenericScriptData
                     ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
                     labels.add(label);
                     labelMap.put(reader.getPosition(), label);
+                    label.name = "label_" + labels.indexOf(label);
                     add(label);
+                } else if (actionOffsets.contains(reader.getPosition())) {
+                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
+                    actions.add(actionLabel);
+                    actionLabel.name = "action_" + actions.indexOf(actionLabel);
+                    add(actionLabel);
                 }
             }
 
@@ -147,16 +203,38 @@ public class ScriptData extends GenericScriptData
 
             command.parameters = commandMacro.readParameters(reader);
 
-            if (command.parameters != null)
+//            if (command.parameters != null)
+//            {
+//                for (int i = 0; i < command.parameters.length; i++)
+//                {
+//                    if (command.parameters[i] == null) {
+//                        System.currentTimeMillis();
+//                    }
+//                }
+//            }
+
+            if (isDoIfCommand.test(commandID))
             {
-                for (int i = 0; i < command.parameters.length; i++)
+                command.parameters[0] = switch ((Integer) command.parameters[0])
                 {
-                    if (command.parameters[i] == null) {
-                        System.currentTimeMillis();
-                    }
-                }
+                    case 0 -> "LESS";
+                    case 1 -> "EQUAL";
+                    case 2 -> "GREATER";
+                    case 3 -> "LESS_OR_EQUAL";
+                    case 4 -> "GREATER_OR_EQUAL";
+                    case 5 -> "DIFFERENT";
+                    default -> throw new IllegalStateException("Unexpected value: " + (Integer) command.parameters[0]);
+                };
             }
 
+            if (isMovementCommand.test(commandID)) {
+                int offsetParam = (int) command.parameters[command.parameters.length-1];
+                if (!actionOffsets.contains(offsetParam))
+                {
+                    actionOffsets.add(offsetParam);
+                    labelOffsets.add(offsetParam);
+                }
+            }
 
             if (isCallCommand.test(commandID)) {
                 int offsetParam = (int) command.parameters[command.parameters.length-1];
@@ -169,6 +247,56 @@ public class ScriptData extends GenericScriptData
 
             if (isEndCommand.test(commandID))
                 break;
+        }
+    }
+
+    private void readActionAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, ActionLabel> actionMap, int offset)
+    {
+        MemBuf.MemBufReader reader = dataBuf.reader();
+        if (visitedOffsets.contains(offset)) {
+            return;
+        }
+
+        reader.setPosition(offset);
+
+        while (reader.getPosition() < dataBuf.writer().getPosition())
+        {
+            if (!visitedOffsets.contains(reader.getPosition()))
+            {
+                visitedOffsets.add(reader.getPosition());
+                if (actionOffsets.contains(reader.getPosition()))
+                {
+                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
+                    actions.add(actionLabel);
+                    actionMap.put(reader.getPosition(), actionLabel);
+                    actionLabel.name = "action_" + actions.indexOf(actionLabel);
+                    add(actionLabel);
+                }
+            }
+
+            int commandID = reader.readUInt16();
+            int parameter = reader.readUInt16();
+
+            String name = ScriptParser.movementNames.get(commandID);
+            if (name != null)
+                add(new ActionCommand(name, parameter));
+            else
+                add(new ActionCommand(commandID, parameter));
+
+            if (isEndMovementCommand.test(commandID))
+            {
+                break;
+            }
+
+//            CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID); //todo change to movement commands
+//            if (commandMacro == null) {
+//                System.currentTimeMillis();
+//            }
+//
+//            ScriptCommand command = new ScriptCommand(commandMacro);
+//            command.name = commandMacro.getName();
+//
+//            command.parameters = commandMacro.readParameters(reader);
         }
     }
 
@@ -233,13 +361,72 @@ public class ScriptData extends GenericScriptData
         return scripts;
     }
 
-    public ArrayList<ScriptLabel> getLabels()
+//    public ArrayList<ScriptLabel> getLabels()
+//    {
+//        return labels;
+//    }
+
+
+    public void setScripts(ArrayList<ScriptLabel> scripts)
     {
-        return labels;
+        this.scripts = scripts;
     }
 
-    public interface ScriptComponent {
-        String getName();
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        for (ScriptData.ScriptComponent component : this)
+        {
+            if (component instanceof ScriptData.ScriptLabel label)
+            {
+//                        if (scriptData.getScripts().contains(label))
+//                        {
+//                            builder.append("script(").append(scriptData.getScripts().indexOf(label) + 1).append(") ");
+//                            builder.append(label.getName()).append(":\n");
+//                        }
+//                        else
+//                        {
+//                            builder.append(label).append("\n");
+//                        }
+
+                if (getScripts().contains(label))
+                {
+                    builder.append("script(").append(getScripts().indexOf(label) + 1).append(") ");
+                }
+                builder.append(label.getName()).append(":\n");
+            }
+            else if (component instanceof ScriptData.ScriptCommand scriptCommand)
+            {
+                builder.append("    ").append(scriptCommand.getName());
+                String[] parameters = scriptCommand.getParameterStrings();
+
+                for (String parameter : parameters) {
+                    builder.append(" ").append(parameter);
+                }
+
+                if (scriptCommand.getName().equalsIgnoreCase("end") || scriptCommand.getName().equalsIgnoreCase("goto") || scriptCommand.getName().equalsIgnoreCase("Jump") || scriptCommand.getName().equalsIgnoreCase("Return"))
+                {
+                    builder.append("\n");
+                }
+                builder.append("\n");
+            }
+            else if (component instanceof ScriptData.ActionLabel actionLabel)
+            {
+                builder.append(actionLabel.getName()).append(":\n");
+            }
+            else if (component instanceof ScriptData.ActionCommand actionCommand)
+            {
+                builder.append("    ").append(actionCommand);
+                if (actionCommand.getName().equalsIgnoreCase("End"))
+                {
+                    builder.append("\n");
+                }
+                builder.append("\n");
+            }
+        }
+
+        return builder.toString().strip() + "\n";
     }
 
     public static class ScriptLabel implements ScriptComponent {
@@ -272,6 +459,7 @@ public class ScriptData extends GenericScriptData
         public ScriptCommand(CommandMacro commandMacro)
         {
             this.commandMacro = commandMacro;
+            this.name = commandMacro.getName();
         }
 
         @Override
@@ -374,18 +562,62 @@ public class ScriptData extends GenericScriptData
 
             return parameterStrings;
         }
+
+        public void setParameters(Object[] newParameters)
+        {
+            parameters = newParameters;
+        }
     }
 
-    static abstract class AbstractScript extends ArrayList<ScriptCommand>
+    public static class ActionLabel implements ScriptComponent
     {
+        private String name;
 
+        public ActionLabel(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        public String toString()
+        {
+            return name + ": ";
+        }
+
+        @Override
+        public String getName()
+        {
+            return name;
+        }
     }
 
-    static class Script extends AbstractScript {
+    public static class ActionCommand implements ScriptComponent
+    {
+        private String name;
+        private int parameter;
 
-    }
+        public ActionCommand(String name, int parameter)
+        {
+            this.name = name;
+            this.parameter = parameter;
+        }
 
-    static class ActionScript extends AbstractScript {
+        public ActionCommand(int id, int parameter)
+        {
+            this.name = String.valueOf(id);
+            this.parameter = parameter;
+        }
 
+        @Override
+        public String toString()
+        {
+            return "Action " + name + " " + parameter;
+        }
+
+        @Override
+        public String getName()
+        {
+            return name;
+        }
     }
 }
