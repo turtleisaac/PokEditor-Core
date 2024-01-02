@@ -10,7 +10,7 @@ definition : WHITESPACE*? MACRO WHITESPACE NAME (WHITESPACE argument_definition)
 last_argument_definition : NAME ('=' number_or_argument)? NEWLINE ;
 argument_definition : NAME ('=' number_or_argument)? ',' ;
 
-id_line : WHITESPACE*? SHORT WHITESPACE NUMBER NEWLINE ;
+id_line : WHITESPACE*? (SHORT | WORD) WHITESPACE NUMBER NEWLINE ;
 
 write_line : WHITESPACE*? write NEWLINE;
 call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input ','))* (WHITESPACE (input NEWLINE))? NEWLINE? ;
