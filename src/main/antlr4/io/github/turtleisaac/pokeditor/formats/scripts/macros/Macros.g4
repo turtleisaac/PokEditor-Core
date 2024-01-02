@@ -32,7 +32,8 @@ input : '(' input ')'
            | number_or_argument ;
 
 //comparator
-algebra : algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
+algebra : '(' algebra ')'
+        | algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
         | algebra WHITESPACE*? ADD_SUBTRACT WHITESPACE*? algebra
         | number_or_argument ;
 
