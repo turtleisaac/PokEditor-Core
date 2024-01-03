@@ -191,35 +191,6 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     @Override
     public Map<GameFiles, Narc> processDataList(List<GenericScriptData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
-//        if (codeBinaries == null)
-//        {
-//            throw new RuntimeException("Code binaries not provided to editor");
-//        }
-//
-//        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
-//        {
-//            throw new RuntimeException("Arm9 not provided to editor");
-//        }
-
-//        if (hasReadTmMoveIds)
-//        {
-//            CodeBinary arm9 = codeBinaries.get(GameCodeBinaries.ARM9);
-//            arm9.lock();
-//            try {
-//                MemBuf.MemBufReader reader = arm9.getPhysicalAddressBuffer().reader();
-//                reader.setPosition(Tables.TM_HM_MOVES.getPointerOffset());
-//                int offset = reader.readInt();
-//                MemBuf.MemBufWriter writer = arm9.getPhysicalAddressBuffer().writer();
-//                writer.setPosition(offset - arm9.getRamStartAddress());
-//                for (int i = 0; i < GenericScriptData.NUMBER_TMS_HMS; i++)
-//                {
-//                    writer.writeShort((short) tmMoveIdNumbers[i]);
-//                }
-//            } finally {
-//                arm9.unlock();
-//            }
-//        }
-
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (GenericScriptData scriptData : data)
         {

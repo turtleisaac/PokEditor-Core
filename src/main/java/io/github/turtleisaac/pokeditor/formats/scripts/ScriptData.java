@@ -194,6 +194,7 @@ public class ScriptData extends GenericScriptData
             if (commandID == 0)
                 break;
 
+			System.err.println(commandID);
             CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
                 System.currentTimeMillis();
@@ -473,7 +474,7 @@ public class ScriptData extends GenericScriptData
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        for (ScriptData.ScriptComponent component : this)
+        for (ScriptComponent component : this)
         {
             if (component instanceof ScriptData.ScriptLabel label)
             {
