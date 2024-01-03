@@ -1,19 +1,12 @@
 package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
-import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.scripts.MacrosBaseVisitor;
 import io.github.turtleisaac.pokeditor.formats.scripts.MacrosLexer;
 import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
 {
@@ -97,5 +90,25 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
 
     protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType) {
         return null;
+    }
+
+    static Integer performAlgebraicOperation(ArrayList<Integer> inputs, AlgebraicOperation operation)
+    {
+        return switch (operation) {
+            case ADD -> inputs.get(0) + inputs.get(1);
+            case SUBTRACT -> inputs.get(0) - inputs.get(1);
+            case MULTIPLY -> inputs.get(0) * inputs.get(1);
+            case DIVIDE -> inputs.get(0) / inputs.get(1);
+            default -> null;
+        };
+    }
+
+    public enum AlgebraicOperation
+    {
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        ERROR
     }
 }

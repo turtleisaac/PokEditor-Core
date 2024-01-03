@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +48,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
             return super.visitAlgebra(ctx);
         }
         ArrayList<Integer> inputs = new ArrayList<>();
-        int operation = -1;
+        AlgebraicOperation operation = AlgebraicOperation.ERROR;
         for (ParseTree child : ctx.children) {
             if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext) {
                 inputs.add(child.accept(this));
@@ -59,35 +58,27 @@ public class CommandReader extends CommandMacroVisitor<Integer>
                 if (terminalNode.symbol.getType() == MacrosLexer.ADD_SUBTRACT)
                 {
                     if (terminalNode.getText().equals("-")) {
-                        operation = 0;
+                        operation = AlgebraicOperation.ADD; // need to do the inverse of the specified operation since this is reading, not writing
                     } else {
-                        operation = 1;
+                        operation = AlgebraicOperation.SUBTRACT;
                     }
                 }
                 else if (terminalNode.symbol.getType() == MacrosLexer.MULT_DIV)
                 {
                     if (terminalNode.getText().equals("/")) {
-                        operation = 2;
+                        operation = AlgebraicOperation.MULTIPLY; // need to do the inverse of the specified operation since this is reading, not writing
                     } else {
-                        operation = 3;
+                        operation = AlgebraicOperation.DIVIDE;
                     }
                 }
             }
 
         }
 
-        switch (operation) {
-            case 0:
-                return inputs.get(0) + inputs.get(1);
-            case 1:
-                return inputs.get(0) - inputs.get(1);
-            case 2:
-                return inputs.get(0) * inputs.get(1);
-            case 3:
-                return inputs.get(0) / inputs.get(1);
-        }
-        return null;
+        return performAlgebraicOperation(inputs, operation);
     }
+
+
 
     @Override
     public Integer visitTerminal(TerminalNode node)
