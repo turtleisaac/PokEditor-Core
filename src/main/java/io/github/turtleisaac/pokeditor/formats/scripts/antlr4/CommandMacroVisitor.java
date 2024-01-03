@@ -79,7 +79,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
                     break;
                 }
             }
-            else if (c instanceof MacrosParser.InputContext inputContext) {
+            else if (c instanceof MacrosParser.AlgebraContext inputContext) {
                 return writeLineAction(ctx, inputContext, dataType);
             }
 
@@ -88,12 +88,12 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
         return null;
     }
 
-    protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType) {
+    protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.AlgebraContext inputContext, int dataType) {
         return null;
     }
 
-    @Override
-    public T visitInput(MacrosParser.InputContext ctx)
+    //@Override
+    public T visitInput(MacrosParser.AlgebraContext ctx)
     {
         if (ctx.children.size() == 1)
         {
@@ -104,7 +104,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
         int contentsIdx = -1;
         int closeParenthesesIdx = -1;
 
-        MacrosParser.InputContext inputContext = null;
+        MacrosParser.AlgebraContext inputContext = null;
 
         int idx = 0;
         for (ParseTree child : ctx.children)
@@ -120,7 +120,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
                     closeParenthesesIdx = idx;
                 }
             }
-            else if (child instanceof MacrosParser.InputContext foundContext)
+            else if (child instanceof MacrosParser.AlgebraContext foundContext)
             {
                 contentsIdx = idx;
                 inputContext = foundContext;
@@ -152,7 +152,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
         int contentsIdx = -1;
         int closeParenthesesIdx = -1;
 
-        MacrosParser.InputContext inputContext = null;
+        MacrosParser.AlgebraContext inputContext = null;
 
         int idx = 0;
         for (ParseTree child : ctx.children)
@@ -168,7 +168,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
                     closeParenthesesIdx = idx;
                 }
             }
-            else if (child instanceof MacrosParser.InputContext foundContext)
+            else if (child instanceof MacrosParser.AlgebraContext foundContext)
             {
                 if (contentsIdx != -1)
                     return null;

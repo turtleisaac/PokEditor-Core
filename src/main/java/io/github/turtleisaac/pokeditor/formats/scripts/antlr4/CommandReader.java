@@ -29,7 +29,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     }
 
     @Override
-    protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType)
+    protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.AlgebraContext inputContext, int dataType)
     {
         parameterType = dataType;
 
@@ -68,9 +68,8 @@ public class CommandReader extends CommandMacroVisitor<Integer>
         ArrayList<ParseTree> inputNodes = new ArrayList<>();
         AlgebraicOperation operation = AlgebraicOperation.ERROR;
         for (ParseTree child : ctx.children) {
-            if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext || child instanceof MacrosParser.InputContext) {
+            if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext) {
                 inputNodes.add(child);
-//                inputs.add(child.accept(this));
             }
             else if (child instanceof TerminalNodeImpl terminalNode)
             {
@@ -177,7 +176,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
         int operation = -1;
         for (ParseTree child : ctx.children)
         {
-            if (child instanceof MacrosParser.InputContext || child instanceof MacrosParser.CompareContext) {
+            if (child instanceof MacrosParser.AlgebraContext || child instanceof MacrosParser.CompareContext) {
                 compareMode = true;
                 compareInputs.add(child.accept(this));
                 compareMode = false;

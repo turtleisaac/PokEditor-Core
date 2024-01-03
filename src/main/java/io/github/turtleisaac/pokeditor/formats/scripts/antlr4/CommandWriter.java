@@ -42,7 +42,7 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
     }
 
     @Override
-    protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType)
+    protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.AlgebraContext inputContext, int dataType)
     {
         parameterType = dataType;
 
@@ -194,7 +194,7 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
         int operation = -1;
         for (ParseTree child : ctx.children)
         {
-            if (child instanceof MacrosParser.InputContext || child instanceof MacrosParser.CompareContext) {
+            if (child instanceof MacrosParser.AlgebraContext || child instanceof MacrosParser.CompareContext) {
                 compareMode = true;
                 compareInputs.add(child.accept(this));
                 compareMode = false;
