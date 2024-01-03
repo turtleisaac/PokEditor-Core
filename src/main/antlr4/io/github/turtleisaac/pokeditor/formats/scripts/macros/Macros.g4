@@ -50,7 +50,7 @@ fragment DIGIT : [0-9] ;
 fragment HEX_DIGIT : (DIGIT | [a-fA-F]) ;
 fragment LETTER : [a-zA-Z] ;
 
-NUMBER : (DIGIT+ | '0x' HEX_DIGIT)+ ;
+NUMBER : (DIGIT+ | '0x' HEX_DIGIT+) ;
 
 WHITESPACE : (' ' | '\t') ;
 NEWLINE : ('\r'? '\n' | '\r')+ ;
