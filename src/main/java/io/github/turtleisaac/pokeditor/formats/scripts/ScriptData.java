@@ -3,13 +3,14 @@ package io.github.turtleisaac.pokeditor.formats.scripts;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
+import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.IntPredicate;
+
+import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
 
 public class ScriptData extends GenericScriptData
 {
@@ -279,7 +280,7 @@ public class ScriptData extends GenericScriptData
 
             String name = ScriptParser.movementNames.get(commandID);
             if (name != null)
-                add(new ActionCommand(name, parameter));
+                add(new ActionCommand(name, commandID, parameter));
             else
                 add(new ActionCommand(commandID, parameter));
 
@@ -352,6 +353,102 @@ public class ScriptData extends GenericScriptData
     {
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
+
+        // todo write header, then skip number of slots needed for all script offsets
+
+        for (int i = 0; i < scripts.size(); i++)
+        {
+            writer.skip(4);
+        }
+
+        writer.writeShort((short) SCRIPT_MAGIC_ID);
+
+        int scriptsStartPosition = writer.getPosition();
+
+        // write each command out, and if it is a jump command we need to store a placeholder for later when we come back and insert the offset (if the destination hasn't been written yet)
+        // at the start of each script we need to grab the offset for the header
+        // something something dark side
+
+        int[] scriptOffsets = new int[scripts.size()];
+        int[] labelOffsets = new int[labels.size()];
+        int[] actionOffsets = new int[actions.size()];
+
+        CommandWriter.LabelOffsetObtainer offsetObtainer = labelName ->
+        {
+            int idx = 0;
+            boolean found = false;
+            for (ScriptLabel label : labels)
+            {
+                if (label.getName().equals(labelName))
+                {
+                    return labelOffsets[idx];
+                }
+                idx++;
+            }
+
+            idx = 0;
+            for (ActionLabel label : actions)
+            {
+                if (label.getName().equals(labelName))
+                {
+                    return actionOffsets[idx];
+                }
+                idx++;
+            }
+
+            return 0;
+        };
+
+        for (ScriptComponent component : this)
+        {
+//            System.out.println(component);
+            if (component instanceof ScriptLabel label)
+            {
+                int scriptNumber = scripts.indexOf(label);
+                if (scriptNumber != -1) // if the label is in the list of scripts
+                    scriptOffsets[scriptNumber] = writer.getPosition();
+
+                labelOffsets[labels.indexOf(label)] = writer.getPosition();
+            }
+            else if (component instanceof ActionLabel actionLabel)
+            {
+                actionOffsets[actions.indexOf(actionLabel)] = writer.getPosition();
+            }
+            else if (component instanceof ScriptCommand command) // is a command
+            {
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+            }
+            else if (component instanceof ActionCommand actionCommand)
+            {
+                writer.writeShort((short) actionCommand.id);
+                writer.writeShort((short) actionCommand.parameter);
+            }
+        }
+
+        writer.setPosition(0);
+
+        for (int i = 0; i < scripts.size(); i++)
+        {
+            int adjustment = writer.getPosition() + 4;
+            writer.writeInt(scriptOffsets[i] - adjustment);
+        }
+
+        writer.skip(2);
+
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof ScriptCommand command) // is a command
+            {
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+            }
+            else if (component instanceof ActionCommand actionCommand)
+            {
+                writer.writeShort((short) actionCommand.id);
+                writer.writeShort((short) actionCommand.parameter);
+            }
+        }
+
+        writer.skip(4 - writer.getPosition() % 4);
 
         return new BytesDataContainer(GameFiles.SCRIPTS, null, dataBuf.reader().getBuffer());
     }
@@ -594,11 +691,13 @@ public class ScriptData extends GenericScriptData
     public static class ActionCommand implements ScriptComponent
     {
         private String name;
+        private int id;
         private int parameter;
 
-        public ActionCommand(String name, int parameter)
+        public ActionCommand(String name, int id, int parameter)
         {
             this.name = name;
+            this.id = id;
             this.parameter = parameter;
         }
 

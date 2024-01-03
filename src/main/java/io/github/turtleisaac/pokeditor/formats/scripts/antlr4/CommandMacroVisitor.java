@@ -12,12 +12,13 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
 {
+    Map<String, Object> parameterToValueMap = new HashMap<>();;
+
     @Override
     public T visitId_line(MacrosParser.Id_lineContext ctx)
     {

@@ -49,6 +49,8 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     public static List<CommandMacro> convenienceCommands;
     public static HashMap<Integer, String> movementNames;
 
+    public static HashMap<String, Integer> definedValues;
+
     static {
 
         MacrosParser.EntriesContext entryContext = prepareMacros("/data/Scrcmd_Hg.txt");
@@ -99,6 +101,14 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             if (node != null)
                 movementNames.put(i, node.asText());
         }
+
+        definedValues = new HashMap<>();
+        definedValues.put("LESS", 0);
+        definedValues.put("EQUAL", 1);
+        definedValues.put("GREATER", 2);
+        definedValues.put("LESS_OR_EQUAL", 3);
+        definedValues.put("GREATER_OR_EQUAL", 4);
+        definedValues.put("DIFFERENT", 5);
     }
 
     private static MacrosParser.EntriesContext prepareMacros(String path)
@@ -209,12 +219,12 @@ public class ScriptParser implements GenericParser<GenericScriptData>
 //        }
 
         ArrayList<byte[]> subfiles = new ArrayList<>();
-        for (GenericScriptData personal : data)
+        for (GenericScriptData scriptData : data)
         {
-            subfiles.add(personal.save().get(GameFiles.PERSONAL, null));
+            subfiles.add(scriptData.save().get(GameFiles.SCRIPTS, null));
         }
 
-        return Collections.singletonMap(GameFiles.PERSONAL, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        return Collections.singletonMap(GameFiles.SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
     }
 
     @Override
@@ -226,7 +236,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     @Override
     public List<GameCodeBinaries> getRequiredBinaries()
     {
-        return List.of(GameCodeBinaries.ARM9);
+        return Collections.emptyList();
     }
 
     static final int SCRIPT_MAGIC_ID = 0xFD13;

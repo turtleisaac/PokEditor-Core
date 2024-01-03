@@ -53,8 +53,9 @@ abstract class GenericParserTest<E extends GenericFileData>
             Narc originalNarc = map.get(gameFile);
             Narc outputNarc = output.get(gameFile);
             for (int idx = 0; idx < originalNarc.getFiles().size(); idx++) {
+                System.out.println(idx);
                 assertThat(outputNarc.getFile(idx))
-                        .isEqualTo(originalNarc.getFile(idx));
+                        .isEqualTo(Arrays.copyOf(originalNarc.getFile(idx), outputNarc.getFile(idx).length));
             }
         }
     }

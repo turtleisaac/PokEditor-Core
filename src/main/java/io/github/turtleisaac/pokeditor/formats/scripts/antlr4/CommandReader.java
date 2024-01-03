@@ -19,8 +19,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     private MemBuf.MemBufReader reader;
     private CommandMacro macro;
 
-    HashMap<String, Number> parameterToValueMap = new HashMap<>();
-
     private int parameterType;
     private boolean compareMode;
 
@@ -89,7 +87,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
                 return inputs.get(0) / inputs.get(1);
         }
         return null;
-//        return super.visitAlgebra(ctx);
     }
 
     @Override
@@ -221,7 +218,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
                 return ( (compareInputs.get(0) != 0) || (compareInputs.get(1) != 0) ) ? 1 : 0;
             }
         }
-        System.currentTimeMillis();
 
         return 0;
     }

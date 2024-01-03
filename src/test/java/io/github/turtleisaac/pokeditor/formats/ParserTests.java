@@ -10,6 +10,9 @@ import io.github.turtleisaac.pokeditor.formats.items.ItemData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
+import io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData;
+import io.github.turtleisaac.pokeditor.formats.scripts.ScriptData;
+import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.gamedata.*;
@@ -110,6 +113,28 @@ public class ParserTests
         protected GenericParser<TextBankData> createParser()
         {
             return injector.getInstance(Key.get(new TypeLiteral<>() {}));
+        }
+    }
+
+    public static class FieldScriptsTests extends GenericParserTest<GenericScriptData>
+    {
+        @Override
+        protected GenericParser<GenericScriptData> createParser()
+        {
+            return new ScriptParser();
+        }
+
+        @BeforeEach
+        @Override
+        protected void setup()
+        {
+            parser = createParser();
+            rom = NintendoDsRom.fromFile("HeartGold.nds");
+            Game game = Game.parseBaseRom(rom.getGameCode());
+            GameFiles.initialize(game);
+            TextFiles.initialize(game);
+            GameCodeBinaries.initialize(game);
+            Tables.initialize(game);
         }
     }
 }

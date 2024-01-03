@@ -2,8 +2,12 @@ package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class CommandMacro
 {
@@ -32,10 +36,28 @@ public class CommandMacro
         return null;
     }
 
-    public void write(MemBuf outputBuf)
+    public void write(MemBuf memBuf, CommandWriter.LabelOffsetObtainer offsetObtainer, Object[] parameterValues)
     {
-        CommandWriter writer = new CommandWriter(outputBuf);
-        writer.visitEntry(entryContext);
+        Map<String, Object> parameterToValueMap = new HashMap<>();
+
+        if (parameters.length != 0)
+        {
+            int idx = 0;
+            for (String parameter : parameters) {
+                Object param = parameterValues[idx++];
+                if (param instanceof Number number)
+                    parameterToValueMap.put(parameter, number);
+                else if (param instanceof String str)
+                {
+                    Object value = ScriptParser.definedValues.get(str);
+                    parameterToValueMap.put(parameter, Objects.requireNonNullElse(value, param));
+                }
+
+            }
+        }
+
+        CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap);
+        commandWriter.visitEntry(entryContext);
     }
 
     public String getName()
