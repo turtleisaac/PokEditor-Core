@@ -159,7 +159,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
             }
         }
         return null;
-//        return super.visitIf_block(ctx);
     }
 
     @Override
@@ -167,7 +166,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     {
         if (ctx.children.size() == 1) {
             int val = super.visitCompare(ctx);
-//            return performCompare(ctx.children.get(0));
             return val;
         }
 
@@ -284,22 +282,6 @@ public class CommandReader extends CommandMacroVisitor<Integer>
             }
         }
 
-//        macro.setParameters(parameters.toArray(String[]::new));
-
         return null;
     }
-
-//    @Override
-//    protected Integer defaultResult()
-//    {
-//        return 0;
-//    }
-//
-//    @Override
-//    protected Integer aggregateResult(Integer aggregate, Integer nextResult)
-//    {
-//        if (aggregate != null && nextResult != null)
-//            return aggregate + nextResult;
-//        return null;
-//    }
 }
