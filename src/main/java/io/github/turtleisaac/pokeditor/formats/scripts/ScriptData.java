@@ -6,6 +6,7 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntPredicate;
@@ -76,6 +77,8 @@ public class ScriptData extends GenericScriptData
             throw new IllegalStateException("This is a level script file, not a normal script file");
         }
 
+        Map<Integer, ScriptComment> comments = readCommentsTable(dataBuf);
+
         ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
         ArrayList<Integer> actionOffsets = new ArrayList<>();
         ArrayList<Integer> visitedOffsets = new ArrayList<>();
@@ -89,7 +92,7 @@ public class ScriptData extends GenericScriptData
             for (int i = 0; i < labelOffsets.size(); i++)
             {
                 if (!actionOffsets.contains(labelOffsets.get(i)))
-                    readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
+                    readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, comments, visitedOffsets, labelOffsets.get(i), labelMap, false);
             }
         }
         while (lastSize != labelOffsets.size());
@@ -98,7 +101,7 @@ public class ScriptData extends GenericScriptData
         for (int i = 0; i < labelOffsets.size(); i++)
         {
             if (!actionOffsets.contains(labelOffsets.get(i)))
-                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, comments, visitedOffsets, labelOffsets.get(i), labelMap, true);
             else
                 readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
@@ -154,7 +157,7 @@ public class ScriptData extends GenericScriptData
 //        }
     }
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, Map<Integer, ScriptComment> comments, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -168,6 +171,12 @@ public class ScriptData extends GenericScriptData
             if (finalRun && !visitedOffsets.contains(reader.getPosition()))
             {
                 visitedOffsets.add(reader.getPosition());
+
+                if (comments.containsKey(reader.getPosition()))
+                {
+                    add(comments.get(reader.getPosition()));
+                }
+
                 if (globalScriptOffsets.contains(reader.getPosition())) {
                     ScriptLabel scriptLabel = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
                     scripts.add(scriptLabel);
@@ -348,6 +357,49 @@ public class ScriptData extends GenericScriptData
         }
     }
 
+    private static final int COMMENTS_SECTION_MAGIC = 0xFD14;
+
+    private Map<Integer, ScriptComment> readCommentsTable(MemBuf dataBuf)
+    {
+        MemBuf.MemBufReader reader = dataBuf.reader();
+        Map<Integer, ScriptComment> comments = new HashMap<>();
+
+        if (reader.getPosition() >= dataBuf.writer().getPosition())
+        {
+            return comments;
+        }
+
+        int checker = reader.readUInt16();
+
+
+
+        comments.put(16, new ScriptComment("test"));
+
+        if (checker != COMMENTS_SECTION_MAGIC)
+        {
+            reader.setPosition(reader.getPosition()-2);
+            return comments;
+        }
+
+//        List<Integer> commentLocations = new ArrayList<>();
+//        List<String> commentStrings = new ArrayList<>();
+
+        while (reader.readUInt16() != COMMENTS_SECTION_MAGIC)
+        {
+            reader.setPosition(reader.getPosition()-2);
+            int offset = reader.readInt();
+            int length = reader.readByte();
+            String text = reader.readString(length);
+
+            comments.put(offset, new ScriptComment(text));
+
+//            commentLocations.add(offset);
+//            commentStrings.add(text);
+        }
+
+        return comments;
+    }
+
     @Override
     public BytesDataContainer save()
     {
@@ -520,6 +572,10 @@ public class ScriptData extends GenericScriptData
                     builder.append("\n");
                 }
                 builder.append("\n");
+            }
+            else if (component instanceof ScriptComment scriptComment)
+            {
+                builder.append("    ").append(scriptComment).append("\n");
             }
         }
 
