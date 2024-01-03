@@ -13,8 +13,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This class reads through a given <code>MacrosParser.EntriesContext</code> and "discovers" all of the
+ * script commands defined within via the macros. The context needs to be created from a string representation
+ * of the file containing all of the macros elsewhere however.
+ */
 public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
 {
+    /**
+     * Call this method to discover all of the script commands defined within the macros inside an <code>MacrosParser.EntriesContext</code>
+     * @param ctx
+     * @return a list of all the found commands
+     */
     public List<CommandMacro> discoverAllCommands(MacrosParser.EntriesContext ctx)
     {
         List<CommandMacro> commands = new ArrayList<>();

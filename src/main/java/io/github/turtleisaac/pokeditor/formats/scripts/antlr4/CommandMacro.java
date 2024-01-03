@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * This class serves to function as a representation of a single macro defining the parameters
+ * and types (byte/u8, short/u16, int/u32) of a single command for one of the games'
+ * internal scripting languages
+ */
 public class CommandMacro
 {
     private String name;
