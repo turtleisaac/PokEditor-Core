@@ -334,12 +334,6 @@ public class TrainerAiData extends GenericScriptData
 					label.name = "label_" + labels.indexOf(label) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
 					add(label);
 				}
-//                  else if (tableOffsets.contains(reader.getPosition())) {
-//                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-//                    tables.add(actionLabel);
-//                    actionLabel.name = "action_" + tables.indexOf(actionLabel) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
-//                    add(actionLabel);
-//                }
             }
 
             long commandID = reader.readUInt32();
@@ -347,7 +341,7 @@ public class TrainerAiData extends GenericScriptData
             CommandMacro commandMacro = TrainerAiParser.nativeCommands.get((int)commandID);
             if (commandMacro == null) {
                 System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset " + reader.getPosition());
-				continue;
+				break;
             }
 
             AiScriptCommand command = new AiScriptCommand(commandMacro);
@@ -464,7 +458,8 @@ public class TrainerAiData extends GenericScriptData
 
 				parameters.forEach(parameter -> builder.append(" ").append(parameter));
 
-                if (scriptCommand.getName().equalsIgnoreCase("end") || scriptCommand.getName().equalsIgnoreCase("goto") || scriptCommand.getName().equalsIgnoreCase("Jump") || scriptCommand.getName().equalsIgnoreCase("Return"))
+				// TODO: Find other AI script commands that need an extra newline.
+                if (Stream.of("endai").anyMatch(s -> scriptCommand.getName().equals(s)))
                 {
                     builder.append("\n");
                 }
