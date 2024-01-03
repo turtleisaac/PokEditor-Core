@@ -43,6 +43,7 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
 
         for (ParseTree child : ctx.children)
         {
+			//System.err.println(child.toString() + " " + child.toStringTree());
             if (child instanceof MacrosParser.DefinitionContext)
             {
                 macro = child.accept(this);

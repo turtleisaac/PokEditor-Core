@@ -23,13 +23,13 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
             ParseTree c = ctx.getChild(i);
 
             int type = ((TerminalNodeImpl) c).symbol.getType();
-            if (type == MacrosLexer.SHORT)
+            if (type == MacrosLexer.SHORT || type == MacrosLexer.WORD)
             {
                 foundShort = true;
             }
             else if (type == MacrosLexer.NUMBER) {
                 foundValue = true;
-                idNumber = Integer.parseInt(c.getText());
+                idNumber = Integer.decode(c.getText());
                 break;
             }
         }

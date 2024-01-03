@@ -11,12 +11,8 @@ import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIP
 
 public abstract class GenericScriptData extends ArrayList<GenericScriptData.ScriptComponent> implements GenericFileData
 {
-    private ArrayList<ScriptComponent> components = new ArrayList<>();
-
     public GenericScriptData()
-    {
-
-    }
+    {}
 
     public GenericScriptData(BytesDataContainer files)
     {
@@ -34,7 +30,7 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         {
             int checker = reader.readUInt16();
             reader.setPosition(reader.getPosition()-2);
-            long value = reader.readUInt32();
+            int value = reader.readUInt16();
 
             if (value == 0 && globalScriptOffsets.isEmpty()) { // yep this is a level script
                 return true;
@@ -48,42 +44,7 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         }
     }
 
-//    public void add(ScriptComponent scriptComponent)
-//    {
-//        components.add(scriptComponent);
-//    }
-//
-//    public void add(int index, ScriptComponent scriptComponent)
-//    {
-//        components.add(index, scriptComponent);
-//    }
-//
-//    public ScriptComponent get(int index)
-//    {
-//        return components.get(index);
-//    }
-//
-//    public ScriptComponent remove(int index)
-//    {
-//        return components.remove(index);
-//    }
-//
-//    public int size()
-//    {
-//        return components.size();
-//    }
-//
-//    public Iterable<ScriptComponent> iterable()
-//    {
-//        return components;
-//    }
-//
-//    public boolean isEmpty()
-//    {
-//        return components.isEmpty();
-//    }
-
-    public interface ScriptComponent {
-        String getName();
-    }
+	public interface ScriptComponent {
+		String getName();
+	}
 }
