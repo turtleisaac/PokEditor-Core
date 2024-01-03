@@ -1,8 +1,8 @@
 package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosLexer;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosLexer;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -47,10 +47,17 @@ public class CommandReader extends CommandMacroVisitor<Integer>
         if (ctx.children.size() == 1) {
             return super.visitAlgebra(ctx);
         }
+        else if (ctx.children.size() == 3)
+        {
+            Integer result = attemptInterceptAlgebraicParenthesesWrapping(ctx);
+            if (result != null) // if the result is null then there was no wrapped parentheses here, so continue to normal calculation
+                return result;
+        }
+
         ArrayList<Integer> inputs = new ArrayList<>();
         AlgebraicOperation operation = AlgebraicOperation.ERROR;
         for (ParseTree child : ctx.children) {
-            if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext) {
+            if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext || child instanceof MacrosParser.InputContext) {
                 inputs.add(child.accept(this));
             }
             else if (child instanceof TerminalNodeImpl terminalNode)
@@ -267,4 +274,18 @@ public class CommandReader extends CommandMacroVisitor<Integer>
 
         return null;
     }
+
+//    @Override
+//    protected Integer defaultResult()
+//    {
+//        return 0;
+//    }
+//
+//    @Override
+//    protected Integer aggregateResult(Integer aggregate, Integer nextResult)
+//    {
+//        if (aggregate != null && nextResult != null)
+//            return aggregate + nextResult;
+//        return null;
+//    }
 }

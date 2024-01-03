@@ -1,7 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosLexer;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosLexer;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;

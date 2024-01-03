@@ -1,8 +1,8 @@
 package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosBaseVisitor;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosLexer;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosBaseVisitor;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosLexer;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
@@ -89,6 +89,114 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
     }
 
     protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType) {
+        return null;
+    }
+
+    @Override
+    public T visitInput(MacrosParser.InputContext ctx)
+    {
+        if (ctx.children.size() == 1)
+        {
+            return ctx.children.get(0).accept(this);
+        }
+
+        int openParenthesesIdx = -1;
+        int contentsIdx = -1;
+        int closeParenthesesIdx = -1;
+
+        MacrosParser.InputContext inputContext = null;
+
+        int idx = 0;
+        for (ParseTree child : ctx.children)
+        {
+            if (child instanceof TerminalNodeImpl terminalNode)
+            {
+                if (terminalNode.symbol.getType() == MacrosLexer.OPEN_PARENTHESES)
+                {
+                    openParenthesesIdx = idx;
+                }
+                else if (terminalNode.symbol.getType() == MacrosLexer.CLOSE_PARENTHESES)
+                {
+                    closeParenthesesIdx = idx;
+                }
+            }
+            else if (child instanceof MacrosParser.InputContext foundContext)
+            {
+                contentsIdx = idx;
+                inputContext = foundContext;
+            }
+            idx++;
+        }
+
+        if (openParenthesesIdx != -1 && closeParenthesesIdx != -1 && inputContext != null)
+        {
+            if (openParenthesesIdx < contentsIdx && closeParenthesesIdx > contentsIdx)
+            {
+                return inputContext.accept(this);
+            }
+        }
+        else if (inputContext != null)
+        {
+            return inputContext.accept(this);
+        }
+        else {
+            throw new RuntimeException("An error occurred while attempting to parse an input for a numerical or potentially algebraic operation.");
+        }
+
+        return null;
+    }
+
+    public T attemptInterceptAlgebraicParenthesesWrapping(MacrosParser.AlgebraContext ctx)
+    {
+        int openParenthesesIdx = -1;
+        int contentsIdx = -1;
+        int closeParenthesesIdx = -1;
+
+        MacrosParser.InputContext inputContext = null;
+
+        int idx = 0;
+        for (ParseTree child : ctx.children)
+        {
+            if (child instanceof TerminalNodeImpl terminalNode)
+            {
+                if (terminalNode.symbol.getType() == MacrosLexer.OPEN_PARENTHESES)
+                {
+                    openParenthesesIdx = idx;
+                }
+                else if (terminalNode.symbol.getType() == MacrosLexer.CLOSE_PARENTHESES)
+                {
+                    closeParenthesesIdx = idx;
+                }
+            }
+            else if (child instanceof MacrosParser.InputContext foundContext)
+            {
+                if (contentsIdx != -1)
+                    return null;
+                contentsIdx = idx;
+                inputContext = foundContext;
+            }
+            idx++;
+        }
+
+        if (openParenthesesIdx != -1 && closeParenthesesIdx != -1 && inputContext != null)
+        {
+            if (openParenthesesIdx < contentsIdx && closeParenthesesIdx > contentsIdx)
+            {
+                return inputContext.accept(this);
+            }
+        }
+        else if (openParenthesesIdx == -1 && closeParenthesesIdx == -1) // ignore cases where there were no parentheses, as this was not a parentheses attempt in actuality
+        {
+            return null;
+        }
+        else if (inputContext != null)
+        {
+            return inputContext.accept(this);
+        }
+        else {
+            throw new RuntimeException("An error occurred while attempting to parse an input for an algebraic operation.");
+        }
+
         return null;
     }
 

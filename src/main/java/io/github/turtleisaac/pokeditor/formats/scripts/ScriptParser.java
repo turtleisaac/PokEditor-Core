@@ -31,6 +31,8 @@ import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.GenericParser;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosLexer;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;

@@ -1,7 +1,7 @@
 package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
-import io.github.turtleisaac.pokeditor.formats.scripts.MacrosParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
 import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 
 import java.util.Arrays;

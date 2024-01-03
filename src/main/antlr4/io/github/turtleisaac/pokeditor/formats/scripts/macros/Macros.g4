@@ -27,17 +27,17 @@ write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? input ',')* (WHITESPACE*?
 
 number_or_argument : (ARGUMENT_USAGE | NUMBER | CURRENT_OFFSET | NAME) ;
 
-input : '(' input ')'
+input : OPEN_PARENTHESES input CLOSE_PARENTHESES
            | algebra
            | number_or_argument ;
 
 //comparator
-algebra : '(' algebra ')'
+algebra : OPEN_PARENTHESES input CLOSE_PARENTHESES
         | algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
         | algebra WHITESPACE*? ADD_SUBTRACT WHITESPACE*? algebra
         | number_or_argument ;
 
-compare : '(' compare ')'
+compare : OPEN_PARENTHESES compare CLOSE_PARENTHESES
              | compare WHITESPACE*? COMPARATOR WHITESPACE*? compare
              | compare WHITESPACE*? AND_OR WHITESPACE*? compare
              | input ;
@@ -67,6 +67,9 @@ SHORT : '.short' ;
 WORD : '.word' ;
 
 ARGUMENT_USAGE : '\\' NAME ;
+
+OPEN_PARENTHESES : '(' ;
+CLOSE_PARENTHESES : ')' ;
 
 fragment GREATER_THAN : '>' ;
 fragment LESS_THAN : '<' ;
