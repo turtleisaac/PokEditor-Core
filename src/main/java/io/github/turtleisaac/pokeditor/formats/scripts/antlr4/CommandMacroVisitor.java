@@ -48,12 +48,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
     @Override
     public T visitWrite(MacrosParser.WriteContext ctx)
     {
-//        System.out.println(ctx.getText());
-//        ParseTree c = ctx.getChild(0);
-
         int dataType = -1;
-        boolean foundWriteValue = false;
-        int writeValue = -1;
         for (int i = 0; i < ctx.getChildCount(); i++)
         {
             ParseTree c = ctx.getChild(i);
@@ -73,11 +68,6 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
                 {
                     dataType = MacrosLexer.WORD;
                 }
-                else if (type == MacrosLexer.NUMBER) {
-                    foundWriteValue = true;
-                    writeValue = Integer.parseInt(c.getText());
-                    break;
-                }
             }
             else if (c instanceof MacrosParser.AlgebraContext inputContext) {
                 return writeLineAction(ctx, inputContext, dataType);
@@ -89,60 +79,6 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
     }
 
     protected T writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.AlgebraContext inputContext, int dataType) {
-        return null;
-    }
-
-    //@Override
-    public T visitInput(MacrosParser.AlgebraContext ctx)
-    {
-        if (ctx.children.size() == 1)
-        {
-            return ctx.children.get(0).accept(this);
-        }
-
-        int openParenthesesIdx = -1;
-        int contentsIdx = -1;
-        int closeParenthesesIdx = -1;
-
-        MacrosParser.AlgebraContext inputContext = null;
-
-        int idx = 0;
-        for (ParseTree child : ctx.children)
-        {
-            if (child instanceof TerminalNodeImpl terminalNode)
-            {
-                if (terminalNode.symbol.getType() == MacrosLexer.OPEN_PARENTHESES)
-                {
-                    openParenthesesIdx = idx;
-                }
-                else if (terminalNode.symbol.getType() == MacrosLexer.CLOSE_PARENTHESES)
-                {
-                    closeParenthesesIdx = idx;
-                }
-            }
-            else if (child instanceof MacrosParser.AlgebraContext foundContext)
-            {
-                contentsIdx = idx;
-                inputContext = foundContext;
-            }
-            idx++;
-        }
-
-        if (openParenthesesIdx != -1 && closeParenthesesIdx != -1 && inputContext != null)
-        {
-            if (openParenthesesIdx < contentsIdx && closeParenthesesIdx > contentsIdx)
-            {
-                return inputContext.accept(this);
-            }
-        }
-        else if (inputContext != null)
-        {
-            return inputContext.accept(this);
-        }
-        else {
-            throw new RuntimeException("An error occurred while attempting to parse an input for a numerical or potentially algebraic operation.");
-        }
-
         return null;
     }
 

@@ -76,13 +76,6 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
                     valueToWrite = offsetObtainer.accept((String) value);
                 }
 
-//                switch (parameterType) {
-//                    case MacrosLexer.BYTE -> writer.write((byte) valueToWrite);
-//                    case MacrosLexer.SHORT -> writer.writeShort((short) valueToWrite);
-//                    case MacrosLexer.WORD -> writer.writeInt(valueToWrite);
-//                    default -> throw new IllegalStateException("Unexpected value: " + parameterType);
-//                }
-
                 return switch (parameterType)
                 {
                     case MacrosLexer.BYTE, MacrosLexer.SHORT, MacrosLexer.WORD -> valueToWrite;
@@ -177,7 +170,6 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
             }
         }
         return null;
-//        return super.visitIf_block(ctx);
     }
 
     @Override
@@ -185,7 +177,6 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
     {
         if (ctx.children.size() == 1) {
             int val = super.visitCompare(ctx);
-//            return performCompare(ctx.children.get(0));
             return val;
         }
 
@@ -262,35 +253,4 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
     {
         int accept(String labelName);
     }
-
-//    public static void main(String[] args)
-//    {
-//        MacrosLexer lexer = new MacrosLexer(CharStreams.fromString("\t.macro scrcmd_465 arg0, arg1=0, arg2=0\n" +
-//                "\t.short 465\n" +
-//                "\t.short \\arg0\n" +
-//                "\t.if \\arg0 <= 3\n" +
-//                "\t\t.short \\arg1\n" +
-//                "\t\t.short \\arg2\n" +
-//                "\t.else\n" +
-//                "\t\t.if \\arg0 != 6\n" +
-//                "\t\t\t.short \\arg1\n" +
-//                "\t\t.endif\n" +
-//                "\t.endif\n" +
-//                "\t.endm\n" +
-//                "\n" +
-//                "\t.macro scrcmd_466 arg0, arg1\n" +
-//                "\t.short 466\n" +
-//                "\t.short \\arg0\n" +
-//                "\t.short \\arg1\n" +
-//                "\t.endm"));
-//
-//        CommonTokenStream tokens = new CommonTokenStream(lexer);
-//        MacrosParser parser = new MacrosParser(tokens);
-////        ParseTree parseTree = parser.entry();
-//
-//        MacrosParser.EntriesContext entryContext = parser.entries();
-//        CommandWriter visitor = new CommandWriter(MemBuf.create());
-//
-//        visitor.visitEntries(entryContext);
-//    }
 }
