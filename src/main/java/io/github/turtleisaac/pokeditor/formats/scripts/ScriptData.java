@@ -7,7 +7,6 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.IntPredicate;
 
 import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
@@ -47,7 +46,7 @@ public class ScriptData extends GenericScriptData
     @Override
     public void setData(BytesDataContainer files)
     {
-        if (!files.containsKey(GameFiles.SCRIPTS))
+        if (!files.containsKey(GameFiles.FIELD_SCRIPTS))
         {
             throw new RuntimeException("Script file not provided to editor");
         }
@@ -56,7 +55,7 @@ public class ScriptData extends GenericScriptData
         labels = new ArrayList<>();
         actions = new ArrayList<>();
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.SCRIPTS, null));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.FIELD_SCRIPTS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         ArrayList<Integer> globalScriptOffsets = new ArrayList<>();
@@ -451,7 +450,7 @@ public class ScriptData extends GenericScriptData
 
         writer.skip(4 - writer.getPosition() % 4);
 
-        return new BytesDataContainer(GameFiles.SCRIPTS, null, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, dataBuf.reader().getBuffer());
     }
 
     public ArrayList<ScriptLabel> getScripts()
@@ -525,27 +524,6 @@ public class ScriptData extends GenericScriptData
         }
 
         return builder.toString().strip() + "\n";
-    }
-
-    public static class ScriptLabel implements ScriptComponent {
-        private String name;
-
-        public ScriptLabel(String name)
-        {
-            this.name = name;
-        }
-
-        @Override
-        public String toString()
-        {
-            return name + ": ";
-        }
-
-        @Override
-        public String getName()
-        {
-            return name;
-        }
     }
 
     public static class ScriptCommand implements ScriptComponent {

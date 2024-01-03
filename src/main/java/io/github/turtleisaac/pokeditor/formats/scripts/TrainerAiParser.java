@@ -37,7 +37,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import java.io.IOException;
 import java.util.*;
 
-public class TrainerAiParser implements GenericParser<GenericScriptData>
+public class TrainerAiParser implements GenericParser<TrainerAiData>
 {
     public static List<CommandMacro> commandMacros;
     public static HashMap<Integer, CommandMacro> nativeCommands;
@@ -80,15 +80,15 @@ public class TrainerAiParser implements GenericParser<GenericScriptData>
     }
 
     @Override
-    public List<GenericScriptData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
+    public List<TrainerAiData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
-        if (!narcs.containsKey(GameFiles.TR_AI))
+        if (!narcs.containsKey(GameFiles.TRAINER_AI_SCRIPTS))
         {
             throw new RuntimeException("Trainer AI narc not provided to editor");
         }
 
-        Narc scripts = narcs.get(GameFiles.TR_AI);
-        ArrayList<GenericScriptData> data = new ArrayList<>();
+        Narc scripts = narcs.get(GameFiles.TRAINER_AI_SCRIPTS);
+        ArrayList<TrainerAiData> data = new ArrayList<>();
 
         int i = 0;
         for (byte[] subfile : scripts.getFiles())
@@ -97,7 +97,7 @@ public class TrainerAiParser implements GenericParser<GenericScriptData>
             if (i == 266) {
                 System.currentTimeMillis();
             }
-			data.add(new TrainerAiData(new BytesDataContainer(GameFiles.TR_AI, null, subfile)));
+			data.add(new TrainerAiData(new BytesDataContainer(GameFiles.TRAINER_AI_SCRIPTS, null, subfile)));
             i++;
         }
 
@@ -105,22 +105,22 @@ public class TrainerAiParser implements GenericParser<GenericScriptData>
     }
 
     @Override
-    public Map<GameFiles, Narc> processDataList(List<GenericScriptData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
+    public Map<GameFiles, Narc> processDataList(List<TrainerAiData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
 
         ArrayList<byte[]> subfiles = new ArrayList<>();
-        for (GenericScriptData personal : data)
+        for (TrainerAiData trainerAiData : data)
         {
-            subfiles.add(personal.save().get(GameFiles.PERSONAL, null));
+            subfiles.add(trainerAiData.save().get(GameFiles.TRAINER_AI_SCRIPTS, null));
         }
 
-        return Collections.singletonMap(GameFiles.PERSONAL, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        return Collections.singletonMap(GameFiles.TRAINER_AI_SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
     }
 
     @Override
     public List<GameFiles> getRequirements()
     {
-        return Collections.singletonList(GameFiles.TR_AI);
+        return Collections.singletonList(GameFiles.TRAINER_AI_SCRIPTS);
     }
 
     @Override

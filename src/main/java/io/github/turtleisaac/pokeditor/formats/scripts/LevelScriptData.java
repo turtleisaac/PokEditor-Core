@@ -2,11 +2,9 @@ package io.github.turtleisaac.pokeditor.formats.scripts;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
-import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class LevelScriptData extends GenericScriptData
 {
@@ -18,12 +16,12 @@ public class LevelScriptData extends GenericScriptData
     @Override
     public void setData(BytesDataContainer files)
     {
-        if (!files.containsKey(GameFiles.SCRIPTS))
+        if (!files.containsKey(GameFiles.FIELD_SCRIPTS))
         {
             throw new RuntimeException("Script file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.SCRIPTS, null));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.FIELD_SCRIPTS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         ArrayList<Integer> temp = new ArrayList<>();
@@ -50,6 +48,6 @@ public class LevelScriptData extends GenericScriptData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        return new BytesDataContainer(GameFiles.SCRIPTS, null, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, dataBuf.reader().getBuffer());
     }
 }
