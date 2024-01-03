@@ -87,4 +87,25 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
             this.scriptID = scriptID;
         }
     }
+
+    public static class ScriptComment implements ScriptComponent {
+        private String text;
+
+        public ScriptComment(String text)
+        {
+            this.text = text;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "; " + text;
+        }
+
+        @Override
+        public String getName()
+        {
+            return text;
+        }
+    }
 }
