@@ -173,6 +173,45 @@ public class TrainerAiData extends GenericScriptData
 		}
 	}
 
+	public enum pokemon_type
+	{
+		NORMAL(0),
+		FIGHTING(1),
+		FLYING(2),
+		POISON(3),
+		GROUND(4),
+		ROCK(5),
+		BUG(6),
+		GHOST(7),
+		STEEL(8),
+		FAIRY(9),
+		FIRE(10),
+		WATER(11),
+		GRASS(12),
+		ELECTRIC(13),
+		PSYCHIC(14),
+		ICE(15),
+		DRAGON(16),
+		DARK(17);
+
+
+		int value;
+
+		pokemon_type(int value)
+		{
+			this.value = value;
+		}
+			// Super simple proof of concept.
+			static String getFromInt(int value)
+		{
+			return Arrays.stream(pokemon_side.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
+		}
+	}
+
 	public enum pokemon_state
 	{
 		BIND(0), // Guess based on dictionary definition of かなしばり.
@@ -496,6 +535,8 @@ public class TrainerAiData extends GenericScriptData
 						return pokemon_side.getFromInt(val);
 					if (parameter.name.equals("stat"))
 						return pokemon_stat.getFromInt(val);
+					if (parameter.name.equals("type"))
+						return pokemon_type.getFromInt(val);
 					if (val >= 0x4000)
 						return "0x" + Integer.toHexString(val);
 					else
