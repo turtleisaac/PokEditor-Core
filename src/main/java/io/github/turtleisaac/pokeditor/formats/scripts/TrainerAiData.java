@@ -6,8 +6,6 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
-import java.util.function.IntPredicate;
-import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -194,7 +192,7 @@ public class TrainerAiData extends GenericScriptData
 
     private ArrayList<ScriptLabel> scripts;
     private ArrayList<ScriptLabel> labels;
-    private ArrayList<ActionLabel> actions;
+    private ArrayList<TableLabel> tables;
 
     public TrainerAiData(BytesDataContainer files)
     {
@@ -203,15 +201,15 @@ public class TrainerAiData extends GenericScriptData
 
     @Override
     public void setData(BytesDataContainer files) {
-		if (!files.containsKey(GameFiles.TR_AI)) {
+		if (!files.containsKey(GameFiles.TRAINER_AI_SCRIPTS)) {
 			throw new RuntimeException("Script file not provided to editor");
 		}
 
 		scripts = new ArrayList<>();
 		labels = new ArrayList<>();
-		actions = new ArrayList<>();
+		tables = new ArrayList<>();
 
-		MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TR_AI, null));
+		MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TRAINER_AI_SCRIPTS, null));
 		MemBuf.MemBufReader reader = dataBuf.reader();
 		System.out.println("Loading AI data with size " + reader.getBuffer().length);
 
@@ -221,46 +219,46 @@ public class TrainerAiData extends GenericScriptData
 			globalScriptOffsets.add((int) reader.readUInt32());
 
 		ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
-		ArrayList<Integer> actionOffsets = new ArrayList<>();
+		ArrayList<Integer> tableOffsets = new ArrayList<>();
 		ArrayList<Integer> visitedOffsets = new ArrayList<>();
 
 		HashMap<Integer, ScriptLabel> labelMap = new HashMap<>();
-		HashMap<Integer, ActionLabel> actionMap = new HashMap<>();
+		HashMap<Integer, TableLabel> tableMap = new HashMap<>();
 
 		int lastSize;
 		do {
 			lastSize = labelOffsets.size();
 			for (int i = 0; i < labelOffsets.size(); i++) {
-				if (!actionOffsets.contains(labelOffsets.get(i)))
-					readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
+				if (!tableOffsets.contains(labelOffsets.get(i)))
+					readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, tableOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
 			}
 		}
 		while (lastSize != labelOffsets.size());
 
 		labelOffsets.sort(Comparator.naturalOrder());
 		for (int i = 0; i < labelOffsets.size(); i++) {
-			if (!actionOffsets.contains(labelOffsets.get(i)))
-				readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+			if (!tableOffsets.contains(labelOffsets.get(i)))
+				readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, tableOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
 			else
-				readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
+				readTableAtOffset(dataBuf, tableOffsets, visitedOffsets, tableMap, labelOffsets.get(i));
 		}
 
 		this.stream()
-				.filter(component -> component instanceof ScriptCommand)
-				.map(component -> (ScriptCommand)component)
+				.filter(component -> component instanceof AiScriptCommand)
+				.map(component -> (AiScriptCommand)component)
 				.flatMap(scriptCommand -> Arrays.stream(scriptCommand.parameters))
 				.filter(namedParameter -> namedParameter.name.equalsIgnoreCase("address"))
 				.forEach(namedParameter -> namedParameter.value = "label_" + labels.indexOf(labelMap.get((Integer) namedParameter.value/4)) + " (0x" + Integer.toHexString((int)namedParameter.value) + ")");
 	}
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> tableOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
             return;
         }
 
-		System.err.println("Reading offset " + offset);
+//		System.err.println("Reading offset " + offset);
 		if (offset < 0 || offset > dataBuf.writer().getPosition())
 			return;
         reader.setPosition(offset);
@@ -278,17 +276,18 @@ public class TrainerAiData extends GenericScriptData
                     labelMap.put(reader.getPosition(), scriptLabel);
                     add(scriptLabel);
                 } else if (labelOffsets.contains(reader.getPosition())) {
-                    ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
-                    labels.add(label);
-                    labelMap.put(reader.getPosition(), label);
-                    label.name = "label_" + labels.indexOf(label) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
-                    add(label);
-                } else if (actionOffsets.contains(reader.getPosition())) {
-                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-                    actions.add(actionLabel);
-                    actionLabel.name = "action_" + actions.indexOf(actionLabel) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
-                    add(actionLabel);
-                }
+					ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
+					labels.add(label);
+					labelMap.put(reader.getPosition(), label);
+					label.name = "label_" + labels.indexOf(label) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
+					add(label);
+				}
+//                  else if (tableOffsets.contains(reader.getPosition())) {
+//                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
+//                    tables.add(actionLabel);
+//                    actionLabel.name = "action_" + tables.indexOf(actionLabel) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
+//                    add(actionLabel);
+//                }
             }
 
             long commandID = reader.readUInt32();
@@ -301,7 +300,7 @@ public class TrainerAiData extends GenericScriptData
 				continue;
             }
 
-            ScriptCommand command = new ScriptCommand(commandMacro);
+            AiScriptCommand command = new AiScriptCommand(commandMacro);
             command.name = commandMacro.getName();
 
             command.setParameters(commandMacro.readParameters(reader));
@@ -322,7 +321,7 @@ public class TrainerAiData extends GenericScriptData
         }
     }
 
-    private void readActionAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, ActionLabel> actionMap, int offset)
+    private void readTableAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, TableLabel> actionMap, int offset)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -338,18 +337,25 @@ public class TrainerAiData extends GenericScriptData
                 visitedOffsets.add(reader.getPosition());
                 if (actionOffsets.contains(reader.getPosition()))
                 {
-                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-                    actions.add(actionLabel);
-                    actionMap.put(reader.getPosition(), actionLabel);
-                    actionLabel.name = "action_" + actions.indexOf(actionLabel);
-                    add(actionLabel);
+					TableLabel tableLabel = new TableLabel("table_" + Integer.toHexString(reader.getPosition()));
+                    tables.add(tableLabel);
+                    actionMap.put(reader.getPosition(), tableLabel);
+                    tableLabel.name = "table_" + tables.indexOf(tableLabel);
+                    add(tableLabel);
                 }
             }
 
-            long commandID = reader.readUInt32();
-            long parameter = reader.readUInt32();
+            long value = reader.readUInt32();
 
-			add(new ActionCommand((int)commandID, (int)parameter));
+			if (value != 0xFFFFFFFFL)
+			{
+				add(new TableEntry(value));
+			}
+			else
+			{
+				add(new TableEntry(value));
+				break;
+			}
         }
     }
 
@@ -359,7 +365,7 @@ public class TrainerAiData extends GenericScriptData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        return new BytesDataContainer(GameFiles.TR_AI, null, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.TRAINER_AI_SCRIPTS, null, dataBuf.reader().getBuffer());
     }
 
     public ArrayList<ScriptLabel> getScripts()
@@ -386,7 +392,7 @@ public class TrainerAiData extends GenericScriptData
                 }
                 builder.append(label.getName()).append(":\n");
             }
-            else if (component instanceof TrainerAiData.ScriptCommand scriptCommand)
+            else if (component instanceof AiScriptCommand scriptCommand)
             {
                 builder.append("    ").append(scriptCommand.getName());
                 Stream<String> parameters = scriptCommand.getParameterStrings();
@@ -399,19 +405,20 @@ public class TrainerAiData extends GenericScriptData
                 }
                 builder.append("\n");
             }
-            else if (component instanceof TrainerAiData.ActionLabel actionLabel)
-            {
-                builder.append(actionLabel.getName()).append(":\n");
-            }
-            else if (component instanceof TrainerAiData.ActionCommand actionCommand)
-            {
-                builder.append("    ").append(actionCommand);
-                if (actionCommand.getName().equalsIgnoreCase("End"))
-                {
-                    builder.append("\n");
-                }
-                builder.append("\n");
-            }
+			else if (component instanceof TableLabel tableLabel)
+			{
+				builder.append(tableLabel.getName()).append(":\n");
+			}
+			else if (component instanceof TableEntry tableEntry)
+			{
+				builder.append("    ").append(tableEntry.getName());
+
+				if (tableEntry.getName().equals(String.valueOf(0xFFFFFFFFL)))
+				{
+					builder.append("\n");
+				}
+				builder.append("\n");
+			}
 			else
 				System.err.println("Invalid Component Type");
         }
@@ -419,28 +426,7 @@ public class TrainerAiData extends GenericScriptData
         return builder.toString().strip() + "\n";
     }
 
-    public static class ScriptLabel implements ScriptComponent {
-        private String name;
-
-        public ScriptLabel(String name)
-        {
-            this.name = name;
-        }
-
-        @Override
-        public String toString()
-        {
-            return name + ": ";
-        }
-
-        @Override
-        public String getName()
-        {
-            return name;
-        }
-    }
-
-    public static class ScriptCommand implements ScriptComponent {
+    public static class AiScriptCommand implements ScriptComponent {
         String name;
 		NamedParameter[] parameters;
 
@@ -452,7 +438,7 @@ public class TrainerAiData extends GenericScriptData
 			Object value;
 		}
 
-        public ScriptCommand(CommandMacro commandMacro)
+        public AiScriptCommand(CommandMacro commandMacro)
         {
             this.commandMacro = commandMacro;
             this.name = commandMacro.getName();
@@ -507,55 +493,35 @@ public class TrainerAiData extends GenericScriptData
         }
     }
 
-    public static class ActionLabel implements ScriptComponent
-    {
-        private String name;
+	public static class TableLabel implements ScriptComponent
+	{
+		String name;
 
-        public ActionLabel(String name)
-        {
-            this.name = name;
-        }
+		public TableLabel(String name)
+		{
+			this.name = name;
+		}
 
-        @Override
-        public String toString()
-        {
-            return name + ": ";
-        }
+		@Override
+		public String getName()
+		{
+			return null;
+		}
+	}
 
-        @Override
-        public String getName()
-        {
-            return name;
-        }
-    }
+	public static class TableEntry implements ScriptComponent
+	{
+		String name;
 
-    public static class ActionCommand implements ScriptComponent
-    {
-        private String name;
-        private int parameter;
+		public TableEntry(long value)
+		{
+			name = String.valueOf(value);
+		}
 
-        public ActionCommand(String name, int parameter)
-        {
-            this.name = name;
-            this.parameter = parameter;
-        }
-
-        public ActionCommand(int id, int parameter)
-        {
-            this.name = String.valueOf(id);
-            this.parameter = parameter;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Action " + name + " " + parameter;
-        }
-
-        @Override
-        public String getName()
-        {
-            return name;
-        }
-    }
+		@Override
+		public String getName()
+		{
+			return null;
+		}
+	}
 }

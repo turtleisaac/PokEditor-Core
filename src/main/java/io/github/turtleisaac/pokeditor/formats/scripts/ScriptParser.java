@@ -132,12 +132,12 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     @Override
     public List<GenericScriptData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
-        if (!narcs.containsKey(GameFiles.SCRIPTS))
+        if (!narcs.containsKey(GameFiles.FIELD_SCRIPTS))
         {
             throw new RuntimeException("Scripts narc not provided to editor");
         }
 
-        Narc scripts = narcs.get(GameFiles.SCRIPTS);
+        Narc scripts = narcs.get(GameFiles.FIELD_SCRIPTS);
         ArrayList<GenericScriptData> data = new ArrayList<>();
 
         int i = 0;
@@ -150,12 +150,12 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             if (testFileIsLevelScript(subfile))
             {
 //                System.out.println(" (Level)");
-                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
+                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
             }
             else
             {
 //                System.out.println(" (Normal)");
-                data.add(new ScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
+                data.add(new ScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
             }
             i++;
         }
@@ -194,16 +194,16 @@ public class ScriptParser implements GenericParser<GenericScriptData>
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (GenericScriptData scriptData : data)
         {
-            subfiles.add(scriptData.save().get(GameFiles.SCRIPTS, null));
+            subfiles.add(scriptData.save().get(GameFiles.FIELD_SCRIPTS, null));
         }
 
-        return Collections.singletonMap(GameFiles.SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        return Collections.singletonMap(GameFiles.FIELD_SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
     }
 
     @Override
     public List<GameFiles> getRequirements()
     {
-        return Collections.singletonList(GameFiles.SCRIPTS);
+        return Collections.singletonList(GameFiles.FIELD_SCRIPTS);
     }
 
     @Override

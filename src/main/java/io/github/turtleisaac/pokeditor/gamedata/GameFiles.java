@@ -38,8 +38,8 @@ public enum GameFiles
     PARTY_ICONS,
     BATTLE_SPRITES,
     TRAINER_SPRITES,
-    SCRIPTS,
-	TR_AI,
+    FIELD_SCRIPTS,
+    TRAINER_AI_SCRIPTS,
     EVENTS
     ;
 
@@ -71,8 +71,8 @@ public enum GameFiles
                 PARTY_ICONS.path = "poketool/icongra/pl_poke_icon.narc";
                 BATTLE_SPRITES.path = "poketool/pokegra/pl_pokegra.narc";
 //   todo             TRAINER_SPRITES.path =
-                SCRIPTS.path = "fielddata/script/scr_seq.narc";
-				TR_AI.path = "battle/tr_ai/tr_ai_seq.narc";
+                FIELD_SCRIPTS.path = "fielddata/script/scr_seq.narc";
+				TRAINER_AI_SCRIPTS.path = "battle/tr_ai/tr_ai_seq.narc";
             }
             case HeartGold, SoulSilver -> {
                 PERSONAL.path = "a/0/0/2";
@@ -97,8 +97,8 @@ public enum GameFiles
                 else {
                     ENCOUNTERS.path = "a/1/3/6";
                 }
-                SCRIPTS.path = "a/0/1/2";
-				TR_AI.path = "a/0/9/9";
+                FIELD_SCRIPTS.path = "a/0/1/2";
+				TRAINER_AI_SCRIPTS.path = "a/0/9/9";
             }
         }
     }
