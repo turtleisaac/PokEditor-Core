@@ -366,26 +366,19 @@ public class TrainerAiData extends GenericScriptData
 
             command.setParameters(commandMacro.readParameters(reader));
 
-            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1])) {
+            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1]))
+			{
                 int offsetParam = (int) command.parameters[command.parameters.length-1].value;
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
 
-//            if (isCallCommand.test(commandID)) {
-//                int offsetParam = (int) command.parameters[command.parameters.length-1].value;
-//                if (offsetParam >= 65536)
-//                    System.err.println("Unusually large offset parameter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
-//                if (!labelOffsets.contains(offsetParam))
-//                    labelOffsets.add(offsetParam);
-//
-////				if (isTableCommand.test(commandID))
-////				{
-////					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
-////					if (!tableOffsets.contains(tableOffsetParam))
-////						tableOffsets.add(tableOffsetParam);
-////				}
-//            }
+			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
+			{
+				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
+				if (!tableOffsets.contains(offsetParam))
+					tableOffsets.add(offsetParam);
+			}
 
             if (finalRun)
                 add(command);
