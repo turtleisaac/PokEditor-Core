@@ -1,7 +1,3 @@
-.macro maintableentry dest, src
-	.word (\dest - \src)/4
-.endm
-
 .macro JumpIfRandomLess value, address
 	.word 0x0
 	.word \value
@@ -189,7 +185,7 @@
 	.word 0x1D
 .endm
 
-.macro CheckType kind
+.macro CheckType side
 	.word 0x1E
 	.word \side
 .endm
