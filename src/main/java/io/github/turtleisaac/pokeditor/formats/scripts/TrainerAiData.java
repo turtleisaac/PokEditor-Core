@@ -334,6 +334,8 @@ public class TrainerAiData extends GenericScriptData
 
         while (dataBuf.writer().getPosition() - reader.getPosition() >= 4)
         {
+			if (tableOffsets.contains(reader.getPosition()))
+				break;
             if (finalRun && !visitedOffsets.contains(reader.getPosition()))
             {
                 visitedOffsets.add(reader.getPosition());
@@ -366,26 +368,19 @@ public class TrainerAiData extends GenericScriptData
 
             command.setParameters(commandMacro.readParameters(reader));
 
-            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1])) {
+            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1]))
+			{
                 int offsetParam = (int) command.parameters[command.parameters.length-1].value;
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
 
-//            if (isCallCommand.test(commandID)) {
-//                int offsetParam = (int) command.parameters[command.parameters.length-1].value;
-//                if (offsetParam >= 65536)
-//                    System.err.println("Unusually large offset parameter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
-//                if (!labelOffsets.contains(offsetParam))
-//                    labelOffsets.add(offsetParam);
-//
-////				if (isTableCommand.test(commandID))
-////				{
-////					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
-////					if (!tableOffsets.contains(tableOffsetParam))
-////						tableOffsets.add(tableOffsetParam);
-////				}
-//            }
+			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
+			{
+				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
+				if (!tableOffsets.contains(offsetParam))
+					tableOffsets.add(offsetParam);
+			}
 
             if (finalRun)
                 add(command);
@@ -421,15 +416,10 @@ public class TrainerAiData extends GenericScriptData
 
             long value = reader.readUInt32();
 
-			if (value != 0xFFFFFFFFL)
-			{
-				add(new TableEntry(value));
-			}
-			else
-			{
-				add(new TableEntry(value));
+			add(new TableEntry(value));
+
+			if (value == 0xFFFFFFFFL)
 				break;
-			}
         }
     }
 
@@ -590,17 +580,17 @@ public class TrainerAiData extends GenericScriptData
 
 	public static class TableEntry implements ScriptComponent
 	{
-		String name;
+		long value;
 
 		public TableEntry(long value)
 		{
-			name = String.valueOf(value);
+			this.value = value;
 		}
 
 		@Override
 		public String getName()
 		{
-			return null;
+			return String.valueOf(value);
 		}
 	}
 }
