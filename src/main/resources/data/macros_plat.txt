@@ -94,7 +94,7 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfMoveEffect side, condition, address
+.macro JumpIfNotMoveEffect side, condition, address
 	.word 0xE
 	.word \side
 	.word \condition
