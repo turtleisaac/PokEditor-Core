@@ -382,6 +382,20 @@ public class TrainerAiData extends GenericScriptData
 					tableOffsets.add(offsetParam);
 			}
 
+//			if (isCallCommand.test(commandID)) {
+//				int offsetParam = (int) command.parameters[command.parameters.length-1].value;
+//
+//				if (!labelOffsets.contains(offsetParam))
+//					labelOffsets.add(offsetParam);
+//
+//				if (isTableCommand.test(commandID))
+//				{
+//					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
+//					if (!tableOffsets.contains(tableOffsetParam))
+//						tableOffsets.add(tableOffsetParam);
+//				}
+//			}
+
             if (finalRun)
                 add(command);
 
@@ -574,7 +588,7 @@ public class TrainerAiData extends GenericScriptData
 		@Override
 		public String getName()
 		{
-			return null;
+			return name;
 		}
 	}
 
