@@ -19,6 +19,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     private CommandMacro macro;
 
     private int parameterType;
+    private int storedReadValue;
     private boolean compareMode;
 
     CommandReader(MemBuf.MemBufReader reader, CommandMacro commandMacro)
@@ -31,13 +32,22 @@ public class CommandReader extends CommandMacroVisitor<Integer>
     protected Integer writeLineAction(MacrosParser.WriteContext writeContext, MacrosParser.InputContext inputContext, int dataType)
     {
         parameterType = dataType;
+
+        storedReadValue = switch (dataType)
+        {
+            case MacrosLexer.BYTE -> (int) reader.readUInt8();
+            case MacrosLexer.SHORT -> reader.readUInt16();
+            case MacrosLexer.WORD -> reader.readInt();
+            default -> throw new IllegalStateException("Unexpected value: " + parameterType);
+        };
+
         Integer ret = inputContext.accept(this);
 
-        Pattern pattern = Pattern.compile("\\\\[\\da-zA-Z_]+");
-        Matcher matcher = pattern.matcher(inputContext.getText());
-        if (matcher.find()) {
-            parameterToValueMap.put(matcher.group().substring(1), ret);
-        }
+//        Pattern pattern = Pattern.compile("\\\\[\\da-zA-Z_]+");
+//        Matcher matcher = pattern.matcher(inputContext.getText());
+//        if (matcher.find()) {
+//            parameterToValueMap.put(matcher.group().substring(1), ret);
+//        }
         return ret;
     }
 
@@ -55,10 +65,12 @@ public class CommandReader extends CommandMacroVisitor<Integer>
         }
 
         ArrayList<Integer> inputs = new ArrayList<>();
+        ArrayList<ParseTree> inputNodes = new ArrayList<>();
         AlgebraicOperation operation = AlgebraicOperation.ERROR;
         for (ParseTree child : ctx.children) {
             if (child instanceof MacrosParser.Number_or_argumentContext || child instanceof MacrosParser.AlgebraContext || child instanceof MacrosParser.InputContext) {
-                inputs.add(child.accept(this));
+                inputNodes.add(child);
+//                inputs.add(child.accept(this));
             }
             else if (child instanceof TerminalNodeImpl terminalNode)
             {
@@ -82,7 +94,16 @@ public class CommandReader extends CommandMacroVisitor<Integer>
 
         }
 
-        return performAlgebraicOperation(inputs, operation);
+        if (inputNodes.size() == 2)
+        {
+            inputs.add(storedReadValue);
+            inputs.add(inputNodes.get(1).accept(this));
+
+            storedReadValue = performAlgebraicOperation(inputs, operation);
+            inputNodes.get(0).accept(this);
+        }
+
+        return null;
     }
 
 
@@ -93,13 +114,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
         TerminalNodeImpl terminalNode = (TerminalNodeImpl) node;
         if ((terminalNode.symbol.getType() == MacrosLexer.ARGUMENT_USAGE)) {
             if (!compareMode) { // reading arg from file for the first time
-                return switch (parameterType)
-                {
-                    case MacrosLexer.BYTE -> (int) reader.readUInt8();
-                    case MacrosLexer.SHORT -> reader.readUInt16();
-                    case MacrosLexer.WORD -> reader.readInt();
-                    default -> throw new IllegalStateException("Unexpected value: " + parameterType);
-                };
+                parameterToValueMap.put(terminalNode.getText().substring(1), storedReadValue);
             }
             else // this is a calculation which requires an already read value
             {

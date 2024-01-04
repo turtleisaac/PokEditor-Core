@@ -216,7 +216,7 @@ public class TrainerAiData extends GenericScriptData
 		ArrayList<Integer> globalScriptOffsets = new ArrayList<>();
 
 		for (int i = 0; i < 32; ++i)
-			globalScriptOffsets.add((int) reader.readUInt32());
+			globalScriptOffsets.add((int) reader.readUInt32() * 4);
 
 		ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
 		ArrayList<Integer> tableOffsets = new ArrayList<>();
@@ -291,8 +291,6 @@ public class TrainerAiData extends GenericScriptData
             }
 
             long commandID = reader.readUInt32();
-            if (commandID > 0xff)
-                continue;
 
             CommandMacro commandMacro = TrainerAiParser.nativeCommands.get((int)commandID);
             if (commandMacro == null) {
