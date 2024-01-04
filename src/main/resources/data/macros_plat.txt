@@ -189,7 +189,7 @@
 	.word 0x1D
 .endm
 
-.macro CheckType kind
+.macro LoadType side
 	.word 0x1E
 	.word \side
 .endm
