@@ -101,14 +101,14 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfSideEffect side, condition, address
+.macro JumpIfFieldCondition side, condition, address
 	.word 0xF
 	.word \side
 	.word \condition
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfNotSideEffect side, condition, address
+.macro JumpIfNotFieldCondition side, condition, address
 	.word 0x10
 	.word \side
 	.word \condition
@@ -189,9 +189,9 @@
 	.word 0x1D
 .endm
 
-.macro Checktype kind
+.macro CheckType kind
 	.word 0x1E
-	.word \kind
+	.word \side
 .endm
 
 .macro LoadMovePower
@@ -250,13 +250,13 @@
 	.word \side
 .endm
 
-.macro LoadCompatability
+.macro LoadBestTypeEffectiveness
 	.word 0x2A
 .endm
 
-.macro CheckMoveCompatability param_0, address
+.macro JumpIfBestTypeEffectivenessEquals compatibility, address
 	.word 0x2B
-	.word \param_0
+	.word \compatibility
 	.word (\address-.-4)/4
 .endm
 
@@ -574,12 +574,12 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro CheckStatusUp side
+.macro LoadStatusBoost side
 	.word 0x64
 	.word \side
 .endm
 
-.macro CheckStatusDiff side, stat
+.macro LoadStatusDiff side, stat
 	.word 0x65
 	.word \side
 	.word \stat

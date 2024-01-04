@@ -55,6 +55,16 @@ public class TrainerAiData extends GenericScriptData
 		{
 			this.value = value;
 		}
+
+		// Super simple proof of concept.
+		static String getFromInt(int value)
+		{
+			return Arrays.stream(move_effectiveness.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
+		}
 	}
 
 	public enum attack_stat_comparison
@@ -160,6 +170,45 @@ public class TrainerAiData extends GenericScriptData
 		}
 	}
 
+	public enum pokemon_type
+	{
+		NORMAL(0),
+		FIGHTING(1),
+		FLYING(2),
+		POISON(3),
+		GROUND(4),
+		ROCK(5),
+		BUG(6),
+		GHOST(7),
+		STEEL(8),
+		FAIRY(9),
+		FIRE(10),
+		WATER(11),
+		GRASS(12),
+		ELECTRIC(13),
+		PSYCHIC(14),
+		ICE(15),
+		DRAGON(16),
+		DARK(17);
+
+
+		int value;
+
+		pokemon_type(int value)
+		{
+			this.value = value;
+		}
+			// Super simple proof of concept.
+			static String getFromInt(int value)
+		{
+			return Arrays.stream(pokemon_type.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
+		}
+	}
+
 	public enum pokemon_state
 	{
 		BIND(0), // Guess based on dictionary definition of かなしばり.
@@ -222,8 +271,8 @@ public class TrainerAiData extends GenericScriptData
 		ArrayList<Integer> tableOffsets = new ArrayList<>();
 		ArrayList<Integer> visitedOffsets = new ArrayList<>();
 
-		HashMap<Integer, ScriptLabel> labelMap = new HashMap<>();
-		HashMap<Integer, TableLabel> tableMap = new HashMap<>();
+		Map<Integer, ScriptLabel> labelMap = new HashMap<>();
+		Map<Integer, TableLabel> tableMap = new HashMap<>();
 
 		int lastSize;
 		do {
@@ -247,11 +296,18 @@ public class TrainerAiData extends GenericScriptData
 				.filter(component -> component instanceof AiScriptCommand)
 				.map(component -> (AiScriptCommand)component)
 				.flatMap(scriptCommand -> Arrays.stream(scriptCommand.parameters))
-				.filter(namedParameter -> namedParameter.name.equalsIgnoreCase("address"))
-				.forEach(namedParameter -> namedParameter.value = "label_" + labels.indexOf(labelMap.get((Integer) namedParameter.value/4)) + " (0x" + Integer.toHexString((int)namedParameter.value) + ")");
+				.filter(namedParameter -> List.of("address", "jumpAddress", "tableAddress").contains(namedParameter.name))
+				.forEach(namedParameter -> {
+					final int val = (int)namedParameter.value;
+					if (namedParameter.name.equals("tableAddress"))
+						namedParameter.value = "table_" + tables.indexOf(tableMap.get(val));
+					else
+						namedParameter.value = "label_" + labels.indexOf(labelMap.get(val));
+					namedParameter.value += " (0x" + Integer.toHexString(val) + ")";
+				});
 	}
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> tableOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> tableOffsets, ArrayList<Integer> visitedOffsets, int offset, Map<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -282,12 +338,6 @@ public class TrainerAiData extends GenericScriptData
 					label.name = "label_" + labels.indexOf(label) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
 					add(label);
 				}
-//                  else if (tableOffsets.contains(reader.getPosition())) {
-//                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-//                    tables.add(actionLabel);
-//                    actionLabel.name = "action_" + tables.indexOf(actionLabel) + " (0x" + Integer.toHexString(reader.getPosition()) + ")";
-//                    add(actionLabel);
-//                }
             }
 
             long commandID = reader.readUInt32();
@@ -295,7 +345,7 @@ public class TrainerAiData extends GenericScriptData
             CommandMacro commandMacro = TrainerAiParser.nativeCommands.get((int)commandID);
             if (commandMacro == null) {
                 System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset " + reader.getPosition());
-				continue;
+				break;
             }
 
             AiScriptCommand command = new AiScriptCommand(commandMacro);
@@ -303,10 +353,8 @@ public class TrainerAiData extends GenericScriptData
 
             command.setParameters(commandMacro.readParameters(reader));
 
-            if (commandMacro.getParameters().length > 0 && commandMacro.getParameters()[commandMacro.getParameters().length-1].equalsIgnoreCase("address")) {
+            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1])) {
                 int offsetParam = (int) command.parameters[command.parameters.length-1].value;
-				if (offsetParam >= 65536)
-					System.err.println("Unusually large offset paremeter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
@@ -319,7 +367,7 @@ public class TrainerAiData extends GenericScriptData
         }
     }
 
-    private void readTableAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, TableLabel> actionMap, int offset)
+    private void readTableAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, Map<Integer, TableLabel> actionMap, int offset)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -397,7 +445,8 @@ public class TrainerAiData extends GenericScriptData
 
 				parameters.forEach(parameter -> builder.append(" ").append(parameter));
 
-                if (scriptCommand.getName().equalsIgnoreCase("end") || scriptCommand.getName().equalsIgnoreCase("goto") || scriptCommand.getName().equalsIgnoreCase("Jump") || scriptCommand.getName().equalsIgnoreCase("Return"))
+				// TODO: Find other AI script commands that need an extra newline.
+                if (Stream.of("endai").anyMatch(s -> scriptCommand.getName().equals(s)))
                 {
                     builder.append("\n");
                 }
@@ -468,6 +517,10 @@ public class TrainerAiData extends GenericScriptData
 						return pokemon_side.getFromInt(val);
 					if (parameter.name.equals("stat"))
 						return pokemon_stat.getFromInt(val);
+					if (parameter.name.equals("type"))
+						return pokemon_type.getFromInt(val);
+					if (parameter.name.equals("compatibility"))
+						return move_effectiveness.getFromInt(val);
 					if (val >= 0x4000)
 						return "0x" + Integer.toHexString(val);
 					else
