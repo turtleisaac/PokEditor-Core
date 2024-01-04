@@ -278,13 +278,13 @@
 	.word 0x2E
 .endm
 
-.macro JumpIfMoveEffect seqno, address
+.macro JumpIfMoveSequenceNumber seqno, address
 	.word 0x2F
 	.word \seqno
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfNotMoveEffect seqno, address
+.macro JumpIfNotMoveSequenceNumber seqno, address
 	.word 0x30
 	.word \seqno
 	.word (\address-.-4)/4
