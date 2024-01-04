@@ -499,13 +499,13 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfFieldCondition param_0, address
+.macro JumpIfFieldCondition flag, address
 	.word 0x56
-	.word \param_0
+	.word \flag
 	.word (\address-.-4)/4
 .endm
 
-.macro LoadSideConditionCount side, flag
+.macro LoadFieldConditionCount side, flag
 	.word 0x57
 	.word \side
 	.word \flag
