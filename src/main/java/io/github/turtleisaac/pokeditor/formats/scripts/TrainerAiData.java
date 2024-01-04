@@ -366,11 +366,19 @@ public class TrainerAiData extends GenericScriptData
 
             command.setParameters(commandMacro.readParameters(reader));
 
-            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1])) {
+            if (commandMacro.getParameters().length > 0 && List.of("address", "jumpAddress").contains(commandMacro.getParameters()[commandMacro.getParameters().length-1]))
+			{
                 int offsetParam = (int) command.parameters[command.parameters.length-1].value;
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
+			
+			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
+			{
+				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
+				if (!tableOffsets.contains(offsetParam))
+					tableOffsets.add(offsetParam);
+			}
 
             if (finalRun)
                 add(command);
