@@ -388,14 +388,14 @@
 	.word 0x3F
 .endm
 
-.macro CheckItem item
+.macro LoadItem item
 	.word 0x40
 	.word \item
 .endm
 
-.macro CheckEquippedItem param_0
+.macro LoadEquippedItem side
 	.word 0x41
-	.word \param_0
+	.word \side
 .endm
 
 .macro LoadGender side
@@ -523,35 +523,35 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro CheckThrowPower side
+.macro LoadThrowPower side
 	.word 0x5A
 	.word \side
 .endm
 
-.macro CheckPPRemaining
+.macro LoadPPRemaining
 	.word 0x5B
 .endm
 
-.macro aiCmd92 side, address
+.macro JumpIfTotteOki side, address
 	.word 0x5C
 	.word \side
 	.word (\address-.-4)/4
 .endm
 
-.macro CheckMoveCategory
+.macro LoadMoveCategory
 	.word 0x5D
 .endm
 
-.macro CheckLastOpponentMoveCategory
+.macro LoadLastOpponentMoveCategory
 	.word 0x5E
 .endm
 
-.macro CheckSpeedRanking side
+.macro LoadSpeedRanking side
 	.word 0x5F
 	.word \side
 .endm
 
-.macro CheckSlowStartTurnNum side
+.macro LoadSlowStartTurnNum side
 	.word 0x60
 	.word \side
 .endm
