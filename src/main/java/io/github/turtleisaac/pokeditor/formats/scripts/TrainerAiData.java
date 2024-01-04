@@ -334,6 +334,8 @@ public class TrainerAiData extends GenericScriptData
 
         while (dataBuf.writer().getPosition() - reader.getPosition() >= 4)
         {
+			if (tableOffsets.contains(reader.getPosition()))
+				break;
             if (finalRun && !visitedOffsets.contains(reader.getPosition()))
             {
                 visitedOffsets.add(reader.getPosition());
@@ -414,15 +416,10 @@ public class TrainerAiData extends GenericScriptData
 
             long value = reader.readUInt32();
 
-			if (value != 0xFFFFFFFFL)
-			{
-				add(new TableEntry(value));
-			}
-			else
-			{
-				add(new TableEntry(value));
+			add(new TableEntry(value));
+
+			if (value == 0xFFFFFFFFL)
 				break;
-			}
         }
     }
 
@@ -583,17 +580,17 @@ public class TrainerAiData extends GenericScriptData
 
 	public static class TableEntry implements ScriptComponent
 	{
-		String name;
+		long value;
 
 		public TableEntry(long value)
 		{
-			name = String.valueOf(value);
+			this.value = value;
 		}
 
 		@Override
 		public String getName()
 		{
-			return null;
+			return String.valueOf(value);
 		}
 	}
 }
