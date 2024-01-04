@@ -101,17 +101,17 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfFieldCondition side, condition, address
+.macro JumpIfSideCondition side, side_condition, address
 	.word 0xF
 	.word \side
-	.word \condition
+	.word \side_condition
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfNotFieldCondition side, condition, address
+.macro JumpIfNotSideCondition side, side_condition, address
 	.word 0x10
 	.word \side
-	.word \condition
+	.word \side_condition
 	.word (\address-.-4)/4
 .endm
 
@@ -198,9 +198,9 @@
 	.word 0x1F
 .endm
 
-.macro CompareMovePower param_0
+.macro CompareMovePower flag
 	.word 0x20
-	.word \param_0
+	.word \flag
 .endm
 
 .macro LoadLastMoveUsed side
@@ -499,16 +499,16 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfFieldCondition flag, address
+.macro JumpIfFieldCondition field_condition, address
 	.word 0x56
-	.word \flag
+	.word \field_condition
 	.word (\address-.-4)/4
 .endm
 
-.macro LoadFieldConditionCount side, flag
+.macro LoadSideConditionCount side, side_condition
 	.word 0x57
 	.word \side
-	.word \flag
+	.word \side_condition
 .endm
 
 .macro JumpIfPartyMonHpNotFull side, address
