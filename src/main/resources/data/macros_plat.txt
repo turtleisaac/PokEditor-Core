@@ -165,14 +165,14 @@
 
 .macro JumpIfTableMatch tableAddress, jumpAddress
 	.word 0x19
-	.word (\tableAddress-.+8)/4
-	.word (\jumpAddress-.+4)/4
+	.word (\tableAddress-.-8)/4
+	.word (\jumpAddress-.-4)/4
 .endm
 
 .macro JumpIfNotTableMatch tableAddress, jumpAddress
 	.word 0x1A
-	.word (\tableAddress-.+8)/4
-	.word (\jumpAddress-.+4)/4
+	.word (\tableAddress-.-8)/4
+	.word (\jumpAddress-.-4)/4
 .endm
 
 .macro JumpIfHasDamagingMove address
