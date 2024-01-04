@@ -250,13 +250,13 @@
 	.word \side
 .endm
 
-.macro LoadCompatability
+.macro LoadBestTypeEffectiveness
 	.word 0x2A
 .endm
 
-.macro CheckMoveCompatability param_0, address
+.macro JumpIfBestTypeEffectivenessEquals compatibility, address
 	.word 0x2B
-	.word \param_0
+	.word \compatibility
 	.word (\address-.-4)/4
 .endm
 
