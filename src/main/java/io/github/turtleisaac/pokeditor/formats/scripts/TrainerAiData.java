@@ -609,7 +609,9 @@ public class TrainerAiData extends GenericScriptData
 		@Override
 		public String getName()
 		{
-			return "0x" + Long.toHexString(value);
+			if (value != 0xFFFFFFFFL)
+				return String.valueOf(value);
+			return "endTable";
 		}
 	}
 }
