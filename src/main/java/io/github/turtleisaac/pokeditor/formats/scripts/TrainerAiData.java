@@ -298,12 +298,16 @@ public class TrainerAiData extends GenericScriptData
 		while (lastSize != labelOffsets.size());
 
 		labelOffsets.sort(Comparator.naturalOrder());
-		for (int i = 0; i < labelOffsets.size(); i++) {
-			if (!tableOffsets.contains(labelOffsets.get(i)))
-				readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, tableOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
-			else
-				readTableAtOffset(dataBuf, tableOffsets, visitedOffsets, tableMap, labelOffsets.get(i));
-		}
+		tableOffsets.sort(Comparator.naturalOrder());
+		Stream.of(tableOffsets, labelOffsets)
+				.flatMap(List::stream)
+				.sorted(Comparator.naturalOrder())
+				.forEachOrdered(offset -> {
+					if (!tableOffsets.contains(offset))
+						readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, tableOffsets, visitedOffsets, offset, labelMap, true);
+					else
+						readTableAtOffset(dataBuf, tableOffsets, visitedOffsets, tableMap, offset);
+				});
 
 		this.stream()
 				.filter(component -> component instanceof AiScriptCommand)
@@ -327,7 +331,6 @@ public class TrainerAiData extends GenericScriptData
             return;
         }
 
-//		System.err.println("Reading offset " + offset);
 		if (offset < 0 || offset > dataBuf.writer().getPosition())
 			return;
         reader.setPosition(offset);
@@ -379,7 +382,9 @@ public class TrainerAiData extends GenericScriptData
 			{
 				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
 				if (!tableOffsets.contains(offsetParam))
+				{
 					tableOffsets.add(offsetParam);
+				}
 			}
 
 //			if (isCallCommand.test(commandID)) {
