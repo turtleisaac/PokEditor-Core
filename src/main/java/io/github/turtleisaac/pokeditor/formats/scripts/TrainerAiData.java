@@ -261,8 +261,8 @@ public class TrainerAiData extends GenericScriptData
 		ArrayList<Integer> tableOffsets = new ArrayList<>();
 		ArrayList<Integer> visitedOffsets = new ArrayList<>();
 
-		HashMap<Integer, ScriptLabel> labelMap = new HashMap<>();
-		HashMap<Integer, TableLabel> tableMap = new HashMap<>();
+		Map<Integer, ScriptLabel> labelMap = new HashMap<>();
+		Map<Integer, TableLabel> tableMap = new HashMap<>();
 
 		int lastSize;
 		do {
@@ -287,10 +287,10 @@ public class TrainerAiData extends GenericScriptData
 				.map(component -> (AiScriptCommand)component)
 				.flatMap(scriptCommand -> Arrays.stream(scriptCommand.parameters))
 				.filter(namedParameter -> namedParameter.name.equalsIgnoreCase("address"))
-				.forEach(namedParameter -> namedParameter.value = "label_" + labels.indexOf(labelMap.get((Integer) namedParameter.value/4)) + " (0x" + Integer.toHexString((int)namedParameter.value) + ")");
+				.forEach(namedParameter -> namedParameter.value = "label_" + labels.indexOf(labelMap.get((Integer) namedParameter.value)) + " (0x" + Integer.toHexString((int)namedParameter.value) + ")");
 	}
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> tableOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> tableOffsets, ArrayList<Integer> visitedOffsets, int offset, Map<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -338,8 +338,6 @@ public class TrainerAiData extends GenericScriptData
 
             if (commandMacro.getParameters().length > 0 && commandMacro.getParameters()[commandMacro.getParameters().length-1].equalsIgnoreCase("address")) {
                 int offsetParam = (int) command.parameters[command.parameters.length-1].value;
-				if (offsetParam >= 65536)
-					System.err.println("Unusually large offset paremeter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
@@ -352,7 +350,7 @@ public class TrainerAiData extends GenericScriptData
         }
     }
 
-    private void readTableAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, TableLabel> actionMap, int offset)
+    private void readTableAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, Map<Integer, TableLabel> actionMap, int offset)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
