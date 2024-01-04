@@ -505,10 +505,10 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfSideCondition side, address
+.macro LoadFieldConditionCount side, param_1
 	.word 0x57
 	.word \side
-	.word (\address-.-4)/4
+	.word \param_1
 .endm
 
 .macro JumpIfPartyMonHpNotFull side, address

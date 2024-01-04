@@ -362,7 +362,7 @@ public class TrainerAiData extends GenericScriptData
 
             CommandMacro commandMacro = TrainerAiParser.nativeCommands.get((int)commandID);
             if (commandMacro == null) {
-                System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset " + reader.getPosition());
+                System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset 0x" + Integer.toHexString(reader.getPosition()));
 				break;
             }
 
