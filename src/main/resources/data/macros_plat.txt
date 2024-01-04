@@ -486,10 +486,10 @@
 	.word \ability
 .endm
 
-.macro JumpIfFlashFireActive side, ability
+.macro JumpIfFlashFireActive side, address
 	.word 0x54
 	.word \side
-	.word \ability
+	.word (\address-.-4)/4
 .endm
 
 .macro JumpIfHasThisItem side, item, address
@@ -505,10 +505,10 @@
 	.word (\address-.-4)/4
 .endm
 
-.macro JumpIfSideCondition side, param_1
+.macro JumpIfSideCondition side, address
 	.word 0x57
 	.word \side
-	.word \param_1
+	.word (\address-.-4)/4
 .endm
 
 .macro JumpIfPartyMonHpNotFull side, address

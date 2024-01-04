@@ -6,11 +6,24 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
+import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TrainerAiData extends GenericScriptData
 {
+	private static final LongPredicate isCallCommand = commandID -> ((commandID >= 0 && commandID <= 0x1C) && commandID != 4)
+			|| (commandID >= 0x22 && commandID <= 0x25)
+			|| (commandID >= 0x2c && commandID <= 0x3e && commandID != 0x2e && commandID != 0x3d)
+			|| (commandID >= 0x4b && commandID <= 0x51 && commandID != 0x4d)
+			|| (commandID >= 0x54 && commandID <= 0x59)
+			|| commandID == 0x5C
+			|| (commandID >= 0x61 && commandID <= 0x63)
+			|| (commandID >= 0x66 && commandID <= 0x6B && commandID != 0x69);
+
+	private static final LongPredicate isTableCommand = commandID -> commandID == 0x19 || commandID == 0x1A;
+
+
 	public enum move_power_rating
 	{
 		NO_POWER(0), // Move doesn't use power.
@@ -303,13 +316,28 @@ public class TrainerAiData extends GenericScriptData
 
             command.setParameters(commandMacro.readParameters(reader));
 
-            if (commandMacro.getParameters().length > 0 && commandMacro.getParameters()[commandMacro.getParameters().length-1].equalsIgnoreCase("address")) {
-                int offsetParam = (int) command.parameters[command.parameters.length-1].value;
+//            if (commandMacro.getParameters().length > 0 && commandMacro.getParameters()[commandMacro.getParameters().length-1].equalsIgnoreCase("address")) {
+//                int offsetParam = (int) command.parameters[command.parameters.length-1].value;
+//				if (offsetParam >= 65536)
+//					System.err.println("Unusually large offset paremeter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
+//                if (!labelOffsets.contains(offsetParam))
+//                    labelOffsets.add(offsetParam);
+//            }
+
+			if (isCallCommand.test(commandID)) {
+				int offsetParam = (int) command.parameters[command.parameters.length-1].value;
 				if (offsetParam >= 65536)
-					System.err.println("Unusually large offset paremeter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
-                if (!labelOffsets.contains(offsetParam))
-                    labelOffsets.add(offsetParam);
-            }
+					System.err.println("Unusually large offset parameter " + offsetParam + " at 0x" + Integer.toHexString(reader.getPosition()) + " command " + command.name);
+				if (!labelOffsets.contains(offsetParam))
+					labelOffsets.add(offsetParam);
+
+//				if (isTableCommand.test(commandID))
+//				{
+//					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
+//					if (!tableOffsets.contains(tableOffsetParam))
+//						tableOffsets.add(tableOffsetParam);
+//				}
+			}
 
             if (finalRun)
                 add(command);
