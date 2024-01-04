@@ -189,9 +189,9 @@
 	.word 0x1D
 .endm
 
-.macro LoadType side
+.macro LoadType lookup_type
 	.word 0x1E
-	.word \side
+	.word \lookup_type
 .endm
 
 .macro LoadMovePower

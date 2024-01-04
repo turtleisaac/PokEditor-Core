@@ -155,6 +155,16 @@ public class TrainerAiData extends GenericScriptData
 		{
 			this.value = value;
 		}
+
+		// Super simple proof of concept.
+		static String getFromInt(int value)
+		{
+			return Arrays.stream(lookup_type.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
+		}
 	}
 
 	// Attacker seems to be the current AI.
@@ -552,6 +562,8 @@ public class TrainerAiData extends GenericScriptData
 				{
 					if (parameter.name.equals("side"))
 						return pokemon_side.getFromInt(val);
+					if (parameter.name.equals("lookup_type"))
+						return lookup_type.getFromInt(val);
 					if (parameter.name.equals("stat"))
 						return pokemon_stat.getFromInt(val);
 					if (parameter.name.equals("type"))
