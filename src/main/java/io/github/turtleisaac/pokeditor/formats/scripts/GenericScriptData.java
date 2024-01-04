@@ -30,7 +30,7 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         {
             int checker = reader.readUInt16();
             reader.setPosition(reader.getPosition()-2);
-            int value = reader.readUInt16();
+            int value = reader.readInt();
 
             if (value == 0 && globalScriptOffsets.isEmpty()) { // yep this is a level script
                 return true;

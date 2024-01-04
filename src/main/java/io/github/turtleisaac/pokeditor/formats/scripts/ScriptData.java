@@ -193,7 +193,7 @@ public class ScriptData extends GenericScriptData
             if (commandID == 0)
                 break;
 
-			System.err.println(commandID);
+//			System.err.println(commandID);
             CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
                 System.currentTimeMillis();
@@ -242,6 +242,8 @@ public class ScriptData extends GenericScriptData
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
+
+//            System.out.println(command);
 
             if (finalRun)
                 add(command);
