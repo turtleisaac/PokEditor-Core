@@ -331,7 +331,6 @@ public class TrainerAiData extends GenericScriptData
             return;
         }
 
-//		System.err.println("Reading offset " + offset);
 		if (offset < 0 || offset > dataBuf.writer().getPosition())
 			return;
         reader.setPosition(offset);
@@ -384,7 +383,6 @@ public class TrainerAiData extends GenericScriptData
 				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
 				if (!tableOffsets.contains(offsetParam))
 				{
-					System.err.println("Creating table offset 0x" + Integer.toHexString(offsetParam));
 					tableOffsets.add(offsetParam);
 				}
 			}
@@ -422,7 +420,6 @@ public class TrainerAiData extends GenericScriptData
 
         while (reader.getPosition() < dataBuf.writer().getPosition())
         {
-			System.err.println("Reading table at offset 0x" + Integer.toHexString(offset));
             if (!visitedOffsets.contains(reader.getPosition()))
             {
                 visitedOffsets.add(reader.getPosition());
