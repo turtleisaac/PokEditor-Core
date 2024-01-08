@@ -13,6 +13,7 @@ import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData;
+import io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.ScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
@@ -168,7 +169,6 @@ public class ParserTests
                 Narc outputNarc = output.get(gameFile);
                 for (int idx = 0; idx < originalNarc.getFiles().size(); idx++) {
                     byte[] outputFile = outputNarc.getFile(idx);
-//                    System.out.println(idx);
                     if (Arrays.equals(originalNarc.getFile(idx), outputFile))
                     {
                         assertThat(outputFile)
@@ -178,7 +178,12 @@ public class ParserTests
                     {
                         BytesDataContainer container = new BytesDataContainer();
                         container.insert(GameFiles.FIELD_SCRIPTS, null, outputFile);
-                        ScriptData scriptData = new ScriptData(container);
+
+                        GenericScriptData scriptData;
+                        if (ScriptParser.testFileIsLevelScript(originalNarc.getFile(idx)))
+                            scriptData = new LevelScriptData(container);
+                        else
+                            scriptData = new ScriptData(container);
 
                         container = scriptData.save();
                         byte[] rebuiltResult = container.get(GameFiles.FIELD_SCRIPTS, null);

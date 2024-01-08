@@ -19,14 +19,15 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         setData(files);
     }
 
-    boolean isLevelScript(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets) {
-        return fileIsLevelScriptFile(reader, globalScriptOffsets);
+    boolean isLevelScript(MemBuf memBuf, List<Integer> globalScriptOffsets) {
+        return fileIsLevelScriptFile(memBuf, globalScriptOffsets);
     }
 
-    protected static boolean fileIsLevelScriptFile(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets)
+    protected static boolean fileIsLevelScriptFile(MemBuf dataBuf, List<Integer> globalScriptOffsets)
     {
+        MemBuf.MemBufReader reader = dataBuf.reader();
         // Is Level Script as long as magic number FD13 doesn't exist
-        while (true)
+        while (reader.getPosition() < dataBuf.writer().getPosition())
         {
             int checker = reader.readUInt16();
             reader.setPosition(reader.getPosition()-2);
@@ -42,6 +43,9 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
                 globalScriptOffsets.add(offsetFromStart);
             }
         }
+
+//        if (reader.getPosition() < dataBuf.writer().getPosition())
+            return true;
     }
 
 	public interface ScriptComponent {

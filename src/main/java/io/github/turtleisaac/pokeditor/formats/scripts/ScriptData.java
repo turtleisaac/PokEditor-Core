@@ -70,7 +70,7 @@ public class ScriptData extends GenericScriptData
 
         boolean isLevelScript;
         try {
-            isLevelScript = isLevelScript(reader, globalScriptOffsets);
+            isLevelScript = isLevelScript(dataBuf, globalScriptOffsets);
         }
         catch (IllegalStateException e)
         {
