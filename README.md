@@ -1,4 +1,6 @@
 # PokEditor-Core
+**Author: Turtleisaac**
+
 This library provides functionality for reading and writing various forms of game data for the Gen 4 Pokémon games and serves as the backend for [PokEditor v3](https://github.com/turtleisaac/PokEditor), my Gen 4 hacking tool.
 
 Feel free to use this library for your own projects relating to the Gen 4 Pokémon games, given that you provide credit to me.
