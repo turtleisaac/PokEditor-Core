@@ -7,7 +7,7 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
-import java.util.function.IntPredicate;
+import java.util.function.*;
 
 import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
 
@@ -20,13 +20,21 @@ public class ScriptData extends GenericScriptData
     private static final IntPredicate isEndMovementCommand = commandID -> commandID == 0xFE;
 //    private static final IntPredicate isOverworldObjectCommand
 
-    private static final Map<Integer, String> overworldNames = new HashMap<>();
+    private static final CommandMacro.OntoIntegerUppercaseStringMap overworldNames = new CommandMacro.OntoIntegerUppercaseStringMap();
+    private static final CommandMacro.OntoIntegerUppercaseStringMap comparators = new CommandMacro.OntoIntegerUppercaseStringMap();
 
     static {
         overworldNames.put(250, "Daycare1");
         overworldNames.put(251, "Daycare2");
         overworldNames.put(253, "Follower");
         overworldNames.put(255, "Player");
+
+        comparators.put(0, "LESS");
+        comparators.put(1, "EQUAL");
+        comparators.put(2, "GREATER");
+        comparators.put(3, "LESS_OR_EQUAL");
+        comparators.put(4, "GREATER_OR_EQUAL");
+        comparators.put(5, "DIFFERENT");
     }
 
     private ArrayList<ScriptLabel> scripts;
@@ -101,6 +109,8 @@ public class ScriptData extends GenericScriptData
             else
                 readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
+
+        System.currentTimeMillis();
 
         for (ScriptComponent component : this)
         {
@@ -216,16 +226,11 @@ public class ScriptData extends GenericScriptData
 
             if (isDoIfCommand.test(commandID))
             {
-                command.parameters[0] = switch ((Integer) command.parameters[0])
-                {
-                    case 0 -> "LESS";
-                    case 1 -> "EQUAL";
-                    case 2 -> "GREATER";
-                    case 3 -> "LESS_OR_EQUAL";
-                    case 4 -> "GREATER_OR_EQUAL";
-                    case 5 -> "DIFFERENT";
-                    default -> throw new IllegalStateException("Unexpected value: " + (Integer) command.parameters[0]);
-                };
+                String s = comparators.get((Integer) command.parameters[0]);
+                if (s == null)
+                    throw new IllegalStateException("Unexpected value: " + command.parameters[0]);
+
+                command.parameters[0] = s;
             }
 
             if (isMovementCommand.test(commandID)) {
@@ -249,7 +254,23 @@ public class ScriptData extends GenericScriptData
                 add(command);
 
             if (isEndCommand.test(commandID))
-                break;
+            {
+//                if (reader.getPosition() < dataBuf.writer().getPosition() - 2)
+//                {
+//                    int next = reader.readUInt16();
+//                    reader.setPosition(reader.getPosition() - 2);
+//                    if (!isEndCommand.test(next))
+//                    {
+//                        break;
+//                    }
+//                }
+//                else
+//                {
+                    break;
+//                }
+
+            }
+
         }
     }
 
@@ -406,6 +427,8 @@ public class ScriptData extends GenericScriptData
 //            System.out.println(component);
             if (component instanceof ScriptLabel label)
             {
+//                if (writer.getPosition() % 2 != 0)
+//                    writer.align(2);
                 int scriptNumber = scripts.indexOf(label);
                 if (scriptNumber != -1) // if the label is in the list of scripts
                     scriptOffsets[scriptNumber] = writer.getPosition();
@@ -414,16 +437,28 @@ public class ScriptData extends GenericScriptData
             }
             else if (component instanceof ActionLabel actionLabel)
             {
+//                if (writer.getPosition() % 2 != 0)
+//                    writer.align(2);
                 actionOffsets[actions.indexOf(actionLabel)] = writer.getPosition();
             }
             else if (component instanceof ScriptCommand command) // is a command
             {
-                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters, null, defaultReplaceParameterStringWithIntegerFunction);
+
+                if (isEndCommand.test(command.commandMacro.getId()))
+                    if (writer.getPosition() % 4 != 0)
+                        writer.skip(4 - writer.getPosition() % 4);
             }
             else if (component instanceof ActionCommand actionCommand)
             {
                 writer.writeShort((short) actionCommand.id);
                 writer.writeShort((short) actionCommand.parameter);
+
+//                if (isEndMovementCommand.test(actionCommand.id))
+//                {
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
+//                }
             }
         }
 
@@ -441,16 +476,32 @@ public class ScriptData extends GenericScriptData
         {
             if (component instanceof ScriptCommand command) // is a command
             {
-                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters, null, defaultReplaceParameterStringWithIntegerFunction);
+                if (isEndCommand.test(command.commandMacro.getId()))
+                    if (writer.getPosition() % 4 != 0)
+                        writer.skip(4 - writer.getPosition() % 4);
             }
             else if (component instanceof ActionCommand actionCommand)
             {
                 writer.writeShort((short) actionCommand.id);
                 writer.writeShort((short) actionCommand.parameter);
+
+//                if (isEndMovementCommand.test(actionCommand.id))
+//                {
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
+//                }
             }
         }
 
-        writer.skip(4 - writer.getPosition() % 4);
+//        writer.align(4);
+        if (writer.getPosition() % 4 != 0)
+            writer.skip(4 - writer.getPosition() % 4);
+//        dataBuf.reader().setPosition(writer.getPosition() - 4);
+//        int last = dataBuf.reader().readInt();
+//        if (last != 0)
+//            writer.skip(4);
+//        dataBuf.reader().setPosition(0);
 
         return new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, dataBuf.reader().getBuffer());
     }
@@ -527,6 +578,47 @@ public class ScriptData extends GenericScriptData
 
         return builder.toString().strip() + "\n";
     }
+
+    private static final CommandMacro.ParameterStringReplacementFunction defaultReplaceParameterStringWithIntegerFunction = (commandID, parameterString) ->
+    {
+        if (isDoIfCommand.test(commandID))
+        {
+            Integer result = comparators.get(parameterString.toUpperCase());
+            if (result != null)
+                return result;
+
+            if (parameterString.startsWith("label_"))
+            {
+                return parameterString;
+            }
+        }
+
+        if (isMovementCommand.test(commandID))
+        {
+            if (parameterString.startsWith("Overworld."))
+            {
+                parameterString = parameterString.replace("Overworld.", "");
+                int overworldNum;
+                try {
+                    overworldNum = Integer.parseInt(parameterString);
+                } catch(NumberFormatException exception) {
+                    return overworldNames.get(parameterString);
+                }
+                return overworldNum;
+            }
+            else if (parameterString.startsWith("action_"))
+            {
+                return parameterString;
+            }
+        }
+
+        if (isCallCommand.test(commandID))
+        {
+            return parameterString;
+        }
+
+        return null;
+    };
 
     public static class ScriptCommand implements ScriptComponent {
         String name;
