@@ -188,14 +188,14 @@ public class LevelScriptData extends GenericScriptData
         return sb.toString().trim();
     }
 
-    private static final int VARIABLE_VALUE = 1;
-    private static final int MAP_CHANGE = 2;
-    private static final int SCREEN_RESET = 3;
-    private static final int LOAD_GAME = 4;
+    public static final int VARIABLE_VALUE = 1;
+    public static final int MAP_CHANGE = 2;
+    public static final int SCREEN_RESET = 3;
+    public static final int LOAD_GAME = 4;
 
     private static final int SMALLEST_TRIGGER_SIZE = 5;
 
-    private static abstract class LevelScriptTrigger implements ScriptComponent
+    public static abstract class LevelScriptTrigger implements ScriptComponent
     {
         private int triggerType;
         private int scriptTriggered;
@@ -270,9 +270,9 @@ public class LevelScriptData extends GenericScriptData
         {
             String message = super.toString();
             switch (getTriggerType()) {
-                case MAP_CHANGE -> message += " upon entering the LS map.";
-                case SCREEN_RESET -> message += " when a fadescreen happens in the LS map.";
-                case LOAD_GAME -> message += " when the game resumes in the LS map.";
+                case MAP_CHANGE -> message += " upon entering the associated header.";
+                case SCREEN_RESET -> message += " when a fadescreen happens in the associated header.";
+                case LOAD_GAME -> message += " when the game resumes in the associated header.";
             }
             return message;
         }
@@ -323,7 +323,7 @@ public class LevelScriptData extends GenericScriptData
 
         @Override
         public String toString() {
-            return super.toString() + " when Var " + variableToWatch + " == " + expectedValue;
+            return super.toString() + " when Var 0x" + Integer.toHexString(variableToWatch).toUpperCase() + " == " + expectedValue;
         }
 
         @Override
