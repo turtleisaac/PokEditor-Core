@@ -164,6 +164,8 @@ public class ParserTests
             List<GenericScriptData> data = parser.generateDataList(map, codeBinaries);
             Map<GameFiles, Narc> output = parser.processDataList(data, codeBinaries);
 
+            int nonExactMatches = 0;
+
             for (GameFiles gameFile : parser.getRequirements()) {
                 Narc originalNarc = map.get(gameFile);
                 Narc outputNarc = output.get(gameFile);
@@ -189,7 +191,10 @@ public class ParserTests
                         byte[] rebuiltResult = container.get(GameFiles.FIELD_SCRIPTS, null);
 
                         if (Arrays.equals(rebuiltResult, outputFile))
+                        {
                             System.out.println("Valid but non-1:1 Match: File " + idx);
+                            nonExactMatches++;
+                        }
                         else
                         {
                             System.err.println("File did not match original, attempted conditional rebuild but failed");
@@ -198,13 +203,10 @@ public class ParserTests
                         assertThat(rebuiltResult)
                                 .isEqualTo(outputFile);
                     }
-                    else
-                    {
-                        System.out.println("Level Script here");
-                    }
-
                 }
             }
+
+            System.out.printf("In total, there were %d valid but non-1:1 matching rebuilt field script files (%d 1:1 matches).\n", nonExactMatches, data.size()-nonExactMatches);
         }
     }
 }

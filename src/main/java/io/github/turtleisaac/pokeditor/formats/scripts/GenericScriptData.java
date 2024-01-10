@@ -54,10 +54,12 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
 
     public static class ScriptLabel implements ScriptComponent {
         protected String name;
+        private int scriptID;
 
         public ScriptLabel(String name)
         {
             this.name = name;
+            this.scriptID = -1;
         }
 
         @Override
@@ -72,5 +74,14 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
             return name;
         }
 
+        public int getScriptID()
+        {
+            return scriptID;
+        }
+
+        public void setScriptID(int scriptID)
+        {
+            this.scriptID = scriptID;
+        }
     }
 }
