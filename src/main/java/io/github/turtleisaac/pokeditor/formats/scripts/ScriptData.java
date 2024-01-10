@@ -4,10 +4,12 @@ import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
+import io.github.turtleisaac.pokeditor.framework.OntoMap;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
 
@@ -110,6 +112,18 @@ public class ScriptData extends GenericScriptData
                 readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
 
+//        Set<Integer> labelOffsetMap = labelMap.keySet().stream().filter(globalScriptOffsets::contains).collect(Collectors.toSet());
+
+
+        System.out.println("expected script count: " + globalScriptOffsets.size());
+        int size = scripts.size();
+        scripts.clear();
+        for (Integer offset : globalScriptOffsets)
+            scripts.add(labelMap.get(offset));
+
+        if (scripts.size() != size)
+            throw new RuntimeException(String.format("the expected number of scripts (%d) does not match the actual located amount (%d)", globalScriptOffsets.size(), size));
+
         System.currentTimeMillis();
 
         for (ScriptComponent component : this)
@@ -183,7 +197,6 @@ public class ScriptData extends GenericScriptData
                     labels.add(scriptLabel);
                     scriptLabel.name = "label_" + labels.indexOf(scriptLabel);
                     labelMap.put(reader.getPosition(), scriptLabel);
-//                    add(new ScriptLabel("script(" + globalScriptOffsets.indexOf(reader.getPosition()) + ") label_" + Integer.toHexString(reader.getPosition())));
                     add(scriptLabel);
                 } else if (labelOffsets.contains(reader.getPosition())) {
                     ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
@@ -206,7 +219,7 @@ public class ScriptData extends GenericScriptData
 //			System.err.println(commandID);
             CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
-                System.currentTimeMillis();
+                throw new RuntimeException("Invalid command ID: " + commandID);
             }
 
             ScriptCommand command = new ScriptCommand(commandMacro);
@@ -737,6 +750,27 @@ public class ScriptData extends GenericScriptData
         {
             parameters = newParameters;
         }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ScriptCommand command = (ScriptCommand) o;
+            return Objects.equals(name, command.name) && Arrays.equals(parameters, command.parameters) && Objects.equals(commandMacro, command.commandMacro);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = Objects.hash(name, commandMacro);
+            result = 31 * result + Arrays.hashCode(parameters);
+            return result;
+        }
     }
 
     public static class ActionLabel implements ScriptComponent
@@ -790,6 +824,25 @@ public class ScriptData extends GenericScriptData
         public String getName()
         {
             return name;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ActionCommand that = (ActionCommand) o;
+            return id == that.id && parameter == that.parameter && Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(name, id, parameter);
         }
     }
 }
