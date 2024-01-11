@@ -51,6 +51,7 @@ public class ScriptData extends GenericScriptData
     public ScriptData()
     {
         super();
+        scripts = new ArrayList<>();
     }
 
     @Override

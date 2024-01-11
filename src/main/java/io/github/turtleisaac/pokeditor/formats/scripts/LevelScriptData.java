@@ -19,6 +19,11 @@ public class LevelScriptData extends GenericScriptData
 {
     private boolean hasPadding = true;
 
+    public LevelScriptData()
+    {
+        super();
+    }
+
     public LevelScriptData(BytesDataContainer files)
     {
         super(files);
