@@ -65,7 +65,10 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         @Override
         public String toString()
         {
-            return name + ": ";
+            if (scriptID == -1)
+                return name;
+            else
+                return String.format("script(%d) %s", scriptID, name);
         }
 
         @Override
