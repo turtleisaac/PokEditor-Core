@@ -1,5 +1,8 @@
 package io.github.turtleisaac.pokeditor.formats.scripts;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
@@ -7,8 +10,8 @@ import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.IntPredicate;
+import java.util.function.*;
+import java.util.stream.Collectors;
 
 import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
 
@@ -21,18 +24,24 @@ public class ScriptData extends GenericScriptData
     private static final IntPredicate isEndMovementCommand = commandID -> commandID == 0xFE;
 //    private static final IntPredicate isOverworldObjectCommand
 
-    private static final Map<Integer, String> overworldNames = new HashMap<>();
+    private static final CommandMacro.OntoIntegerUppercaseStringMap overworldNames = new CommandMacro.OntoIntegerUppercaseStringMap();
+    private static final CommandMacro.OntoIntegerUppercaseStringMap comparators = new CommandMacro.OntoIntegerUppercaseStringMap();
 
     static {
         overworldNames.put(250, "Daycare1");
         overworldNames.put(251, "Daycare2");
         overworldNames.put(253, "Follower");
         overworldNames.put(255, "Player");
+
+        comparators.put(0, "LESS");
+        comparators.put(1, "EQUAL");
+        comparators.put(2, "GREATER");
+        comparators.put(3, "LESS_OR_EQUAL");
+        comparators.put(4, "GREATER_OR_EQUAL");
+        comparators.put(5, "DIFFERENT");
     }
 
-    private ArrayList<ScriptLabel> scripts;
-    private ArrayList<ScriptLabel> labels;
-    private ArrayList<ActionLabel> actions;
+    private List<ScriptLabel> scripts;
 
     public ScriptData(BytesDataContainer files)
     {
@@ -42,28 +51,27 @@ public class ScriptData extends GenericScriptData
     public ScriptData()
     {
         super();
+        scripts = new ArrayList<>();
     }
 
     @Override
     public void setData(BytesDataContainer files)
     {
-        if (!files.containsKey(GameFiles.SCRIPTS))
+        if (!files.containsKey(GameFiles.FIELD_SCRIPTS))
         {
             throw new RuntimeException("Script file not provided to editor");
         }
 
         scripts = new ArrayList<>();
-        labels = new ArrayList<>();
-        actions = new ArrayList<>();
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.SCRIPTS, null));
+        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.FIELD_SCRIPTS, null));
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         ArrayList<Integer> globalScriptOffsets = new ArrayList<>();
 
         boolean isLevelScript;
         try {
-            isLevelScript = isLevelScript(reader, globalScriptOffsets);
+            isLevelScript = isLevelScript(dataBuf, globalScriptOffsets);
         }
         catch (IllegalStateException e)
         {
@@ -103,40 +111,58 @@ public class ScriptData extends GenericScriptData
                 readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
 
+        List<ScriptLabel> labels = new ArrayList<>();
+        List<ActionLabel> actions = new ArrayList<>();
+
         for (ScriptComponent component : this)
         {
-            if (component instanceof ScriptCommand command)
+            if (component instanceof ScriptLabel label)
             {
-                if (command.parameters != null)
+                label.name = "label_" + labels.size();
+                labels.add(label);
+            }
+            else if (component instanceof ActionLabel actionLabel)
+            {
+                actionLabel.name = "action_" + actions.size();
+                actions.add(actionLabel);
+            }
+        }
+
+        scripts.sort(Comparator.comparingInt(ScriptLabel::getScriptID));
+
+        if (scripts.size() != globalScriptOffsets.size())
+            throw new RuntimeException(String.format("the expected number of scripts (%d) does not match the actual located amount (%d)", globalScriptOffsets.size(), globalScriptOffsets.size()));
+
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof ScriptCommand command && command.parameters != null)
+            {
+                if (isCallCommand.test(command.commandMacro.getId()))
                 {
-                    if (isCallCommand.test(command.commandMacro.getId()))
+                    for (int i = 0; i < command.parameters.length; i++)
                     {
-                        for (int i = 0; i < command.parameters.length; i++)
+                        String paramName = command.commandMacro.getParameters()[i];
+                        if ((paramName.contains("dest") || paramName.contains("sub")))
                         {
-                            String paramName = command.commandMacro.getParameters()[i];
-                            if ((paramName.contains("dest") || paramName.contains("sub")))
-                            {
-                                command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
-                            }
+                            command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
                         }
                     }
-                    else if (isMovementCommand.test(command.commandMacro.getId()))
+                }
+                else if (isMovementCommand.test(command.commandMacro.getId()))
+                {
+                    for (int i = 0; i < command.parameters.length; i++)
                     {
-                        for (int i = 0; i < command.parameters.length; i++)
+                        String paramName = command.commandMacro.getParameters()[i];
+                        if ((paramName.contains("dest") || paramName.contains("sub")))
                         {
-                            String paramName = command.commandMacro.getParameters()[i];
-                            if ((paramName.contains("dest") || paramName.contains("sub")))
+                            command.parameters[i] = "action_" + actions.indexOf(actionMap.get((Integer) command.parameters[i]));
+                        }
+                        else if (paramName.contains("overworld"))
+                        {
+                            if ((int) command.parameters[i] < 0x4000)
                             {
-                                command.parameters[i] = "action_" + actions.indexOf(actionMap.get((Integer) command.parameters[i]));
-                            }
-                            else if (paramName.contains("overworld"))
-                            {
-                                if ((int) command.parameters[i] < 0x4000)
-                                {
-                                    String valueName = overworldNames.get((int) command.parameters[i]);
-                                    command.parameters[i] = "Overworld." + (valueName != null ? valueName : command.parameters[i]);
-                                }
-
+                                String valueName = overworldNames.get((int) command.parameters[i]);
+                                command.parameters[i] = "Overworld." + (valueName != null ? valueName : command.parameters[i]);
                             }
                         }
                     }
@@ -163,29 +189,40 @@ public class ScriptData extends GenericScriptData
 
         reader.setPosition(offset);
 
+        int currentPosition;
+
         while (reader.getPosition() < dataBuf.writer().getPosition())
         {
-            if (finalRun && !visitedOffsets.contains(reader.getPosition()))
+            currentPosition = reader.getPosition();
+            if (finalRun && !visitedOffsets.contains(currentPosition))
             {
-                visitedOffsets.add(reader.getPosition());
-                if (globalScriptOffsets.contains(reader.getPosition())) {
-                    ScriptLabel scriptLabel = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
-                    scripts.add(scriptLabel);
-                    labels.add(scriptLabel);
-                    scriptLabel.name = "label_" + labels.indexOf(scriptLabel);
-                    labelMap.put(reader.getPosition(), scriptLabel);
-//                    add(new ScriptLabel("script(" + globalScriptOffsets.indexOf(reader.getPosition()) + ") label_" + Integer.toHexString(reader.getPosition())));
-                    add(scriptLabel);
-                } else if (labelOffsets.contains(reader.getPosition())) {
-                    ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(reader.getPosition()));
-                    labels.add(label);
-                    labelMap.put(reader.getPosition(), label);
-                    label.name = "label_" + labels.indexOf(label);
+                visitedOffsets.add(currentPosition);
+                if (globalScriptOffsets.contains(currentPosition))
+                {
+                    List<Integer> globalScriptOffsetsCopy = new ArrayList<>(globalScriptOffsets);
+                    while (globalScriptOffsetsCopy.contains(currentPosition))
+                    {
+                        int idx = globalScriptOffsetsCopy.indexOf(currentPosition);
+                        globalScriptOffsetsCopy.set(idx, null);
+                        ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(currentPosition));
+                        if (globalScriptOffsets.contains(currentPosition))
+                        {
+                            scripts.add(label);
+                            label.setScriptID(idx+1);
+                        }
+                        labelMap.putIfAbsent(currentPosition, label);
+                        add(label);
+                    }
+                }
+                else if (labelOffsets.contains(currentPosition))
+                {
+                    ScriptLabel label = new ScriptLabel("label_" + Integer.toHexString(currentPosition));
+                    labelMap.putIfAbsent(currentPosition, label);
                     add(label);
-                } else if (actionOffsets.contains(reader.getPosition())) {
-                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-                    actions.add(actionLabel);
-                    actionLabel.name = "action_" + actions.indexOf(actionLabel);
+                }
+                else if (actionOffsets.contains(currentPosition))
+                {
+                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(currentPosition));
                     add(actionLabel);
                 }
             }
@@ -194,9 +231,10 @@ public class ScriptData extends GenericScriptData
             if (commandID == 0)
                 break;
 
+//			System.err.println(commandID);
             CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
-                System.currentTimeMillis();
+                throw new RuntimeException("Invalid command ID: " + commandID);
             }
 
             ScriptCommand command = new ScriptCommand(commandMacro);
@@ -216,16 +254,11 @@ public class ScriptData extends GenericScriptData
 
             if (isDoIfCommand.test(commandID))
             {
-                command.parameters[0] = switch ((Integer) command.parameters[0])
-                {
-                    case 0 -> "LESS";
-                    case 1 -> "EQUAL";
-                    case 2 -> "GREATER";
-                    case 3 -> "LESS_OR_EQUAL";
-                    case 4 -> "GREATER_OR_EQUAL";
-                    case 5 -> "DIFFERENT";
-                    default -> throw new IllegalStateException("Unexpected value: " + (Integer) command.parameters[0]);
-                };
+                String s = comparators.get((Integer) command.parameters[0]);
+                if (s == null)
+                    throw new IllegalStateException("Unexpected value: " + command.parameters[0]);
+
+                command.parameters[0] = s;
             }
 
             if (isMovementCommand.test(commandID)) {
@@ -243,11 +276,29 @@ public class ScriptData extends GenericScriptData
                     labelOffsets.add(offsetParam);
             }
 
+//            System.out.println(command);
+
             if (finalRun)
                 add(command);
 
             if (isEndCommand.test(commandID))
-                break;
+            {
+//                if (reader.getPosition() < dataBuf.writer().getPosition() - 2)
+//                {
+//                    int next = reader.readUInt16();
+//                    reader.setPosition(reader.getPosition() - 2);
+//                    if (!isEndCommand.test(next))
+//                    {
+//                        break;
+//                    }
+//                }
+//                else
+//                {
+                    break;
+//                }
+
+            }
+
         }
     }
 
@@ -268,9 +319,7 @@ public class ScriptData extends GenericScriptData
                 if (actionOffsets.contains(reader.getPosition()))
                 {
                     ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
-                    actions.add(actionLabel);
                     actionMap.put(reader.getPosition(), actionLabel);
-                    actionLabel.name = "action_" + actions.indexOf(actionLabel);
                     add(actionLabel);
                 }
             }
@@ -351,6 +400,21 @@ public class ScriptData extends GenericScriptData
     @Override
     public BytesDataContainer save()
     {
+        List<ScriptLabel> labels = new ArrayList<>();
+        List<ActionLabel> actions = new ArrayList<>();
+
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof ScriptLabel label)
+            {
+                labels.add(label);
+            }
+            else if (component instanceof ActionLabel actionLabel)
+            {
+                actions.add(actionLabel);
+            }
+        }
+
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
@@ -362,8 +426,6 @@ public class ScriptData extends GenericScriptData
         }
 
         writer.writeShort((short) SCRIPT_MAGIC_ID);
-
-        int scriptsStartPosition = writer.getPosition();
 
         // write each command out, and if it is a jump command we need to store a placeholder for later when we come back and insert the offset (if the destination hasn't been written yet)
         // at the start of each script we need to grab the offset for the header
@@ -401,7 +463,6 @@ public class ScriptData extends GenericScriptData
 
         for (ScriptComponent component : this)
         {
-//            System.out.println(component);
             if (component instanceof ScriptLabel label)
             {
                 int scriptNumber = scripts.indexOf(label);
@@ -416,12 +477,22 @@ public class ScriptData extends GenericScriptData
             }
             else if (component instanceof ScriptCommand command) // is a command
             {
-                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters, null, defaultReplaceParameterStringWithIntegerFunction);
+
+//                if (isEndCommand.test(command.commandMacro.getId()))
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
             }
             else if (component instanceof ActionCommand actionCommand)
             {
                 writer.writeShort((short) actionCommand.id);
                 writer.writeShort((short) actionCommand.parameter);
+
+//                if (isEndMovementCommand.test(actionCommand.id))
+//                {
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
+//                }
             }
         }
 
@@ -439,21 +510,37 @@ public class ScriptData extends GenericScriptData
         {
             if (component instanceof ScriptCommand command) // is a command
             {
-                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters);
+                command.commandMacro.write(dataBuf, offsetObtainer, command.parameters, null, defaultReplaceParameterStringWithIntegerFunction);
+//                if (isEndCommand.test(command.commandMacro.getId()))
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
             }
             else if (component instanceof ActionCommand actionCommand)
             {
                 writer.writeShort((short) actionCommand.id);
                 writer.writeShort((short) actionCommand.parameter);
+
+//                if (isEndMovementCommand.test(actionCommand.id))
+//                {
+//                    if (writer.getPosition() % 4 != 0)
+//                        writer.skip(4 - writer.getPosition() % 4);
+//                }
             }
         }
 
-        writer.skip(4 - writer.getPosition() % 4);
+//        writer.align(4);
+        if (writer.getPosition() % 4 != 0)
+            writer.skip(4 - writer.getPosition() % 4);
+//        dataBuf.reader().setPosition(writer.getPosition() - 4);
+//        int last = dataBuf.reader().readInt();
+//        if (last != 0)
+//            writer.skip(4);
+//        dataBuf.reader().setPosition(0);
 
-        return new BytesDataContainer(GameFiles.SCRIPTS, null, dataBuf.reader().getBuffer());
+        return new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, dataBuf.reader().getBuffer());
     }
 
-    public ArrayList<ScriptLabel> getScripts()
+    public List<ScriptLabel> getScripts()
     {
         return scripts;
     }
@@ -464,7 +551,7 @@ public class ScriptData extends GenericScriptData
 //    }
 
 
-    public void setScripts(ArrayList<ScriptLabel> scripts)
+    public void setScripts(List<ScriptLabel> scripts)
     {
         this.scripts = scripts;
     }
@@ -473,7 +560,7 @@ public class ScriptData extends GenericScriptData
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        for (ScriptData.ScriptComponent component : this)
+        for (ScriptComponent component : this)
         {
             if (component instanceof ScriptData.ScriptLabel label)
             {
@@ -489,7 +576,7 @@ public class ScriptData extends GenericScriptData
 
                 if (getScripts().contains(label))
                 {
-                    builder.append("script(").append(getScripts().indexOf(label) + 1).append(") ");
+                    builder.append("script(").append(scripts.indexOf(label)+1).append(") ");
                 }
                 builder.append(label.getName()).append(":\n");
             }
@@ -526,26 +613,46 @@ public class ScriptData extends GenericScriptData
         return builder.toString().strip() + "\n";
     }
 
-    public static class ScriptLabel implements ScriptComponent {
-        private String name;
-
-        public ScriptLabel(String name)
+    private static final CommandMacro.ParameterStringReplacementFunction defaultReplaceParameterStringWithIntegerFunction = (commandID, parameterString) ->
+    {
+        if (isDoIfCommand.test(commandID))
         {
-            this.name = name;
+            Integer result = comparators.get(parameterString.toUpperCase());
+            if (result != null)
+                return result;
+
+            if (parameterString.startsWith("label_"))
+            {
+                return parameterString;
+            }
         }
 
-        @Override
-        public String toString()
+        if (isMovementCommand.test(commandID))
         {
-            return name + ": ";
+            if (parameterString.startsWith("Overworld."))
+            {
+                parameterString = parameterString.replace("Overworld.", "");
+                int overworldNum;
+                try {
+                    overworldNum = Integer.parseInt(parameterString);
+                } catch(NumberFormatException exception) {
+                    return overworldNames.get(parameterString);
+                }
+                return overworldNum;
+            }
+            else if (parameterString.startsWith("action_"))
+            {
+                return parameterString;
+            }
         }
 
-        @Override
-        public String getName()
+        if (isCallCommand.test(commandID))
         {
-            return name;
+            return parameterString;
         }
-    }
+
+        return null;
+    };
 
     public static class ScriptCommand implements ScriptComponent {
         String name;
@@ -664,6 +771,27 @@ public class ScriptData extends GenericScriptData
         {
             parameters = newParameters;
         }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ScriptCommand command = (ScriptCommand) o;
+            return Objects.equals(name, command.name) && Arrays.equals(parameters, command.parameters) && Objects.equals(commandMacro, command.commandMacro);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = Objects.hash(name, commandMacro);
+            result = 31 * result + Arrays.hashCode(parameters);
+            return result;
+        }
     }
 
     public static class ActionLabel implements ScriptComponent
@@ -678,7 +806,7 @@ public class ScriptData extends GenericScriptData
         @Override
         public String toString()
         {
-            return name + ": ";
+            return name;
         }
 
         @Override
@@ -717,6 +845,25 @@ public class ScriptData extends GenericScriptData
         public String getName()
         {
             return name;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ActionCommand that = (ActionCommand) o;
+            return id == that.id && parameter == that.parameter && Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(name, id, parameter);
         }
     }
 }

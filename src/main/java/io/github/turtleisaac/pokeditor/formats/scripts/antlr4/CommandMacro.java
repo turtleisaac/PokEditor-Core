@@ -2,12 +2,11 @@ package io.github.turtleisaac.pokeditor.formats.scripts.antlr4;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.scripts.macros.MacrosParser;
-import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.BiFunction;
 
 /**
  * This class serves to function as a representation of a single macro defining the parameters
@@ -41,7 +40,7 @@ public class CommandMacro
         return null;
     }
 
-    public void write(MemBuf memBuf, CommandWriter.LabelOffsetObtainer offsetObtainer, Object[] parameterValues)
+    public void write(MemBuf memBuf, CommandWriter.LabelOffsetObtainer offsetObtainer, Object[] parameterValues, ParameterStringReplacementFunction customReplaceParameterStringWithIntegerFunction, ParameterStringReplacementFunction defaultReplaceParameterStringWithIntegerFunction)
     {
         Map<String, Object> parameterToValueMap = new HashMap<>();
 
@@ -54,10 +53,26 @@ public class CommandMacro
                     parameterToValueMap.put(parameter, number);
                 else if (param instanceof String str)
                 {
-                    Object value = ScriptParser.definedValues.get(str);
-                    parameterToValueMap.put(parameter, Objects.requireNonNullElse(value, param));
-                }
+                    Object value = null;
 
+                    if (customReplaceParameterStringWithIntegerFunction != null)
+                    {
+                        value = customReplaceParameterStringWithIntegerFunction.apply(id, str);
+                    }
+
+                    if (value != null)
+                    {
+                        parameterToValueMap.put(parameter, value);
+                    }
+                    else
+                    {
+                        value = defaultReplaceParameterStringWithIntegerFunction.apply(id, str);
+                        if (value != null)
+                            parameterToValueMap.put(parameter, value);
+                        else
+                            throw new RuntimeException(String.format("An invalid parameter was provided (%s) in \"%s\"", str, this));
+                    }
+                }
             }
         }
 
@@ -130,6 +145,50 @@ public class CommandMacro
         public String[] getCommands()
         {
             return commands;
+        }
+    }
+
+    public interface ParameterStringReplacementFunction extends BiFunction<Integer, String, Object>
+    {
+
+        /**
+         * Replaces String parameters for a command with the given ID with the corresponding integer value.
+         *
+         * @param commandID an <code>Integer</code> containing the ID of the command whose parameters need to be replace
+         * @param parameterString a <code>String</code> containing a parameter for the given command
+         * @return the integer value to replace the parameter string with
+         */
+        @Override
+        Object apply(Integer commandID, String parameterString);
+    }
+
+    public static class OntoIntegerUppercaseStringMap
+    {
+        private final Map<Integer, String> numberToStringMap;
+        private final Map<String, Integer> stringToNumberMap;
+
+        public OntoIntegerUppercaseStringMap()
+        {
+            numberToStringMap = new HashMap<>();
+            stringToNumberMap = new HashMap<>();
+        }
+
+        public void put(Integer number, String str)
+        {
+            str = str.toUpperCase();
+            numberToStringMap.put(number, str);
+            stringToNumberMap.put(str, number);
+        }
+
+        public Integer get(String str)
+        {
+            str = str.toUpperCase();
+            return stringToNumberMap.get(str);
+        }
+
+        public String get(Integer number)
+        {
+            return numberToStringMap.get(number);
         }
     }
 }

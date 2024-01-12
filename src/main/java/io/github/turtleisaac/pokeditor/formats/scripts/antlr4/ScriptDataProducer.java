@@ -6,10 +6,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 {
@@ -53,6 +50,17 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 
         if (scriptCompilationException.getSuppressed().length != 0)
             throw scriptCompilationException;
+
+        ArrayList<GenericScriptData.ScriptLabel> scripts = new ArrayList<>();
+
+        for (GenericScriptData.ScriptComponent component : data)
+        {
+            if (component instanceof GenericScriptData.ScriptLabel label && label.getScriptID() != -1)
+                scripts.add(label);
+        }
+
+        scripts.sort(Comparator.comparingInt(GenericScriptData.ScriptLabel::getScriptID));
+        data.setScripts(scripts);
 
         return data;
     }
@@ -129,6 +137,7 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
                     scriptCompilationException.addSuppressed(new ScriptCompilationException("There is already a script with ID number " + scriptNumber));
                 else
                     scriptEntryPoints.put(scriptNumber, label);
+                label.setScriptID(scriptNumber);
             }
         }
 

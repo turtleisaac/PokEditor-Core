@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+*.nds
+.idea
+src/main/generated-sources/

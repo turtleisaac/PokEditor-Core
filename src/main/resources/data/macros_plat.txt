@@ -1,0 +1,626 @@
+.macro JumpIfRandomLess value, address
+	.word 0x0
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfGreater value, address
+	.word 0x1
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfRandomEqual value, address
+	.word 0x2
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfRandomNotEqual value, address
+	.word 0x3
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro aiIncDec value
+	.word 0x4
+	.word \value
+.endm
+
+.macro JumpIfHpLess side, value, address
+	.word 0x5
+	.word \side
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHpGreater side, value, address
+	.word 0x6
+	.word \side
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHpEqual side, value, address
+	.word 0x7
+	.word \side
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHpNotEqual side, value, address
+	.word 0x8
+	.word \side
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfCondition side, condition, address
+	.word 0x9
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotCondition side, condition, address
+	.word 0xA
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfCondition2 side, condition, address
+	.word 0xB
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotCondition2 side, condition, address
+	.word 0xC
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfMoveEffect side, condition, address
+	.word 0xD
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotMoveEffect side, condition, address
+	.word 0xE
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfSideCondition side, side_condition, address
+	.word 0xF
+	.word \side
+	.word \side_condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotSideCondition side, side_condition, address
+	.word 0x10
+	.word \side
+	.word \side_condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfLess value, address
+	.word 0x11
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfGreater value, address
+	.word 0x12
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfEqual value, address
+	.word 0x13
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotEqual value, address
+	.word 0x14
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfBitSet bit_no, address
+	.word 0x15
+	.word \bit_no
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfBitClear bit_no, address
+	.word 0x16
+	.word \bit_no
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfMove move, address
+	.word 0x17
+	.word \move
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotMove move, address
+	.word 0x18
+	.word \move
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfTableMatch tableAddress, jumpAddress
+	.word 0x19
+	.word (\tableAddress-.-8)/4
+	.word (\jumpAddress-.-4)/4
+.endm
+
+.macro JumpIfNotTableMatch tableAddress, jumpAddress
+	.word 0x1A
+	.word (\tableAddress-.-8)/4
+	.word (\jumpAddress-.-4)/4
+.endm
+
+.macro JumpIfHasDamagingMove address
+	.word 0x1B
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHasNoDamagingMove address
+	.word 0x1C
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadTurnNum
+	.word 0x1D
+.endm
+
+.macro LoadType lookup_type
+	.word 0x1E
+	.word \lookup_type
+.endm
+
+.macro LoadMovePower
+	.word 0x1F
+.endm
+
+.macro CompareMovePower flag
+	.word 0x20
+	.word \flag
+.endm
+
+.macro LoadLastMoveUsed side
+	.word 0x21
+	.word \side
+.endm
+
+.macro JumpIfMoveType type, address
+	.word 0x22
+	.word \type
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotMoveType type, address
+	.word 0x23
+	.word \type
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfSideFaster side, address
+	.word 0x24
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfSideSlower side, address
+	.word 0x25
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadNumUsableMons side
+	.word 0x26
+	.word \side
+.endm
+
+.macro LoadMove
+	.word 0x27
+.endm
+
+.macro LoadMoveEffect
+	.word 0x28
+.endm
+
+.macro LoadAbility side
+	.word 0x29
+	.word \side
+.endm
+
+.macro LoadBestTypeEffectiveness
+	.word 0x2A
+.endm
+
+.macro JumpIfBestTypeEffectivenessEquals compatibility, address
+	.word 0x2B
+	.word \compatibility
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfPartyMonStatus side, condition, address
+	.word 0x2C
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotPartyMonStatus side, condition, address
+	.word 0x2D
+	.word \side
+	.word \condition
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadWeather
+	.word 0x2E
+.endm
+
+.macro JumpIfMoveSequenceNumber seqno, address
+	.word 0x2F
+	.word \seqno
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotMoveSequenceNumber seqno, address
+	.word 0x30
+	.word \seqno
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatLess side, stat, value, address
+	.word 0x31
+	.word \side
+	.word \stat
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatGreater side, stat, value, address
+	.word 0x32
+	.word \side
+	.word \stat
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatEqual side, stat, value, address
+	.word 0x33
+	.word \side
+	.word \stat
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatNotEqual side, stat, value, address
+	.word 0x34
+	.word \side
+	.word \stat
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfAttackWillKillPlayer param_0, address
+	.word 0x35
+	.word \param_0
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfAttackWillNotKillPlayer param_0, address
+	.word 0x36
+	.word \param_0
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHasMove side, move, address
+	.word 0x37
+	.word \side
+	.word \move
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotHasMove side, move, address
+	.word 0x38
+	.word \side
+	.word \move
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHasMoveEffect side, seqno, address
+	.word 0x39
+	.word \side
+	.word \seqno
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotHasMoveEffect side, seqno, address
+	.word 0x3A
+	.word \side
+	.word \seqno
+	.word (\address-.-4)/4
+.endm
+
+.macro IfPokemonCheckState side, param_1, address
+	.word 0x3B
+	.word \side
+	.word \param_1
+	.word (\address-.-4)/4
+.endm
+
+.macro IfMoveCheckState param_0, address
+	.word 0x3C
+	.word \param_0
+	.word (\address-.-4)/4
+.endm
+
+.macro Escape
+	.word 0x3D
+.endm
+
+.macro JumpSafariEscape address
+	.word 0x3E
+	.word (\address-.-4)/4
+.endm
+
+.macro Safari
+	.word 0x3F
+.endm
+
+.macro LoadItem item
+	.word 0x40
+	.word \item
+.endm
+
+.macro LoadEquippedItem side
+	.word 0x41
+	.word \side
+.endm
+
+.macro LoadGender side
+	.word 0x42
+	.word \side
+.endm
+
+.macro LoadFakeoutCount side
+	.word 0x43
+	.word \side
+.endm
+
+.macro LoadStockpileCount side
+	.word 0x44
+	.word \side
+.endm
+
+.macro LoadFightType
+	.word 0x45
+.endm
+
+.macro LoadRecycleItem side
+	.word 0x46
+	.word \side
+.endm
+
+.macro LoadCurrentMoveType
+	.word 0x47
+.endm
+
+.macro LoadCurrentMovePower
+	.word 0x48
+.endm
+
+.macro LoadCurrentMoveEffect
+	.word 0x49
+.endm
+
+.macro LoadProtectSuccessCount side
+	.word 0x4A
+	.word \side
+.endm
+
+.macro GoSub address
+	.word 0x4B
+	.word (\address-.-4)/4
+.endm
+
+.macro Jump address
+	.word 0x4C
+	.word (\address-.-4)/4
+.endm
+
+.macro EndAi
+	.word 0x4D
+.endm
+
+.macro JumpIfLevel value, address
+	.word 0x4E
+	.word \value
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfTaunted address
+	.word 0x4F
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfNotTaunted address
+	.word 0x50
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfTargetIsAlly address
+	.word 0x51
+	.word (\address-.-4)/4
+.endm
+
+.macro CheckHaveType side, type
+	.word 0x52
+	.word \side
+	.word \type
+.endm
+
+.macro CheckHaveAbility side, ability
+	.word 0x53
+	.word \side
+	.word \ability
+.endm
+
+.macro JumpIfFlashFireActive side, address
+	.word 0x54
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHasThisItem side, item, address
+	.word 0x55
+	.word \side
+	.word \item
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfFieldCondition field_condition, address
+	.word 0x56
+	.word \field_condition
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadSideConditionCount side, side_condition
+	.word 0x57
+	.word \side
+	.word \side_condition
+.endm
+
+.macro JumpIfPartyMonHpNotFull side, address
+	.word 0x58
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfPartyMonPpNotFull side, address
+	.word 0x59
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadThrowPower side
+	.word 0x5A
+	.word \side
+.endm
+
+.macro LoadPPRemaining
+	.word 0x5B
+.endm
+
+.macro JumpIfTotteOki side, address
+	.word 0x5C
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadMoveCategory
+	.word 0x5D
+.endm
+
+.macro LoadLastOpponentMoveCategory
+	.word 0x5E
+.endm
+
+.macro LoadSpeedRanking side
+	.word 0x5F
+	.word \side
+.endm
+
+.macro LoadSlowStartTurnNum side
+	.word 0x60
+	.word \side
+.endm
+
+.macro JumpIfPartyMonHpLow param_0, address
+	.word 0x61
+	.word \param_0
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfHaveUnknown address
+	.word 0x62
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfLastMoveDamageCheck side, param_1, address
+	.word 0x63
+	.word \side
+	.word \param_1
+	.word (\address-.-4)/4
+.endm
+
+.macro LoadStatusBoost side
+	.word 0x64
+	.word \side
+.endm
+
+.macro LoadStatusDiff side, stat
+	.word 0x65
+	.word \side
+	.word \stat
+.endm
+
+.macro JumpIfStatusLess side, flag, address
+	.word 0x66
+	.word \side
+	.word \flag
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatusGreater side, flag, address
+	.word 0x67
+	.word \side
+	.word \flag
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfStatusEqual side, flag, address
+	.word 0x68
+	.word \side
+	.word \flag
+	.word (\address-.-4)/4
+.endm
+
+.macro ComparePowerWithAlly param_0
+	.word 0x69
+	.word \param_0
+.endm
+
+.macro JumpIfSideAlmostDead side, address
+	.word 0x6A
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro JumpIfSideNotAlmostDead side, address
+	.word 0x6B
+	.word \side
+	.word (\address-.-4)/4
+.endm
+
+.macro CheckAbilityAgainstCurrentMove side
+	.word 0x6C
+	.word \side
+.endm
+

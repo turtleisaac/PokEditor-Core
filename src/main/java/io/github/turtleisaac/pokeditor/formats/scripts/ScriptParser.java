@@ -51,8 +51,6 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     public static List<CommandMacro> convenienceCommands;
     public static HashMap<Integer, String> movementNames;
 
-    public static HashMap<String, Integer> definedValues;
-
     static {
 
         MacrosParser.EntriesContext entryContext = prepareMacros("/data/Scrcmd_Hg.txt");
@@ -103,14 +101,6 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             if (node != null)
                 movementNames.put(i, node.asText());
         }
-
-        definedValues = new HashMap<>();
-        definedValues.put("LESS", 0);
-        definedValues.put("EQUAL", 1);
-        definedValues.put("GREATER", 2);
-        definedValues.put("LESS_OR_EQUAL", 3);
-        definedValues.put("GREATER_OR_EQUAL", 4);
-        definedValues.put("DIFFERENT", 5);
     }
 
     private static MacrosParser.EntriesContext prepareMacros(String path)
@@ -132,38 +122,38 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     @Override
     public List<GenericScriptData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
-        if (!narcs.containsKey(GameFiles.SCRIPTS))
+        if (!narcs.containsKey(GameFiles.FIELD_SCRIPTS))
         {
             throw new RuntimeException("Scripts narc not provided to editor");
         }
 
-        Narc scripts = narcs.get(GameFiles.SCRIPTS);
+        Narc scripts = narcs.get(GameFiles.FIELD_SCRIPTS);
         ArrayList<GenericScriptData> data = new ArrayList<>();
 
-        int i = 0;
+//        int i = 0;
         for (byte[] subfile : scripts.getFiles())
         {
 //            System.out.print(i);
-            if (i == 266) {
-                System.currentTimeMillis();
-            }
+//            if (i == 271) {
+//                System.currentTimeMillis();
+//            }
             if (testFileIsLevelScript(subfile))
             {
 //                System.out.println(" (Level)");
-                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
+                data.add(new LevelScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
             }
             else
             {
 //                System.out.println(" (Normal)");
-                data.add(new ScriptData(new BytesDataContainer(GameFiles.SCRIPTS, null, subfile)));
+                data.add(new ScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
             }
-            i++;
+//            i++;
         }
 
         return data;
     }
 
-    private boolean testFileIsLevelScript(byte[] subfile)
+    public static boolean testFileIsLevelScript(byte[] subfile)
     {
         MemBuf buf = MemBuf.create(subfile);
         MemBuf.MemBufReader reader = buf.reader();
@@ -174,7 +164,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
         boolean ret = true;
         try
         {
-            ret = GenericScriptData.fileIsLevelScriptFile(reader, temp);
+            ret = GenericScriptData.fileIsLevelScriptFile(buf, temp);
             return ret;
         }
         catch (IllegalStateException e)
@@ -191,48 +181,19 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     @Override
     public Map<GameFiles, Narc> processDataList(List<GenericScriptData> data, Map<GameCodeBinaries, CodeBinary> codeBinaries)
     {
-//        if (codeBinaries == null)
-//        {
-//            throw new RuntimeException("Code binaries not provided to editor");
-//        }
-//
-//        if (!codeBinaries.containsKey(GameCodeBinaries.ARM9))
-//        {
-//            throw new RuntimeException("Arm9 not provided to editor");
-//        }
-
-//        if (hasReadTmMoveIds)
-//        {
-//            CodeBinary arm9 = codeBinaries.get(GameCodeBinaries.ARM9);
-//            arm9.lock();
-//            try {
-//                MemBuf.MemBufReader reader = arm9.getPhysicalAddressBuffer().reader();
-//                reader.setPosition(Tables.TM_HM_MOVES.getPointerOffset());
-//                int offset = reader.readInt();
-//                MemBuf.MemBufWriter writer = arm9.getPhysicalAddressBuffer().writer();
-//                writer.setPosition(offset - arm9.getRamStartAddress());
-//                for (int i = 0; i < GenericScriptData.NUMBER_TMS_HMS; i++)
-//                {
-//                    writer.writeShort((short) tmMoveIdNumbers[i]);
-//                }
-//            } finally {
-//                arm9.unlock();
-//            }
-//        }
-
         ArrayList<byte[]> subfiles = new ArrayList<>();
         for (GenericScriptData scriptData : data)
         {
-            subfiles.add(scriptData.save().get(GameFiles.SCRIPTS, null));
+            subfiles.add(scriptData.save().get(GameFiles.FIELD_SCRIPTS, null));
         }
 
-        return Collections.singletonMap(GameFiles.SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
+        return Collections.singletonMap(GameFiles.FIELD_SCRIPTS, Narc.fromContentsAndNames(subfiles, new Fnt.Folder(), Endianness.EndiannessType.BIG));
     }
 
     @Override
     public List<GameFiles> getRequirements()
     {
-        return Collections.singletonList(GameFiles.SCRIPTS);
+        return Collections.singletonList(GameFiles.FIELD_SCRIPTS);
     }
 
     @Override

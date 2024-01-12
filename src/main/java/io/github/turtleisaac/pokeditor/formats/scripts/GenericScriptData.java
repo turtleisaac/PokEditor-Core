@@ -11,30 +11,27 @@ import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIP
 
 public abstract class GenericScriptData extends ArrayList<GenericScriptData.ScriptComponent> implements GenericFileData
 {
-    private ArrayList<ScriptComponent> components = new ArrayList<>();
-
     public GenericScriptData()
-    {
-
-    }
+    {}
 
     public GenericScriptData(BytesDataContainer files)
     {
         setData(files);
     }
 
-    boolean isLevelScript(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets) {
-        return fileIsLevelScriptFile(reader, globalScriptOffsets);
+    boolean isLevelScript(MemBuf memBuf, List<Integer> globalScriptOffsets) {
+        return fileIsLevelScriptFile(memBuf, globalScriptOffsets);
     }
 
-    protected static boolean fileIsLevelScriptFile(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets)
+    protected static boolean fileIsLevelScriptFile(MemBuf dataBuf, List<Integer> globalScriptOffsets)
     {
+        MemBuf.MemBufReader reader = dataBuf.reader();
         // Is Level Script as long as magic number FD13 doesn't exist
-        while (true)
+        while (reader.getPosition() < dataBuf.writer().getPosition())
         {
             int checker = reader.readUInt16();
             reader.setPosition(reader.getPosition()-2);
-            long value = reader.readUInt32();
+            int value = reader.readInt();
 
             if (value == 0 && globalScriptOffsets.isEmpty()) { // yep this is a level script
                 return true;
@@ -46,44 +43,48 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
                 globalScriptOffsets.add(offsetFromStart);
             }
         }
+
+//        if (reader.getPosition() < dataBuf.writer().getPosition())
+            return true;
     }
 
-//    public void add(ScriptComponent scriptComponent)
-//    {
-//        components.add(scriptComponent);
-//    }
-//
-//    public void add(int index, ScriptComponent scriptComponent)
-//    {
-//        components.add(index, scriptComponent);
-//    }
-//
-//    public ScriptComponent get(int index)
-//    {
-//        return components.get(index);
-//    }
-//
-//    public ScriptComponent remove(int index)
-//    {
-//        return components.remove(index);
-//    }
-//
-//    public int size()
-//    {
-//        return components.size();
-//    }
-//
-//    public Iterable<ScriptComponent> iterable()
-//    {
-//        return components;
-//    }
-//
-//    public boolean isEmpty()
-//    {
-//        return components.isEmpty();
-//    }
+	public interface ScriptComponent {
+		String getName();
+	}
 
-    public interface ScriptComponent {
-        String getName();
+    public static class ScriptLabel implements ScriptComponent {
+        protected String name;
+        private int scriptID;
+
+        public ScriptLabel(String name)
+        {
+            this.name = name;
+            this.scriptID = -1;
+        }
+
+        @Override
+        public String toString()
+        {
+            if (scriptID == -1)
+                return name;
+            else
+                return String.format("script(%d) %s", scriptID, name);
+        }
+
+        @Override
+        public String getName()
+        {
+            return name;
+        }
+
+        public int getScriptID()
+        {
+            return scriptID;
+        }
+
+        public void setScriptID(int scriptID)
+        {
+            this.scriptID = scriptID;
+        }
     }
 }

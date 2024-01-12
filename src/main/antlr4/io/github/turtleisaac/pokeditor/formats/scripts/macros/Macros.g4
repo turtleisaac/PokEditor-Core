@@ -13,7 +13,7 @@ argument_definition : NAME ('=' number_or_argument)? ',' ;
 id_line : WHITESPACE*? (SHORT | WORD) WHITESPACE NUMBER NEWLINE ;
 
 write_line : WHITESPACE*? write NEWLINE;
-call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (input ','))* (WHITESPACE (input NEWLINE))? NEWLINE? ;
+call_line : WHITESPACE*? NAME WHITESPACE*? (WHITESPACE (algebra ','))* (WHITESPACE (algebra NEWLINE))? NEWLINE? ;
 else_line : WHITESPACE*? ELSE NEWLINE ;
 if_line : WHITESPACE*? IF WHITESPACE*? compare NEWLINE ;
 endif_line : WHITESPACE*? ENDIF NEWLINE ;
@@ -23,24 +23,23 @@ else_block : else_line (write_line | call_line | if_block)*? endif_line ;
 
 end : WHITESPACE*? END_MACRO NEWLINE?? ;
 
-write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? input ',')* (WHITESPACE*? input) ;
+write : (BYTE | SHORT | WORD) WHITESPACE (WHITESPACE*? algebra ',')* (WHITESPACE*? algebra) ;
 
 number_or_argument : (ARGUMENT_USAGE | NUMBER | CURRENT_OFFSET | NAME) ;
 
-input : OPEN_PARENTHESES input CLOSE_PARENTHESES
-           | algebra
-           | number_or_argument ;
-
 //comparator
-algebra : OPEN_PARENTHESES input CLOSE_PARENTHESES
+algebra : OPEN_PARENTHESES algebra CLOSE_PARENTHESES
         | algebra WHITESPACE*? MULT_DIV WHITESPACE*? algebra
         | algebra WHITESPACE*? ADD_SUBTRACT WHITESPACE*? algebra
-        | number_or_argument ;
+        | ARGUMENT_USAGE
+        | NUMBER
+        | CURRENT_OFFSET
+        | NAME;
 
 compare : OPEN_PARENTHESES compare CLOSE_PARENTHESES
              | compare WHITESPACE*? COMPARATOR WHITESPACE*? compare
              | compare WHITESPACE*? AND_OR WHITESPACE*? compare
-             | input ;
+             | algebra ;
 
 /*
  * Lexer Rules
