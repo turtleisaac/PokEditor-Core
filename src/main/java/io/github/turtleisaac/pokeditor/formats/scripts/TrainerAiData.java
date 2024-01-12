@@ -155,6 +155,16 @@ public class TrainerAiData extends GenericScriptData
 		{
 			this.value = value;
 		}
+
+		// Super simple proof of concept.
+		static String getFromInt(int value)
+		{
+			return Arrays.stream(lookup_type.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
+		}
 	}
 
 	// Attacker seems to be the current AI.
@@ -249,6 +259,38 @@ public class TrainerAiData extends GenericScriptData
 		weather(int value)
 		{
 			this.value = value;
+		}
+	}
+
+	public enum side_condition
+	{
+		REFLECT(1),
+		LIGHT_SCREEN(2),
+		SPIKES(4),
+		MYSTERY(8),
+		FUTURE_SIGHT(16),
+		WISH(32),
+		FOG(64),
+		STEALTH_ROCK(128),
+		TAILWIND(0x00000300),
+		TOXIC_SPIKES(0x00000400),
+		SPELL(0x00007000);
+
+
+		int value;
+
+		side_condition(int value)
+		{
+			this.value = value;
+		}
+		// Super simple proof of concept.
+		static String getFromInt(int value)
+		{
+			return Arrays.stream(side_condition.values())
+					.filter(side -> side.value == value)
+					.findFirst()
+					.map(side -> side.name())
+					.orElse("INVALID(" + value + ")");
 		}
 	}
 
@@ -377,6 +419,29 @@ public class TrainerAiData extends GenericScriptData
                 if (!labelOffsets.contains(offsetParam))
                     labelOffsets.add(offsetParam);
             }
+			
+			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
+			{
+				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
+				if (!tableOffsets.contains(offsetParam))
+				{
+					tableOffsets.add(offsetParam);
+				}
+			}
+
+//			if (isCallCommand.test(commandID)) {
+//				int offsetParam = (int) command.parameters[command.parameters.length-1].value;
+//
+//				if (!labelOffsets.contains(offsetParam))
+//					labelOffsets.add(offsetParam);
+//
+//				if (isTableCommand.test(commandID))
+//				{
+//					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
+//					if (!tableOffsets.contains(tableOffsetParam))
+//						tableOffsets.add(tableOffsetParam);
+//				}
+//			}
 
 			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
 			{
@@ -552,12 +617,16 @@ public class TrainerAiData extends GenericScriptData
 				{
 					if (parameter.name.equals("side"))
 						return pokemon_side.getFromInt(val);
+					if (parameter.name.equals("lookup_type"))
+						return lookup_type.getFromInt(val);
 					if (parameter.name.equals("stat"))
 						return pokemon_stat.getFromInt(val);
 					if (parameter.name.equals("type"))
 						return pokemon_type.getFromInt(val);
 					if (parameter.name.equals("compatibility"))
 						return move_effectiveness.getFromInt(val);
+					if (parameter.name.equals("side_condition"))
+						return side_condition.getFromInt(val);
 					if (val >= 0x4000)
 						return "0x" + Integer.toHexString(val);
 					else
