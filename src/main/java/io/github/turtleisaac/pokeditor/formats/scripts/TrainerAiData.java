@@ -404,7 +404,7 @@ public class TrainerAiData extends GenericScriptData
 
             CommandMacro commandMacro = TrainerAiParser.nativeCommands.get((int)commandID);
             if (commandMacro == null) {
-                System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset " + reader.getPosition());
+                System.err.println("Invalid command 0x" + Integer.toHexString((int)commandID) + " at offset 0x" + Integer.toHexString(reader.getPosition()));
 				break;
             }
 
@@ -420,6 +420,29 @@ public class TrainerAiData extends GenericScriptData
                     labelOffsets.add(offsetParam);
             }
 			
+			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
+			{
+				int offsetParam = (int) command.parameters[command.parameters.length-2].value;
+				if (!tableOffsets.contains(offsetParam))
+				{
+					tableOffsets.add(offsetParam);
+				}
+			}
+
+//			if (isCallCommand.test(commandID)) {
+//				int offsetParam = (int) command.parameters[command.parameters.length-1].value;
+//
+//				if (!labelOffsets.contains(offsetParam))
+//					labelOffsets.add(offsetParam);
+//
+//				if (isTableCommand.test(commandID))
+//				{
+//					int tableOffsetParam = (int) command.parameters[command.parameters.length-2].value;
+//					if (!tableOffsets.contains(tableOffsetParam))
+//						tableOffsets.add(tableOffsetParam);
+//				}
+//			}
+
 			if (commandMacro.getParameters().length > 1 && commandMacro.getParameters()[commandMacro.getParameters().length-2].equals("tableAddress"))
 			{
 				int offsetParam = (int) command.parameters[command.parameters.length-2].value;

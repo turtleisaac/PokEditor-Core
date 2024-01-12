@@ -2,7 +2,9 @@ package io.github.turtleisaac.pokeditor.formats;
 
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import io.github.turtleisaac.nds4j.Narc;
 import io.github.turtleisaac.nds4j.NintendoDsRom;
+import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.pokeditor.formats.encounters.JohtoEncounterData;
 import io.github.turtleisaac.pokeditor.formats.encounters.SinnohEncounterData;
 import io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData;
@@ -11,14 +13,23 @@ import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData;
+import io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.ScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.gamedata.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.github.turtleisaac.pokeditor.formats.TestsInjector.injector;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ParserTests
 {
@@ -116,7 +127,8 @@ public class ParserTests
         }
     }
 
-    public static class FieldScriptsTests extends GenericParserTest<GenericScriptData>
+    @Nested
+    class FieldScriptsTests extends GenericParserTest<GenericScriptData>
     {
         @Override
         protected GenericParser<GenericScriptData> createParser()
@@ -135,6 +147,66 @@ public class ParserTests
             TextFiles.initialize(game);
             GameCodeBinaries.initialize(game);
             Tables.initialize(game);
+        }
+
+        @Test
+        @Override
+        void outputMatchesInput()
+        {
+            HashMap<GameFiles, Narc> map = new HashMap<>();
+            for (GameFiles gameFile : parser.getRequirements()) {
+                map.put(gameFile, new Narc(rom.getFileByName(gameFile.getPath())));
+            }
+
+            HashMap<GameCodeBinaries, CodeBinary> codeBinaries = new HashMap<>();
+            codeBinaries.put(GameCodeBinaries.ARM9, rom.loadArm9());
+
+            List<GenericScriptData> data = parser.generateDataList(map, codeBinaries);
+            Map<GameFiles, Narc> output = parser.processDataList(data, codeBinaries);
+
+            int nonExactMatches = 0;
+
+            for (GameFiles gameFile : parser.getRequirements()) {
+                Narc originalNarc = map.get(gameFile);
+                Narc outputNarc = output.get(gameFile);
+                for (int idx = 0; idx < originalNarc.getFiles().size(); idx++) {
+                    byte[] outputFile = outputNarc.getFile(idx);
+                    if (Arrays.equals(originalNarc.getFile(idx), outputFile))
+                    {
+                        assertThat(outputFile)
+                                .isEqualTo(originalNarc.getFile(idx));
+                    }
+                    else if (outputFile.length != 0)
+                    {
+                        BytesDataContainer container = new BytesDataContainer();
+                        container.insert(GameFiles.FIELD_SCRIPTS, null, outputFile);
+
+                        GenericScriptData scriptData;
+                        if (ScriptParser.testFileIsLevelScript(originalNarc.getFile(idx)))
+                            scriptData = new LevelScriptData(container);
+                        else
+                            scriptData = new ScriptData(container);
+
+                        container = scriptData.save();
+                        byte[] rebuiltResult = container.get(GameFiles.FIELD_SCRIPTS, null);
+
+                        if (Arrays.equals(rebuiltResult, outputFile))
+                        {
+                            System.out.println("Valid but non-1:1 Match: File " + idx);
+                            nonExactMatches++;
+                        }
+                        else
+                        {
+                            System.err.println("File did not match original, attempted conditional rebuild but failed");
+                        }
+
+                        assertThat(rebuiltResult)
+                                .isEqualTo(outputFile);
+                    }
+                }
+            }
+
+            System.out.printf("In total, there were %d valid but non-1:1 matching rebuilt field script files (%d 1:1 matches).\n", nonExactMatches, data.size()-nonExactMatches);
         }
     }
 }

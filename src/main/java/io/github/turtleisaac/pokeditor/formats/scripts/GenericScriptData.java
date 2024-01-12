@@ -19,14 +19,15 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
         setData(files);
     }
 
-    boolean isLevelScript(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets) {
-        return fileIsLevelScriptFile(reader, globalScriptOffsets);
+    boolean isLevelScript(MemBuf memBuf, List<Integer> globalScriptOffsets) {
+        return fileIsLevelScriptFile(memBuf, globalScriptOffsets);
     }
 
-    protected static boolean fileIsLevelScriptFile(MemBuf.MemBufReader reader, List<Integer> globalScriptOffsets)
+    protected static boolean fileIsLevelScriptFile(MemBuf dataBuf, List<Integer> globalScriptOffsets)
     {
+        MemBuf.MemBufReader reader = dataBuf.reader();
         // Is Level Script as long as magic number FD13 doesn't exist
-        while (true)
+        while (reader.getPosition() < dataBuf.writer().getPosition())
         {
             int checker = reader.readUInt16();
             reader.setPosition(reader.getPosition()-2);
@@ -42,6 +43,9 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
                 globalScriptOffsets.add(offsetFromStart);
             }
         }
+
+//        if (reader.getPosition() < dataBuf.writer().getPosition())
+            return true;
     }
 
 	public interface ScriptComponent {
@@ -50,16 +54,21 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
 
     public static class ScriptLabel implements ScriptComponent {
         protected String name;
+        private int scriptID;
 
         public ScriptLabel(String name)
         {
             this.name = name;
+            this.scriptID = -1;
         }
 
         @Override
         public String toString()
         {
-            return name + ": ";
+            if (scriptID == -1)
+                return name;
+            else
+                return String.format("script(%d) %s", scriptID, name);
         }
 
         @Override
@@ -68,5 +77,14 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
             return name;
         }
 
+        public int getScriptID()
+        {
+            return scriptID;
+        }
+
+        public void setScriptID(int scriptID)
+        {
+            this.scriptID = scriptID;
+        }
     }
 }

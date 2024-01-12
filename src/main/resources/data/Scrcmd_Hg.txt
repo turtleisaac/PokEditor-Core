@@ -4752,14 +4752,3 @@
 	.byte \arg1
 	.endm
 
-	; Script headers
-
-	.macro map_script kind, script
-	.byte \kind
-	.word \script
-	.endm
-
-	.macro map_script_2 var, val, script
-	.short \var, \val, \script
-	.endm
-
