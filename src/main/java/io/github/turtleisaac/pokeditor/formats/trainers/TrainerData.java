@@ -21,12 +21,14 @@ package io.github.turtleisaac.pokeditor.formats.trainers;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.trainers.antlr.SmogonTeamImporter;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 public class TrainerData implements GenericFileData
 {
@@ -45,6 +47,12 @@ public class TrainerData implements GenericFileData
     short unknown3;
 
     ArrayList<TrainerPartyEntry> trainerPartyEntries;
+
+    public TrainerData()
+    {
+        items = new int[NUMBER_TRAINER_ITEMS];
+        ai = new boolean[NUMBER_AI_FLAGS];
+    }
 
     public TrainerData(BytesDataContainer files)
     {
@@ -132,6 +140,11 @@ public class TrainerData implements GenericFileData
 
             trainerPartyEntries.add(entry);
         }
+    }
+
+    public void setTeamFromSmogon(String text, BiFunction<SmogonTeamImporter.SmogonStringSources, String, Integer> stringReplacementFunction)
+    {
+        trainerPartyEntries = SmogonTeamImporter.importSmogonTeam(text, stringReplacementFunction);
     }
 
     @Override
@@ -365,6 +378,16 @@ public class TrainerData implements GenericFileData
         }
     }
 
+    public String toSmogonString(BiFunction<SmogonTeamImporter.SmogonStringSources, Integer, String> intReplacementFunction)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (TrainerPartyEntry entry : trainerPartyEntries)
+        {
+            sb.append(entry.toSmogonString(intReplacementFunction)).append("\n");
+        }
+        return sb.toString().trim();
+    }
+
     private static final int MIN_NUMBER_TRAINER_MONS = 1;
     private static final int MAX_NUMBER_TRAINER_MONS = 6;
     private static final int NUMBER_MOVES = 4;
@@ -478,5 +501,36 @@ public class TrainerData implements GenericFileData
         {
             this.ballCapsule = ballCapsule;
         }
+
+        public String toSmogonString(BiFunction<SmogonTeamImporter.SmogonStringSources, Integer, String> intReplacementFunction)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append(intReplacementFunction.apply(SmogonTeamImporter.SmogonStringSources.SPECIES, species));
+            if (heldItem != 0)
+            {
+                sb.append(String.format(" @ %s", intReplacementFunction.apply(SmogonTeamImporter.SmogonStringSources.ITEMS, heldItem)));
+            }
+            sb.append("\n").append("Level: ").append(level).append("\n");
+
+            int ivs = difficultyValue * 31 / 255;
+            sb.append("IVs: ");
+            for (int i = 0; i < statNames.length; i++)
+            {
+                sb.append(ivs).append(" ").append(statNames[i]).append(" ");
+                if (i != 5)
+                    sb.append("/");
+            }
+            sb.append("\n");
+
+            for (int move : moves) {
+                if (move != 0)
+                    sb.append(String.format("- %s\n", intReplacementFunction.apply(SmogonTeamImporter.SmogonStringSources.MOVES, move)));
+            }
+
+
+            return sb.toString();
+        }
+
+        private static final String[] statNames = {"HP", "Atk", "Def", "SpA", "SpD", "Spe"};
     }
 }

@@ -44,7 +44,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class ScriptParser implements GenericParser<GenericScriptData>
+public class FieldScriptParser implements GenericParser<GenericScriptData>
 {
     public static List<CommandMacro> commandMacros;
     public static HashMap<Integer, CommandMacro> nativeCommands;
@@ -59,7 +59,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
 
         String[] alternateNames;
         try {
-            alternateNames = new String(ScriptParser.class.getResourceAsStream("/data/AlternateNames_Hg.txt").readAllBytes()).split("\n");
+            alternateNames = new String(FieldScriptParser.class.getResourceAsStream("/data/AlternateNames_Hg.txt").readAllBytes()).split("\n");
         }
         catch(IOException e) {
             throw new RuntimeException(e);
@@ -107,7 +107,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
     {
         MacrosLexer lexer;
         try {
-            lexer = new MacrosLexer(CharStreams.fromStream(ScriptParser.class.getResourceAsStream(path)));
+            lexer = new MacrosLexer(CharStreams.fromStream(FieldScriptParser.class.getResourceAsStream(path)));
         }
         catch(IOException e) {
             throw new RuntimeException(e);
@@ -145,7 +145,7 @@ public class ScriptParser implements GenericParser<GenericScriptData>
             else
             {
 //                System.out.println(" (Normal)");
-                data.add(new ScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
+                data.add(new FieldScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
             }
 //            i++;
         }

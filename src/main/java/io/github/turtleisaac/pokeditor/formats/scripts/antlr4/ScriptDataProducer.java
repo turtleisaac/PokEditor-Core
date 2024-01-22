@@ -10,15 +10,15 @@ import java.util.*;
 
 public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 {
-    private ScriptData data;
+    private FieldScriptData data;
 
-    private HashMap<Integer, ScriptData.ScriptLabel> scriptEntryPoints;
+    private HashMap<Integer, FieldScriptData.ScriptLabel> scriptEntryPoints;
 
     private ScriptCompilationException scriptCompilationException;
 
-    public ScriptData produceScriptData(String text) throws ScriptCompilationException
+    public FieldScriptData produceScriptData(String text) throws ScriptCompilationException
     {
-        data = new ScriptData();
+        data = new FieldScriptData();
         scriptEntryPoints = new HashMap<>();
         scriptCompilationException = new ScriptCompilationException();
 
@@ -109,12 +109,12 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 
         if (labelName != null)
         {
-            ScriptData.ScriptLabel label = new ScriptData.ScriptLabel(labelName);
+            FieldScriptData.ScriptLabel label = new FieldScriptData.ScriptLabel(labelName);
 
             boolean foundConflict = false;
             for (GenericScriptData.ScriptComponent scriptComponent : data)
             {
-                if (scriptComponent instanceof ScriptData.ScriptLabel existingLabel)
+                if (scriptComponent instanceof FieldScriptData.ScriptLabel existingLabel)
                 {
                     if (existingLabel.getName().equals(labelName))
                     {
@@ -161,12 +161,12 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 
         if (actionName != null)
         {
-            ScriptData.ActionLabel action = new ScriptData.ActionLabel(actionName);
+            FieldScriptData.ActionLabel action = new FieldScriptData.ActionLabel(actionName);
 
             boolean foundConflict = false;
             for (GenericScriptData.ScriptComponent scriptComponent : data)
             {
-                if (scriptComponent instanceof ScriptData.ActionLabel existingLabel)
+                if (scriptComponent instanceof FieldScriptData.ActionLabel existingLabel)
                 {
                     if (existingLabel.getName().equals(actionName))
                     {
@@ -203,7 +203,7 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
                 if (terminalNode.symbol.getType() == ScriptFileLexer.NAME)
                 {
                     name = terminalNode.getText();
-                    for (CommandMacro macro : ScriptParser.commandMacros)
+                    for (CommandMacro macro : FieldScriptParser.commandMacros)
                     {
                         if (macro.getName().equals(terminalNode.getText()))
                         {
@@ -244,7 +244,7 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
             return null; //todo better
         }
 
-        ScriptData.ScriptCommand command = new ScriptData.ScriptCommand(commandMacro);
+        FieldScriptData.ScriptCommand command = new FieldScriptData.ScriptCommand(commandMacro);
         command.setParameters(parameters);
         data.add(command);
 

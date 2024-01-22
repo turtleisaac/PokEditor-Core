@@ -7,7 +7,7 @@ import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
+import static io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser.SCRIPT_MAGIC_ID;
 
 public abstract class GenericScriptData extends ArrayList<GenericScriptData.ScriptComponent> implements GenericFileData
 {

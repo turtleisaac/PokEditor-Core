@@ -4,16 +4,23 @@ grammar SmogonTeam;
  * Parser Rules
  */
 
-team: (speciesEntry)+ EOF;
+team: (speciesEntry)+ EOF?;
 
-speciesEntry : NEWLINE*? species (ability | effortValues | nature)+ move move? move? move? NEWLINE+ ;
+move: '-' WHITESPACE+ nameWithSpace WHITESPACE*? NEWLINE? ;
 
-species: NAME WHITESPACE+ '@' WHITESPACE+ (NAME | WHITESPACE)+ NEWLINE ;
-ability: 'Ability:' WHITESPACE+ NAME NEWLINE ;
-effortValues: 'EVs:' (WHITESPACE+ effortValueEntry WHITESPACE+? '/')*? WHITESPACE effortValueEntry NEWLINE ;
+speciesEntry : NEWLINE*? species ability? level? shiny? effortValues? nature? individualValues? move move? move? move? NEWLINE*? ;
+
+species: NEWLINE NAME WHITESPACE+? item? WHITESPACE*? NEWLINE ;
+item: '@' WHITESPACE+ nameWithSpace ;
+nameWithSpace : (NAME | WHITESPACE)*? NAME ;
+ability: 'Ability:' WHITESPACE+ nameWithSpace WHITESPACE*? NEWLINE ;
+level: 'Level:' WHITESPACE+ NUMBER WHITESPACE*? NEWLINE;
+shiny: 'Shiny:' WHITESPACE+ YES_NO WHITESPACE*? NEWLINE;
+individualValues: 'IVs:' (WHITESPACE+ effortValueEntry WHITESPACE+? '/')*? WHITESPACE effortValueEntry WHITESPACE*? NEWLINE ;
+effortValues: 'EVs:' (WHITESPACE+ effortValueEntry WHITESPACE+? '/')*? WHITESPACE effortValueEntry WHITESPACE*? NEWLINE ;
 effortValueEntry: NUMBER WHITESPACE+ STAT ;
-nature: NAME WHITESPACE+ 'Nature' NEWLINE ;
-move: '-' WHITESPACE+ (NAME | WHITESPACE)+ NEWLINE? ;
+nature: NAME WHITESPACE+ 'Nature' WHITESPACE*? NEWLINE ;
+
 
 
 /*
@@ -31,9 +38,16 @@ NEWLINE : ('\r'? '\n' | '\r')+ ;
 
 STAT : (HP | ATTACK | DEFENSE | SPEED | SPECIAL_ATTACK | SPECIAL_DEFENSE);
 
+fragment YES : 'Yes' ;
+fragment NO : 'No' ;
+
+YES_NO : (YES | NO) ;
+
 NAME : (LETTER | NUMBER | '_')+ ;
 
-fragment HP : 'Hp' ;
+//NAME_WITH_SPACE : (LETTER | NUMBER | '_' )+ (LETTER | NUMBER | '_' | WHITESPACE)*? (LETTER | NUMBER | '_')+?  ;
+
+fragment HP : 'HP' ;
 fragment ATTACK : 'Atk' ;
 fragment DEFENSE : 'Def' ;
 fragment SPEED : 'Spe' ;

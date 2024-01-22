@@ -14,8 +14,8 @@ import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
 import io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData;
-import io.github.turtleisaac.pokeditor.formats.scripts.ScriptData;
-import io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser;
+import io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData;
+import io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.gamedata.*;
@@ -133,7 +133,7 @@ public class ParserTests
         @Override
         protected GenericParser<GenericScriptData> createParser()
         {
-            return new ScriptParser();
+            return new FieldScriptParser();
         }
 
         @BeforeEach
@@ -182,10 +182,10 @@ public class ParserTests
                         container.insert(GameFiles.FIELD_SCRIPTS, null, outputFile);
 
                         GenericScriptData scriptData;
-                        if (ScriptParser.testFileIsLevelScript(originalNarc.getFile(idx)))
+                        if (FieldScriptParser.testFileIsLevelScript(originalNarc.getFile(idx)))
                             scriptData = new LevelScriptData(container);
                         else
-                            scriptData = new ScriptData(container);
+                            scriptData = new FieldScriptData(container);
 
                         container = scriptData.save();
                         byte[] rebuiltResult = container.get(GameFiles.FIELD_SCRIPTS, null);

@@ -1,8 +1,5 @@
 package io.github.turtleisaac.pokeditor.formats.scripts;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
 import io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro;
@@ -11,11 +8,10 @@ import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.Collectors;
 
-import static io.github.turtleisaac.pokeditor.formats.scripts.ScriptParser.SCRIPT_MAGIC_ID;
+import static io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser.SCRIPT_MAGIC_ID;
 
-public class ScriptData extends GenericScriptData
+public class FieldScriptData extends GenericScriptData
 {
     private static final IntPredicate isCallCommand = commandID -> commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B;
     private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x16 || commandId == 0x1B;
@@ -43,12 +39,12 @@ public class ScriptData extends GenericScriptData
 
     private List<ScriptLabel> scripts;
 
-    public ScriptData(BytesDataContainer files)
+    public FieldScriptData(BytesDataContainer files)
     {
         super(files);
     }
 
-    public ScriptData()
+    public FieldScriptData()
     {
         super();
         scripts = new ArrayList<>();
@@ -232,7 +228,7 @@ public class ScriptData extends GenericScriptData
                 break;
 
 //			System.err.println(commandID);
-            CommandMacro commandMacro = ScriptParser.nativeCommands.get(commandID);
+            CommandMacro commandMacro = FieldScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
                 throw new RuntimeException("Invalid command ID: " + commandID);
             }
@@ -327,7 +323,7 @@ public class ScriptData extends GenericScriptData
             int commandID = reader.readUInt16();
             int parameter = reader.readUInt16();
 
-            String name = ScriptParser.movementNames.get(commandID);
+            String name = FieldScriptParser.movementNames.get(commandID);
             if (name != null)
                 add(new ActionCommand(name, commandID, parameter));
             else
@@ -352,7 +348,7 @@ public class ScriptData extends GenericScriptData
 
     private void findAndReplaceSequencesWithConvenienceCommands()
     {
-        for (CommandMacro commandMacro : ScriptParser.convenienceCommands)
+        for (CommandMacro commandMacro : FieldScriptParser.convenienceCommands)
         {
             boolean matchFound = true;
             CommandMacro.ConvenienceCommandMacro convenienceCommand = (CommandMacro.ConvenienceCommandMacro) commandMacro;
@@ -562,7 +558,7 @@ public class ScriptData extends GenericScriptData
         StringBuilder builder = new StringBuilder();
         for (ScriptComponent component : this)
         {
-            if (component instanceof ScriptData.ScriptLabel label)
+            if (component instanceof FieldScriptData.ScriptLabel label)
             {
 //                        if (scriptData.getScripts().contains(label))
 //                        {
@@ -580,7 +576,7 @@ public class ScriptData extends GenericScriptData
                 }
                 builder.append(label.getName()).append(":\n");
             }
-            else if (component instanceof ScriptData.ScriptCommand scriptCommand)
+            else if (component instanceof FieldScriptData.ScriptCommand scriptCommand)
             {
                 builder.append("    ").append(scriptCommand.getName());
                 String[] parameters = scriptCommand.getParameterStrings();
@@ -595,11 +591,11 @@ public class ScriptData extends GenericScriptData
                 }
                 builder.append("\n");
             }
-            else if (component instanceof ScriptData.ActionLabel actionLabel)
+            else if (component instanceof FieldScriptData.ActionLabel actionLabel)
             {
                 builder.append(actionLabel.getName()).append(":\n");
             }
-            else if (component instanceof ScriptData.ActionCommand actionCommand)
+            else if (component instanceof FieldScriptData.ActionCommand actionCommand)
             {
                 builder.append("    ").append(actionCommand);
                 if (actionCommand.getName().equalsIgnoreCase("End"))
@@ -765,6 +761,11 @@ public class ScriptData extends GenericScriptData
             }
 
             return parameterStrings;
+        }
+
+        public Object[] getParameters()
+        {
+            return parameters;
         }
 
         public void setParameters(Object[] newParameters)
