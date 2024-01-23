@@ -469,6 +469,8 @@ public class FieldScriptData extends GenericScriptData
             }
             else if (component instanceof ActionLabel actionLabel)
             {
+                if (writer.getPosition() % 2 != 0)
+                    writer.align(2);
                 actionOffsets[actions.indexOf(actionLabel)] = writer.getPosition();
             }
             else if (component instanceof ScriptCommand command) // is a command
@@ -521,6 +523,12 @@ public class FieldScriptData extends GenericScriptData
 //                    if (writer.getPosition() % 4 != 0)
 //                        writer.skip(4 - writer.getPosition() % 4);
 //                }
+            }
+            else if (component instanceof ActionLabel)
+            {
+                if (writer.getPosition() % 2 != 0)
+                    writer.align(2);
+//                actionOffsets[actions.indexOf(actionLabel)] = writer.getPosition();
             }
         }
 

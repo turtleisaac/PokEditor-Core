@@ -143,10 +143,10 @@
 	.endm
 
 	; Compares two variables
-	.macro compare_var_to_var a, b
+	.macro compare_var_to_var var1, var2
 	.short 18
-	.short \a
-	.short \b
+	.short \var1
+	.short \var2
 	.endm
 
 	; Creates a new script context to run the indicated script asynchronously
@@ -295,17 +295,17 @@
 	.endm
 
 	; Set var from other var
-	.macro copyvar dst, src
+	.macro copyvar dst_var, src_var
 	.short 42
-	.short \dst
-	.short \src
+	.short \dst_var
+	.short \src_var
 	.endm
 
 	; Set var from other var or short literal
-	.macro setorcopyvar dst, src
+	.macro setorcopyvar dst_var, src_var
 	.short 43
-	.short \dst
-	.short \src
+	.short \dst_var
+	.short \src_var
 	.endm
 
 	; Print non_npc_msg in field window from current map message bank
@@ -327,9 +327,9 @@
 	.short \msg_id
 	.endm
 
-	.macro npc_msg_var arg0
+	.macro npc_msg_var var_or_id
 	.short 47
-	.short \arg0
+	.short \var_or_id
 	.endm
 
 	.macro scrcmd_048 arg0
@@ -388,15 +388,15 @@
 	.short 58
 	.endm
 
-	.macro trainer_tips arg0, arg1
+	.macro trainer_tips arg0, var
 	.short 59
 	.byte \arg0
-	.short \arg1
+	.short \var
 	.endm
 
-	.macro scrcmd_060 arg0
+	.macro scrcmd_060 var
 	.short 60
-	.short \arg0
+	.short \var
 	.endm
 
 	.macro scrcmd_061
@@ -413,27 +413,27 @@
 	.byte \arg5
 	.endm
 
-	.macro yesno arg0
+	.macro yesno var
 	.short 63
-	.short \arg0
+	.short \var
 	.endm
 
-	.macro scrcmd_064 arg0, arg1, arg2, arg3, arg4
+	.macro scrcmd_064 x, y, initial_selection, cancel_selection, var_selection
 	.short 64
-	.byte \arg0
-	.byte \arg1
-	.byte \arg2
-	.byte \arg3
-	.short \arg4
+	.byte \x
+	.byte \y
+	.byte \initial_selection
+	.byte \cancel_selection
+	.short \var_selection
 	.endm
 
-	.macro scrcmd_065 arg0, arg1, arg2, arg3, arg4
+	.macro scrcmd_065 x, y, initial_selection, cancel_selection, var_selection
 	.short 65
-	.byte \arg0
-	.byte \arg1
-	.byte \arg2
-	.byte \arg3
-	.short \arg4
+	.byte \x
+	.byte \y
+	.byte \initial_selection
+	.byte \cancel_selection
+	.short \var_selection
 	.endm
 
 	.macro scrcmd_066 arg0, arg1
@@ -446,22 +446,22 @@
 	.short 67
 	.endm
 
-	.macro scrcmd_068 arg0, arg1, arg2, arg3, arg4
+	.macro scrcmd_068 x, y, initial_selection, cancel_selection, var_selection
 	.short 68
-	.byte \arg0
-	.byte \arg1
-	.byte \arg2
-	.byte \arg3
-	.short \arg4
+	.byte \x
+	.byte \y
+	.byte \initial_selection
+	.byte \cancel_selection
+	.short \var_selection
 	.endm
 
-	.macro scrcmd_069 arg0, arg1, arg2, arg3, arg4
+	.macro scrcmd_069 x, y, initial_selection, cancel_selection, var_selection
 	.short 69
-	.byte \arg0
-	.byte \arg1
-	.byte \arg2
-	.byte \arg3
-	.short \arg4
+	.byte \x
+	.byte \y
+	.byte \initial_selection
+	.byte \cancel_selection
+	.short \var_selection
 	.endm
 
 	.macro scrcmd_070 arg0, arg1, arg2
@@ -562,14 +562,14 @@
 	.byte \arg0
 	.endm
 
-	.macro chatot_has_cry arg0
+	.macro chatot_has_cry var
 	.short 89
-	.short \arg0
+	.short \var
 	.endm
 
-	.macro chatot_start_recording arg0
+	.macro chatot_start_recording var
 	.short 90
-	.short \arg0
+	.short \var
 	.endm
 
 	.macro chatot_stop_recording
@@ -636,17 +636,17 @@
 	.short 104
 	.endm
 
-	.macro get_player_coords arg0, arg1
+	.macro get_player_coords var_x, var_y
 	.short 105
-	.short \arg0
-	.short \arg1
+	.short \var_x
+	.short \var_y
 	.endm
 
-	.macro get_person_coords overworld, arg1, arg2
+	.macro get_person_coords person, var_x, var_y
 	.short 106
-	.short \overworld
-	.short \arg1
-	.short \arg2
+	.short \person
+	.short \var_x
+	.short \var_y
 	.endm
 
 	.macro scrcmd_107 arg0, arg1, arg2
@@ -678,9 +678,9 @@
 	.word \arg0
 	.endm
 
-	.macro hasenoughmoneyimmediate arg0, arg1
+	.macro hasenoughmoneyimmediate var, arg1
 	.short 112
-	.short \arg0
+	.short \var
 	.word \arg1
 	.endm
 
@@ -714,9 +714,9 @@
 	.byte \arg0
 	.endm
 
-	.macro get_coin_amount arg0
+	.macro get_coin_amount var
 	.short 119
-	.short \arg0
+	.short \var
 	.endm
 
 	.macro give_coins arg0
@@ -739,50 +739,50 @@
 	.short \arg0
 	.endm
 
-	.macro check_athlete_points arg0, arg1
+	.macro check_athlete_points var, arg1
 	.short 124
-	.short \arg0
+	.short \var
 	.short \arg1
 	.endm
 
-	.macro giveitem arg0, arg1, arg2
+	.macro giveitem arg0, arg1, var
 	.short 125
 	.short \arg0
 	.short \arg1
-	.short \arg2
+	.short \var
 	.endm
 
-	.macro takeitem arg0, arg1, arg2
+	.macro takeitem arg0, arg1, var
 	.short 126
 	.short \arg0
 	.short \arg1
-	.short \arg2
+	.short \var
 	.endm
 
-	.macro hasspaceforitem arg0, arg1, arg2
+	.macro hasspaceforitem arg0, arg1, var
 	.short 127
 	.short \arg0
 	.short \arg1
-	.short \arg2
+	.short \var
 	.endm
 
-	.macro hasitem arg0, arg1, arg2
+	.macro hasitem arg0, arg1, var
 	.short 128
 	.short \arg0
 	.short \arg1
-	.short \arg2
+	.short \var
 	.endm
 
-	.macro itemistmorhm arg0, arg1
+	.macro itemistmorhm arg0, var
 	.short 129
 	.short \arg0
-	.short \arg1
+	.short \var
 	.endm
 
-	.macro getitempocket arg0, arg1
+	.macro getitempocket arg0, var
 	.short 130
 	.short \arg0
-	.short \arg1
+	.short \var
 	.endm
 
 	.macro set_starter_choice arg0
@@ -796,10 +796,10 @@
 	.byte \arg1
 	.endm
 
-	.macro get_seal_quantity arg0, arg1
+	.macro get_seal_quantity arg0, var
 	.short 133
 	.short \arg0
-	.short \arg1
+	.short \var
 	.endm
 
 	.macro give_or_take_seal arg0, arg1
@@ -808,27 +808,27 @@
 	.short \arg1
 	.endm
 
-	.macro give_random_seal arg0, arg1, arg2
+	.macro give_random_seal var_1, var_2, var_3
 	.short 135
-	.short \arg0
-	.short \arg1
-	.short \arg2
+	.short \var_1
+	.short \var_2
+	.short \var_3
 	.endm
 
-	.macro scrcmd_136 arg0, arg1
+	.macro scrcmd_136 arg0, var
 	.short 136
 	.short \arg0
-	.short \arg1
+	.short \var
 	.endm
 
-	.macro give_mon arg0, arg1, arg2, arg3, arg4, arg5
+	.macro give_mon arg0, arg1, arg2, arg3, arg4, var
 	.short 137
 	.short \arg0
 	.short \arg1
 	.short \arg2
 	.short \arg3
 	.short \arg4
-	.short \arg5
+	.short \var
 	.endm
 
 	.macro give_egg arg0, arg1
@@ -844,16 +844,16 @@
 	.short \arg2
 	.endm
 
-	.macro mon_has_move arg0, arg1, arg2
+	.macro mon_has_move var, arg1, arg2
 	.short 140
-	.short \arg0
+	.short \var
 	.short \arg1
 	.short \arg2
 	.endm
 
-	.macro get_party_slot_with_move arg0, arg1
+	.macro get_party_slot_with_move var, arg1
 	.short 141
-	.short \arg0
+	.short \var
 	.short \arg1
 	.endm
 
@@ -863,9 +863,9 @@
 	.short \arg1
 	.endm
 
-	.macro name_rival arg0
+	.macro name_rival var
 	.short 143
-	.short \arg0
+	.short \var
 	.endm
 
 	.macro get_friend_sprite arg0
@@ -1006,15 +1006,17 @@
 	.short \arg1
 	.endm
 
-	.macro name_player arg0
+    ; opens keyboard for naming the player, stores 1 in var if user cancels
+	.macro name_player var
 	.short 172
-	.short \arg0
+	.short \var
 	.endm
 
-	.macro nickname_input arg0, arg1
+    ; opens keyboard for naming the party pokemon in slot arg0, stores 1 in var if user cancels
+	.macro nickname_input arg0, var
 	.short 173
 	.short \arg0
-	.short \arg1
+	.short \var
 	.endm
 
 	.macro fade_screen arg0, speed, direction, color
