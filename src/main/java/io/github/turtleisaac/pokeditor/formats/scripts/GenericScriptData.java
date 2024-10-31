@@ -36,7 +36,7 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
             if (value == 0 && globalScriptOffsets.isEmpty()) { // yep this is a level script
                 return true;
             } else if (checker == SCRIPT_MAGIC_ID) { // magic appeared so this is a normal script
-//                reader.setPosition(reader.getPosition()-4);
+                reader.setPosition(reader.getPosition()-4);
                 return false;
             } else {
                 int offsetFromStart = (int)(value + reader.getPosition());  // Don't change order of addition
@@ -89,7 +89,7 @@ public abstract class GenericScriptData extends ArrayList<GenericScriptData.Scri
     }
 
     public static class ScriptComment implements ScriptComponent {
-        private String text;
+        private final String text;
 
         public ScriptComment(String text)
         {

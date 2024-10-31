@@ -81,7 +81,7 @@ public class FieldScriptData extends GenericScriptData
             throw new IllegalStateException("This is a level script file, not a normal script file");
         }
 
-        Map<Integer, ScriptComment> comments = readCommentsTable(dataBuf);
+        List<ScriptCommentWithOffset> comments = readCommentsTable(dataBuf);
 
         ArrayList<Integer> labelOffsets = new ArrayList<>(globalScriptOffsets);
         ArrayList<Integer> actionOffsets = new ArrayList<>();
@@ -107,7 +107,7 @@ public class FieldScriptData extends GenericScriptData
             if (!actionOffsets.contains(labelOffsets.get(i)))
                 readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, comments, visitedOffsets, labelOffsets.get(i), labelMap, true);
             else
-                readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
+                readActionAtOffset(dataBuf, actionOffsets, comments, visitedOffsets, actionMap, labelOffsets.get(i));
         }
 
         List<ScriptLabel> labels = new ArrayList<>();
@@ -179,7 +179,7 @@ public class FieldScriptData extends GenericScriptData
 //        }
     }
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, Map<Integer, ScriptComment> comments, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, List<ScriptCommentWithOffset> comments, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -197,9 +197,18 @@ public class FieldScriptData extends GenericScriptData
             {
                 visitedOffsets.add(currentPosition);
 
-                if (comments.containsKey(reader.getPosition()))
+                ScriptCommentWithOffset placeholderForComparison = new ScriptCommentWithOffset(null, currentPosition);
+
+                if (comments.contains(placeholderForComparison))
                 {
-                    add(comments.get(reader.getPosition()));
+                    List<ScriptCommentWithOffset> commentsCopy = new ArrayList<>(comments);
+                    while (commentsCopy.contains(placeholderForComparison))
+                    {
+                        int idx = commentsCopy.indexOf(placeholderForComparison);
+                        ScriptComment comment = new ScriptComment(commentsCopy.get(idx).getName());
+                        commentsCopy.set(idx, null);
+                        add(comment);
+                    }
                 }
 
                 if (globalScriptOffsets.contains(currentPosition))
@@ -307,7 +316,7 @@ public class FieldScriptData extends GenericScriptData
         }
     }
 
-    private void readActionAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, HashMap<Integer, ActionLabel> actionMap, int offset)
+    private void readActionAtOffset(MemBuf dataBuf, ArrayList<Integer> actionOffsets, List<ScriptCommentWithOffset> comments, ArrayList<Integer> visitedOffsets, HashMap<Integer, ActionLabel> actionMap, int offset)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -318,12 +327,28 @@ public class FieldScriptData extends GenericScriptData
 
         while (reader.getPosition() < dataBuf.writer().getPosition())
         {
-            if (!visitedOffsets.contains(reader.getPosition()))
+            int currentPosition = reader.getPosition();
+            if (!visitedOffsets.contains(currentPosition))
             {
-                visitedOffsets.add(reader.getPosition());
+                visitedOffsets.add(currentPosition);
+
+                ScriptCommentWithOffset placeholderForComparison = new ScriptCommentWithOffset(null, currentPosition);
+
+                if (comments.contains(placeholderForComparison))
+                {
+                    List<ScriptCommentWithOffset> commentsCopy = new ArrayList<>(comments);
+                    while (commentsCopy.contains(placeholderForComparison))
+                    {
+                        int idx = commentsCopy.indexOf(placeholderForComparison);
+                        ScriptComment comment = new ScriptComment(commentsCopy.get(idx).getName());
+                        commentsCopy.set(idx, null);
+                        add(comment);
+                    }
+                }
+
                 if (actionOffsets.contains(reader.getPosition()))
                 {
-                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(reader.getPosition()));
+                    ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(currentPosition));
                     actionMap.put(reader.getPosition(), actionLabel);
                     add(actionLabel);
                 }
@@ -404,21 +429,21 @@ public class FieldScriptData extends GenericScriptData
 
     private static final int COMMENTS_SECTION_MAGIC = 0xFD14;
 
-    private Map<Integer, ScriptComment> readCommentsTable(MemBuf dataBuf)
+    private List<ScriptCommentWithOffset> readCommentsTable(MemBuf dataBuf)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
-        Map<Integer, ScriptComment> comments = new HashMap<>();
+        List<ScriptCommentWithOffset> comments = new ArrayList<>();
 
         if (reader.getPosition() >= dataBuf.writer().getPosition())
         {
             return comments;
         }
 
+        reader.skip(2);
+
         int checker = reader.readUInt16();
 
-
-
-        comments.put(16, new ScriptComment("test"));
+        comments.add(new ScriptCommentWithOffset("test", 14));
 
         if (checker != COMMENTS_SECTION_MAGIC)
         {
@@ -436,8 +461,7 @@ public class FieldScriptData extends GenericScriptData
             int length = reader.readByte();
             String text = reader.readString(length);
 
-            comments.put(offset, new ScriptComment(text));
-
+            comments.add(new ScriptCommentWithOffset(text, offset));
 //            commentLocations.add(offset);
 //            commentStrings.add(text);
         }
@@ -475,6 +499,21 @@ public class FieldScriptData extends GenericScriptData
 
         writer.writeShort((short) SCRIPT_MAGIC_ID);
 
+        // iterate through list and find all of the comments, figure out the length needed to store them all.
+
+        List<ScriptCommentWithOffset> comments = new ArrayList<>();
+
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof ScriptComment comment)
+            {
+                comments.add(new ScriptCommentWithOffset(comment.getName(), 0));
+            }
+        }
+
+        if (!comments.isEmpty())
+            writeCommentsTable(writer, comments);
+
         // write each command out, and if it is a jump command we need to store a placeholder for later when we come back and insert the offset (if the destination hasn't been written yet)
         // at the start of each script we need to grab the offset for the header
         // something something dark side
@@ -509,6 +548,7 @@ public class FieldScriptData extends GenericScriptData
             return 0;
         };
 
+        int commentNumber = 0;
         for (ScriptComponent component : this)
         {
             if (component instanceof ScriptLabel label)
@@ -544,6 +584,10 @@ public class FieldScriptData extends GenericScriptData
 //                        writer.skip(4 - writer.getPosition() % 4);
 //                }
             }
+            else if (component instanceof ScriptComment)
+            {
+                comments.get(commentNumber++).offset = writer.getPosition();
+            }
         }
 
         writer.setPosition(0);
@@ -555,6 +599,9 @@ public class FieldScriptData extends GenericScriptData
         }
 
         writer.skip(2);
+
+        if (!comments.isEmpty())
+            writeCommentsTable(writer, comments);
 
         for (ScriptComponent component : this)
         {
@@ -594,6 +641,21 @@ public class FieldScriptData extends GenericScriptData
 //        dataBuf.reader().setPosition(0);
 
         return new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, dataBuf.reader().getBuffer());
+    }
+
+    private void writeCommentsTable(MemBuf.MemBufWriter writer, List<ScriptCommentWithOffset> comments)
+    {
+        writer.writeShort((short) COMMENTS_SECTION_MAGIC);
+
+        for (ScriptCommentWithOffset comment : comments)
+        {
+            writer.writeInt(comment.offset);
+            byte[] bytes = comment.getName().getBytes();
+            writer.writeByte((byte) bytes.length);
+            writer.write(bytes);
+        }
+
+        writer.writeShort((short) COMMENTS_SECTION_MAGIC);
     }
 
     public List<ScriptLabel> getScripts()
@@ -929,6 +991,37 @@ public class FieldScriptData extends GenericScriptData
         public int hashCode()
         {
             return Objects.hash(name, id, parameter);
+        }
+    }
+
+    private static class ScriptCommentWithOffset extends ScriptComment
+    {
+        private int offset;
+
+        public ScriptCommentWithOffset(String text, int offset)
+        {
+            super(text);
+            this.offset = offset;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if(this == o) {
+                return true;
+            }
+            if(o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ScriptCommentWithOffset that = (ScriptCommentWithOffset) o;
+            return offset == that.offset;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(offset);
         }
     }
 }
