@@ -92,7 +92,7 @@ public class MoveData implements GenericFileData
 
         target = reader.readUInt16();
 
-        priority = reader.readByte();
+        priority = (byte) reader.readByte(); // s8: negative for Trick Room, Roar, Whirlwind...
 
         flags = new boolean[NUM_MOVE_FLAGS];
         int composite = reader.readUInt8();

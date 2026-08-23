@@ -150,8 +150,8 @@ public class PokemonSpriteData implements GenericFileData
         unknownSection1 = reader.readBytes(42); //bytes 2-43
         backMovement = reader.readUInt8(); //byte 44
         unknownSection2 = reader.readBytes(41); //bytes 45-85
-        globalFrontYOffset = reader.readByte(); //byte 86
-        shadowXOffset = reader.readByte(); //byte 87
+        globalFrontYOffset = (byte) reader.readByte(); //byte 86, s8
+        shadowXOffset = (byte) reader.readByte(); //byte 87, s8
         shadowSize = reader.readUInt8(); //byte 88
 
         partyIcon = new IndexedImage(partyIconFile, 4, 0, 1, 1, scanFrontToBack);

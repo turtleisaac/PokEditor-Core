@@ -150,7 +150,7 @@ public class ItemData implements GenericFileData
         evYields = new int[NUM_EV_YIELDS];
         for (int i = 0; i < NUM_EV_YIELDS; i++)
         {
-            evYields[i] = reader.readByte(); // s8
+            evYields[i] = (byte) reader.readByte(); // s8
         }
 
         hpRecoveryAmount = reader.readByte() & 0xFF;
@@ -159,7 +159,7 @@ public class ItemData implements GenericFileData
         friendshipChangeAmounts = new int[NUM_FRIENDSHIP_CHANGE_FIELDS];
         for (int i = 0; i < NUM_FRIENDSHIP_CHANGE_FIELDS; i++)
         {
-            friendshipChangeAmounts[i] = reader.readByte();
+            friendshipChangeAmounts[i] = (byte) reader.readByte(); // s8: bitter berries lower friendship
         }
 
         // getBuffer() returns everything between the read and write positions - i.e. the unread remainder
