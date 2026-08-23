@@ -100,6 +100,7 @@ public enum GameFiles
                 FIELD_SCRIPTS.path = "a/0/1/2";
 				TRAINER_AI_SCRIPTS.path = "a/0/9/9";
             }
+            default -> throw new UnsupportedOperationException("Unsupported base ROM: " + baseROM);
         }
     }
 }

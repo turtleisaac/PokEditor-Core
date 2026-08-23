@@ -35,9 +35,15 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
     }
 
     @Override
-    protected Integer idLineAction(int idNumber)
+    protected Integer idLineAction(int idNumber, int dataType)
     {
-        writer.writeShort((short) idNumber);
+        // the macro declares the width of its own id line - AI script macros use .word, field script
+        // macros use .short - so it has to be honoured rather than assumed to be a short
+        switch (dataType) {
+            case MacrosLexer.SHORT -> writer.writeShort((short) idNumber);
+            case MacrosLexer.WORD -> writer.writeInt(idNumber);
+            default -> throw new IllegalStateException("Unexpected command id width: " + dataType);
+        }
         return null;
     }
 
@@ -87,7 +93,7 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
                 return (int) parameterToValueMap.get(text);
             }
         } else if (terminalNode.symbol.getType() == MacrosLexer.NUMBER) {
-            return Integer.parseInt(terminalNode.getText());
+            return Integer.decode(terminalNode.getText());
         } else if (terminalNode.symbol.getType() == MacrosLexer.CURRENT_OFFSET) {
             return writer.getPosition();
         }

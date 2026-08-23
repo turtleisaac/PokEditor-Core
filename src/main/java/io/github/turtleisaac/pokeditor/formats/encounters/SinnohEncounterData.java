@@ -17,6 +17,10 @@ public class SinnohEncounterData extends GenericEncounterData
 
     int[][] dualSlotSpecies;
 
+    // 0x2C bytes sitting between the surf encounters and the old rod encounters - contents are not
+    // understood yet, so they are preserved verbatim rather than zeroed out on save
+    byte[] unknown;
+
     public SinnohEncounterData(BytesDataContainer files)
     {
         super(files);
@@ -24,6 +28,24 @@ public class SinnohEncounterData extends GenericEncounterData
 
     private SinnohEncounterData() {
         super();
+        fieldSpecies = new int[1][NUM_BASE_FIELD_ENCOUNTER_SLOTS];
+        swarmSpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        daySpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        nightSpecies = new int[NUM_SWARM_DAY_NIGHT_ENCOUNTER_SLOTS];
+        radarSpecies = new int[NUM_RADAR_ENCOUNTER_SLOTS];
+        formProbability = new byte[NUM_FORM_PROBABILITY_BYTES];
+        dualSlotSpecies = new int[NUM_DUAL_SLOT_GAMES][NUM_DUAL_SLOT_ENCOUNTER_SLOTS];
+        unknown = new byte[NUM_UNKNOWN_BYTES];
+
+        for (int i = 0; i < waterEncounters.length; i++)
+        {
+            WaterEncounterSet set = new WaterEncounterSet(WaterEncounterSet.NUM_WATER_SLOTS);
+            for (int slot = 0; slot < WaterEncounterSet.NUM_WATER_SLOTS; slot++)
+            {
+                set.slotPadding[slot] = new byte[NUM_WATER_SLOT_PADDING_BYTES];
+            }
+            waterEncounters[i] = set;
+        }
     }
 
     public static SinnohEncounterData create()
@@ -82,7 +104,7 @@ public class SinnohEncounterData extends GenericEncounterData
         }
 
         //todo really read the form probability table
-        formProbability = reader.readBytes(24);
+        formProbability = reader.readBytes(NUM_FORM_PROBABILITY_BYTES);
 
         //todo really read the dual slot mons
         dualSlotSpecies = new int[NUM_DUAL_SLOT_GAMES][NUM_DUAL_SLOT_ENCOUNTER_SLOTS];
@@ -97,8 +119,8 @@ public class SinnohEncounterData extends GenericEncounterData
         surfRate = reader.readInt();
         waterEncounters[0] = readWaterEncounterSet(reader);
 
-        //todo figure out wtf is going on here
-        reader.skip(0x2C);
+        //todo figure out wtf is going on here - preserved verbatim so a save round-trips
+        unknown = reader.readBytes(NUM_UNKNOWN_BYTES);
 
         oldRodRate = reader.readInt();
         waterEncounters[1] = readWaterEncounterSet(reader);
@@ -117,7 +139,7 @@ public class SinnohEncounterData extends GenericEncounterData
         {
             set.maxLevels[i] = reader.readUInt8();
             set.minLevels[i] = reader.readUInt8();
-            reader.skip(2);
+            set.slotPadding[i] = reader.readBytes(NUM_WATER_SLOT_PADDING_BYTES);
             set.species[i] = reader.readInt();
         }
         return set;
@@ -173,8 +195,8 @@ public class SinnohEncounterData extends GenericEncounterData
 
         writeWaterEncounterSet(writer, surfRate, waterEncounters[0]);
 
-        //todo figure out wtf is going on here
-        writer.skip(0x2C);
+        //todo figure out wtf is going on here - preserved verbatim so a save round-trips
+        writer.write(unknown);
 
         writeWaterEncounterSet(writer, oldRodRate, waterEncounters[1]);
         writeWaterEncounterSet(writer, goodRodRate, waterEncounters[2]);
@@ -189,7 +211,7 @@ public class SinnohEncounterData extends GenericEncounterData
         for (int i = 0; i < set.getNumSlots(); i++)
         {
             writer.writeBytes(set.maxLevels[i], set.minLevels[i]);
-            writer.skip(2);
+            writer.write(set.slotPadding[i] != null ? set.slotPadding[i] : new byte[NUM_WATER_SLOT_PADDING_BYTES]);
             writer.writeInt(set.species[i]);
         }
     }
@@ -248,6 +270,9 @@ public class SinnohEncounterData extends GenericEncounterData
     private static final int NUM_RADAR_ENCOUNTER_SLOTS = 4;
     private static final int NUM_DUAL_SLOT_ENCOUNTER_SLOTS = 2;
     private static final int NUM_DUAL_SLOT_GAMES = 5;
+    private static final int NUM_FORM_PROBABILITY_BYTES = 24;
+    private static final int NUM_UNKNOWN_BYTES = 0x2C;
+    private static final int NUM_WATER_SLOT_PADDING_BYTES = 2;
     private static final int PLAT_FIELD_ENCOUNTER_SET_IDX = 0;
 
     enum DualSlot {

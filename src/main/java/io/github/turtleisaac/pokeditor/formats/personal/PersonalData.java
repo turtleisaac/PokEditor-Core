@@ -40,6 +40,8 @@ public class PersonalData implements GenericFileData
     private int runChance; // u8
 
     private int dexColor; // u8:7
+    private byte[] padding; // 2 bytes of padding, preserved verbatim so a save round-trips
+    private int unknownEvYieldBits; // bits 12-15 of the ev yield halfword, preserved verbatim
     private boolean flip;  // u8:1
 
     private boolean[] tmCompatibility; // u8[16], each TM is a single bit
@@ -106,6 +108,7 @@ public class PersonalData implements GenericFileData
         baseExp = reader.readUInt8();
 
         int evYields = reader.readUInt16();
+        unknownEvYieldBits = evYields & 0xF000;
         hpEvYield = getHpEv(evYields);
         atkEvYield = getAtkEv(evYields);
         defEvYield = getDefEv(evYields);
@@ -131,7 +134,7 @@ public class PersonalData implements GenericFileData
         dexColor = colorFlip & 0x7F;
         flip = ((colorFlip & 0x80) >> 7) == 1;
 
-        reader.skip(2); // 2 bytes padding
+        padding = reader.readBytes(NUMBER_PADDING_BYTES); // 2 bytes padding, preserved verbatim
         byte[] tmLearnset = reader.readBytes(16);
 
         this.tmCompatibility = new boolean[NUMBER_TM_HM_BITS];
@@ -152,7 +155,7 @@ public class PersonalData implements GenericFileData
         writer.writeShort((short)uncommonItem);
         writer.writeShort((short)rareItem);
         writer.writeBytes(genderRatio,hatchMultiplier,baseHappiness,expRate,eggGroup1,eggGroup2,ability1,ability2,runChance,getCombinedColorFlip());
-        writer.skip(2);
+        writer.write(padding != null ? padding : new byte[NUMBER_PADDING_BYTES]);
 
         int[] tmLearnsetData = new int[16];
         for (int i = 0; i < NUMBER_TM_HM_BITS; i++)
@@ -224,19 +227,20 @@ public class PersonalData implements GenericFileData
     private short getCombinedEvShort()
     {
         int val = 0;
-        val |= hpEvYield;
-        val |= (atkEvYield << 2);
-        val |= (defEvYield << 4);
-        val |= (speedEvYield << 6);
-        val |= (spAtkEvYield << 8);
-        val |= (spDefEvYield << 10);
+        val |= (hpEvYield & 0x03);
+        val |= ((atkEvYield & 0x03) << 2);
+        val |= ((defEvYield & 0x03) << 4);
+        val |= ((speedEvYield & 0x03) << 6);
+        val |= ((spAtkEvYield & 0x03) << 8);
+        val |= ((spDefEvYield & 0x03) << 10);
+        val |= (unknownEvYieldBits & 0xF000);
 
         return (short) val;
     }
 
     private int getCombinedColorFlip()
     {
-        return dexColor | (flip ? 0x80 : 0);
+        return (dexColor & 0x7F) | (flip ? 0x80 : 0);
     }
 
     public int getHp()
@@ -366,8 +370,8 @@ public class PersonalData implements GenericFileData
 
     public void setHpEvYield(int hpEvYield)
     {
-        if (hpEvYield >= 5)
-            throw new RuntimeException("Maximum HP EV yield value is 4. Provided: " + hpEvYield);
+        if (hpEvYield < 0 || hpEvYield > 3)
+            throw new RuntimeException("Maximum HP EV yield value is 3. Provided: " + hpEvYield);
         this.hpEvYield = hpEvYield;
     }
 
@@ -378,8 +382,8 @@ public class PersonalData implements GenericFileData
 
     public void setAtkEvYield(int atkEvYield)
     {
-        if (atkEvYield >= 5)
-            throw new RuntimeException("Maximum Attack EV yield value is 4. Provided: " + atkEvYield);
+        if (atkEvYield < 0 || atkEvYield > 3)
+            throw new RuntimeException("Maximum Attack EV yield value is 3. Provided: " + atkEvYield);
         this.atkEvYield = atkEvYield;
     }
 
@@ -390,8 +394,8 @@ public class PersonalData implements GenericFileData
 
     public void setDefEvYield(int defEvYield)
     {
-        if (defEvYield >= 5)
-            throw new RuntimeException("Maximum Defense EV yield value is 4. Provided: " + defEvYield);
+        if (defEvYield < 0 || defEvYield > 3)
+            throw new RuntimeException("Maximum Defense EV yield value is 3. Provided: " + defEvYield);
         this.defEvYield = defEvYield;
     }
 
@@ -402,8 +406,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpeedEvYield(int speedEvYield)
     {
-        if (speedEvYield >= 5)
-            throw new RuntimeException("Maximum Speed EV yield value is 4. Provided: " + speedEvYield);
+        if (speedEvYield < 0 || speedEvYield > 3)
+            throw new RuntimeException("Maximum Speed EV yield value is 3. Provided: " + speedEvYield);
         this.speedEvYield = speedEvYield;
     }
 
@@ -414,8 +418,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpAtkEvYield(int spAtkEvYield)
     {
-        if (spAtkEvYield >= 5)
-            throw new RuntimeException("Maximum Special Attack EV yield value is 4. Provided: " + spAtkEvYield);
+        if (spAtkEvYield < 0 || spAtkEvYield > 3)
+            throw new RuntimeException("Maximum Special Attack EV yield value is 3. Provided: " + spAtkEvYield);
         this.spAtkEvYield = spAtkEvYield;
     }
 
@@ -426,8 +430,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpDefEvYield(int spDefEvYield)
     {
-        if (spDefEvYield >= 5)
-            throw new RuntimeException("Maximum Special Defense EV yield value is 4. Provided: " + spDefEvYield);
+        if (spDefEvYield < 0 || spDefEvYield > 3)
+            throw new RuntimeException("Maximum Special Defense EV yield value is 3. Provided: " + spDefEvYield);
         this.spDefEvYield = spDefEvYield;
     }
 
@@ -570,8 +574,8 @@ public class PersonalData implements GenericFileData
 
     public void setDexColor(int dexColor)
     {
-        if (dexColor >= 129)
-            throw new RuntimeException("Maximum dex color value is 128. Provided: " + dexColor);
+        if (dexColor < 0 || dexColor > 0x7F)
+            throw new RuntimeException("Maximum dex color value is 127. Provided: " + dexColor);
         this.dexColor = dexColor;
     }
 
@@ -596,6 +600,7 @@ public class PersonalData implements GenericFileData
     }
 
     private static final int NUMBER_TM_HM_BITS = 128;
+    private static final int NUMBER_PADDING_BYTES = 2;
     protected static final int NUMBER_TMS_HMS = 100;
 
     private static int getHpEv(int x)

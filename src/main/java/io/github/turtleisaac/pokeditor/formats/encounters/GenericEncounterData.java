@@ -113,6 +113,7 @@ public abstract class GenericEncounterData implements GenericFileData
         int[] minLevels;
         int[] maxLevels;
         int[] species;
+        byte[][] slotPadding; // bytes between the levels and the species of each slot, preserved verbatim
 
         WaterEncounterSet(int numSlots)
         {
@@ -120,6 +121,7 @@ public abstract class GenericEncounterData implements GenericFileData
             minLevels = new int[numSlots];
             maxLevels = new int[numSlots];
             species = new int[numSlots];
+            slotPadding = new byte[numSlots][];
         }
 
         public int getNumSlots()

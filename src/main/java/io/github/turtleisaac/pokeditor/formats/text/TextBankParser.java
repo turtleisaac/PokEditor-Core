@@ -46,9 +46,10 @@ public class TextBankParser implements GenericParser<TextBankData>
         Narc personal = narcs.get(GameFiles.TEXT);
         ArrayList<TextBankData> data = new ArrayList<>();
 
-        for (byte[] subfile : personal.getFiles())
+        List<byte[]> subfiles = personal.getFiles();
+        for (int idx = 0; idx < subfiles.size(); idx++)
         {
-            data.add(new TextBankData(new BytesDataContainer(GameFiles.TEXT, null, subfile)));
+            data.add(new TextBankData(new BytesDataContainer(GameFiles.TEXT, null, subfiles.get(idx)), idx));
         }
 
         return data;

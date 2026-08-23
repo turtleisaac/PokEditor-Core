@@ -55,7 +55,7 @@ public class CommandDiscoverer extends CommandMacroVisitor<CommandMacro>
                 macro.setId(child.accept(new CommandMacroVisitor<>()
                 {
                     @Override
-                    protected Integer idLineAction(int idNumber)
+                    protected Integer idLineAction(int idNumber, int dataType)
                     {
                         return idNumber;
                     }

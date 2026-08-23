@@ -5,7 +5,10 @@ import io.github.turtleisaac.nds4j.images.IndexedImage;
 import io.github.turtleisaac.nds4j.images.Palette;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.gamedata.Game;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
+
+import java.util.Objects;
 
 public class PokemonSpriteData implements GenericFileData
 {
@@ -40,9 +43,55 @@ public class PokemonSpriteData implements GenericFileData
 
     private int partyIconPaletteIndex = 0;
 
+    private final boolean scanFrontToBack;
+
+    private boolean femaleBackOffsetEmpty;
+    private boolean maleBackOffsetEmpty;
+    private boolean femaleFrontOffsetEmpty;
+    private boolean maleFrontOffsetEmpty;
+
+    private boolean paletteEmpty;
+    private boolean shinyPaletteEmpty;
+
+    /**
+     * Creates a <code>PokemonSpriteData</code> for a game which scans its sprites front-to-back
+     * (Platinum, HeartGold and SoulSilver - the games this module supports)
+     * @param files a <code>BytesDataContainer</code>
+     */
     public PokemonSpriteData(BytesDataContainer files)
     {
+        this(files, true);
+    }
+
+    /**
+     * Creates a <code>PokemonSpriteData</code>, deriving the sprite scan direction from the given game
+     * @param files a <code>BytesDataContainer</code>
+     * @param game a <code>Game</code>
+     */
+    public PokemonSpriteData(BytesDataContainer files, Game game)
+    {
+        this(files, scanDirectionFor(game));
+    }
+
+    private PokemonSpriteData(BytesDataContainer files, boolean scanFrontToBack)
+    {
+        this.scanFrontToBack = scanFrontToBack;
         setData(files);
+    }
+
+    /**
+     * Gets whether the given game scans its sprite data front-to-back
+     * @param game a <code>Game</code>
+     * @return a <code>boolean</code>
+     */
+    public static boolean scanDirectionFor(Game game)
+    {
+        Objects.requireNonNull(game, "A game must be provided in order to determine the sprite scan direction");
+        return switch (game) {
+            case Platinum, HeartGold, SoulSilver -> true;
+            // Diamond and Pearl seed their scanned sprite decoding from the last halfword rather than the first
+            case Diamond, Pearl -> false;
+        };
     }
 
     @Override
@@ -62,25 +111,35 @@ public class PokemonSpriteData implements GenericFileData
         byte[] femaleFrontHeightOffsetFile = files.get(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y);
         byte[] maleFrontHeightOffsetFile = files.get(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y);
 
-        palette = new Palette(paletteFile, 4);
-        shinyPalette = new Palette(shinyPaletteFile, 4);
+        paletteEmpty = paletteFile.length == 0;
+        shinyPaletteEmpty = shinyPaletteFile.length == 0;
+
+        if (!paletteEmpty)
+            palette = new Palette(paletteFile, 4);
+        if (!shinyPaletteEmpty)
+            shinyPalette = new Palette(shinyPaletteFile, 4);
 
         if (femaleBackFile.length != 0)
-            femaleBack = new IndexedImage(femaleBackFile, 0, 0, 1, 1, true);
+            femaleBack = new IndexedImage(femaleBackFile, 0, 0, 1, 1, scanFrontToBack);
         if (maleBackFile.length != 0)
-            maleBack = new IndexedImage(maleBackFile, 0, 0, 1, 1, true);
+            maleBack = new IndexedImage(maleBackFile, 0, 0, 1, 1, scanFrontToBack);
         if (femaleFrontFile.length != 0)
-            femaleFront = new IndexedImage(femaleFrontFile, 0, 0, 1, 1, true);
+            femaleFront = new IndexedImage(femaleFrontFile, 0, 0, 1, 1, scanFrontToBack);
         if (maleFrontFile.length != 0)
-            maleFront = new IndexedImage(maleFrontFile, 0, 0, 1, 1, true);
+            maleFront = new IndexedImage(maleFrontFile, 0, 0, 1, 1, scanFrontToBack);
 
-        if (femaleBackHeightOffsetFile.length != 0)
+        femaleBackOffsetEmpty = femaleBackHeightOffsetFile.length == 0;
+        maleBackOffsetEmpty = maleBackHeightOffsetFile.length == 0;
+        femaleFrontOffsetEmpty = femaleFrontHeightOffsetFile.length == 0;
+        maleFrontOffsetEmpty = maleFrontHeightOffsetFile.length == 0;
+
+        if (!femaleBackOffsetEmpty)
             femaleBackOffset = -(femaleBackHeightOffsetFile[0] & 0xff);
-        if (maleBackHeightOffsetFile.length != 0)
+        if (!maleBackOffsetEmpty)
             maleBackOffset = -(maleBackHeightOffsetFile[0] & 0xff);
-        if (femaleFrontHeightOffsetFile.length != 0)
+        if (!femaleFrontOffsetEmpty)
             femaleFrontOffset = -(femaleFrontHeightOffsetFile[0] & 0xff);
-        if (maleFrontHeightOffsetFile.length != 0)
+        if (!maleFrontOffsetEmpty)
             maleFrontOffset = -(maleFrontHeightOffsetFile[0] & 0xff);
 
         MemBuf buffer = MemBuf.create(metadata);
@@ -95,7 +154,7 @@ public class PokemonSpriteData implements GenericFileData
         shadowXOffset = reader.readByte(); //byte 87
         shadowSize = reader.readUInt8(); //byte 88
 
-        partyIcon = new IndexedImage(partyIconFile, 4, 0, 1, 1, true);
+        partyIcon = new IndexedImage(partyIconFile, 4, 0, 1, 1, scanFrontToBack);
     }
 
     @Override
@@ -106,22 +165,15 @@ public class PokemonSpriteData implements GenericFileData
         container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.MALE_BACK, maleBack != null ? maleBack.save() : new byte[] {});
         container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.FEMALE_FRONT, femaleFront != null ? femaleFront.save() : new byte[] {});
         container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.MALE_FRONT, maleFront != null ? maleFront.save() : new byte[] {});
-        container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.PALETTE, palette.save());
-        container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.SHINY_PALETTE, shinyPalette.save());
+        container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.PALETTE, palette != null ? palette.save() : new byte[] {});
+        container.insert(GameFiles.BATTLE_SPRITES, BattleSpriteNarcPattern.SHINY_PALETTE, shinyPalette != null ? shinyPalette.save() : new byte[] {});
 
-        container.insert(GameFiles.PARTY_ICONS, null, partyIcon.save());
+        container.insert(GameFiles.PARTY_ICONS, null, partyIcon != null ? partyIcon.save() : new byte[] {});
 
-        byte[] femaleBackHeightOffsetFile = new byte[] {(byte) Math.abs(femaleBackOffset)};
-        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.FEMALE_BACK_Y, femaleBackHeightOffsetFile);
-
-        byte[] maleBackHeightOffsetFile = new byte[] {(byte) Math.abs(maleBackOffset)};
-        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.MALE_BACK_Y, maleBackHeightOffsetFile);
-
-        byte[] femaleFrontHeightOffsetFile = new byte[] {(byte) Math.abs(femaleFrontOffset)};
-        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y, femaleFrontHeightOffsetFile);
-
-        byte[] maleFrontHeightOffsetFile = new byte[] {(byte) Math.abs(maleFrontOffset)};
-        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y, maleFrontHeightOffsetFile);
+        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.FEMALE_BACK_Y, heightOffsetFile(femaleBackOffset, femaleBackOffsetEmpty));
+        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.MALE_BACK_Y, heightOffsetFile(maleBackOffset, maleBackOffsetEmpty));
+        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.FEMALE_FRONT_Y, heightOffsetFile(femaleFrontOffset, femaleFrontOffsetEmpty));
+        container.insert(GameFiles.BATTLE_SPRITE_HEIGHT, BattleSpriteHeightOffsetsPattern.MALE_FRONT_Y, heightOffsetFile(maleFrontOffset, maleFrontOffsetEmpty));
 
         MemBuf buffer = MemBuf.create();
         MemBuf.MemBufWriter writer = buffer.writer();
@@ -136,6 +188,22 @@ public class PokemonSpriteData implements GenericFileData
         container.insert(GameFiles.BATTLE_SPRITE_METADATA, null, buffer.reader().getBuffer());
 
         return container;
+    }
+
+    /**
+     * Produces the height offset subfile for the given offset. A zero-length entry in the ROM has to stay
+     * zero-length, and the stored byte is the exact inverse of what <code>setData</code> reads, which
+     * negates it.
+     *
+     * @param offset an <code>int</code> containing the height offset
+     * @param wasEmpty a <code>boolean</code> containing whether the entry this came from was zero-length
+     * @return a <code>byte[]</code>
+     */
+    private static byte[] heightOffsetFile(int offset, boolean wasEmpty)
+    {
+        if (wasEmpty)
+            return new byte[0];
+        return new byte[] {(byte) (-offset)};
     }
 
 

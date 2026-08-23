@@ -6,8 +6,8 @@ import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 // this class only exists because AdAstra is awesome and wrote the only tool (until now) which could work with them
@@ -17,11 +17,14 @@ import java.util.stream.Collectors;
  */
 public class LevelScriptData extends GenericScriptData
 {
-    private boolean hasPadding = true;
+    // NOTE: no initializer - instance initializers run after the superclass constructor, which is what
+    // parses the file, so an initializer here would overwrite whatever setData() worked out
+    private boolean hasPadding;
 
     public LevelScriptData()
     {
         super();
+        hasPadding = true;
     }
 
     public LevelScriptData(BytesDataContainer files)
@@ -37,7 +40,8 @@ public class LevelScriptData extends GenericScriptData
             throw new RuntimeException("Script file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.FIELD_SCRIPTS, null));
+        byte[] file = files.get(GameFiles.FIELD_SCRIPTS, null);
+        MemBuf dataBuf = MemBuf.create(file);
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         ArrayList<Integer> temp = new ArrayList<>();
@@ -85,6 +89,7 @@ public class LevelScriptData extends GenericScriptData
             if (reader.readUInt16() == 0 && dataBuf.writer().getPosition() < SMALLEST_TRIGGER_SIZE) {
                 //todo come back here
 //                LSTrigger.customInfo("This level script does nothing.", "Interesting...");
+                hasPadding = false;
                 return;
             }
         }
@@ -107,6 +112,34 @@ public class LevelScriptData extends GenericScriptData
                 }
             }
         }
+
+        // whether this file carries trailing padding is a property of the file, not a constant
+        hasPadding = file.length != getUnpaddedLength();
+    }
+
+    /**
+     * Calculates the number of bytes <code>save()</code> emits before any trailing padding is applied
+     * @return the unpadded length in bytes of this level script
+     */
+    private int getUnpaddedLength()
+    {
+        if (isEmpty())
+            return 4;
+
+        int mapScreenLoadCount = 0;
+        int variableCount = 0;
+        for (ScriptComponent component : this)
+        {
+            if (component instanceof VariableValueTrigger)
+                variableCount++;
+            else if (component instanceof MapScreenLoadTrigger)
+                mapScreenLoadCount++;
+        }
+
+        int length = mapScreenLoadCount * 5;
+        if (variableCount != 0)
+            length += 6 + variableCount * 6;
+        return length + 2;
     }
 
     @Override
@@ -115,8 +148,8 @@ public class LevelScriptData extends GenericScriptData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        TreeSet<MapScreenLoadTrigger> tsMapScreenLoad = new TreeSet<>();
-        TreeSet<VariableValueTrigger> tsVariable = new TreeSet<>();
+        List<MapScreenLoadTrigger> tsMapScreenLoad = new ArrayList<>();
+        List<VariableValueTrigger> tsVariable = new ArrayList<>();
 
         if (!isEmpty())
         {
@@ -133,7 +166,7 @@ public class LevelScriptData extends GenericScriptData
 
             for (LevelScriptTrigger lstm : tsMapScreenLoad) {
                 writer.writeByte((byte) lstm.getTriggerType());
-                writer.writeUInt32((byte) lstm.getScriptTriggered());
+                writer.writeUInt32(lstm.getScriptTriggered());
             }
 
             if (!tsVariable.isEmpty()) {

@@ -23,6 +23,7 @@ public enum GameCodeBinaries
             case HeartGold, SoulSilver -> {
                 BATTLE.id = 12;
             }
+            default -> throw new UnsupportedOperationException("Unsupported base ROM: " + baseROM);
         }
     }
 

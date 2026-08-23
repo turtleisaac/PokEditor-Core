@@ -51,9 +51,21 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
 //        reader.setPosition(0);
 
         short combinedValue;
-        while ((combinedValue = reader.readShort()) != (short) 0xFFFF)
+        boolean terminated = false;
+        while (reader.getPosition() + 2 <= file.length)
         {
+            combinedValue = reader.readShort();
+            if (combinedValue == (short) 0xFFFF)
+            {
+                terminated = true;
+                break;
+            }
             add(new LearnsetEntry(getMoveId(combinedValue), getLevelLearned(combinedValue)));
+        }
+
+        if (!terminated)
+        {
+            throw new RuntimeException("Level-up learnset is missing its 0xFFFF terminator (file is " + file.length + " bytes long)");
         }
     }
 

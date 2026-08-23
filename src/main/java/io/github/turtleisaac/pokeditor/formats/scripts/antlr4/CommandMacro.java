@@ -46,10 +46,20 @@ public class CommandMacro
 
         if (parameters.length != 0)
         {
+            int providedCount = parameterValues == null ? 0 : parameterValues.length;
+            if (providedCount != parameters.length)
+            {
+                throw new RuntimeException(String.format("The command \"%s\" expects %d parameter(s) %s but %d were provided", name, parameters.length, Arrays.toString(parameters), providedCount));
+            }
+
             int idx = 0;
             for (String parameter : parameters) {
                 Object param = parameterValues[idx++];
-                if (param instanceof Number number)
+                if (param == null)
+                {
+                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was not provided a value", parameter, name));
+                }
+                else if (param instanceof Number number)
                     parameterToValueMap.put(parameter, number);
                 else if (param instanceof String str)
                 {
@@ -73,7 +83,15 @@ public class CommandMacro
                             throw new RuntimeException(String.format("An invalid parameter was provided (%s) in \"%s\"", str, this));
                     }
                 }
+                else
+                {
+                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was provided a value of an unsupported type (%s): %s", parameter, name, param.getClass().getName(), param));
+                }
             }
+        }
+        else if (parameterValues != null && parameterValues.length != 0)
+        {
+            throw new RuntimeException(String.format("The command \"%s\" takes no parameters but %d were provided", name, parameterValues.length));
         }
 
         CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap);

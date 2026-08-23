@@ -13,9 +13,14 @@ import static io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser.
 
 public class FieldScriptData extends GenericScriptData
 {
-    private static final IntPredicate isCallCommand = commandID -> commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B;
-    private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x16 || commandId == 0x1B;
-    private static final IntPredicate isDoIfCommand = commandID -> commandID == 28 || commandID == 29 || commandID == 225;
+    private static final int GOTO_IF_TRAINER_DEFEATED = 225;
+
+    // 225 (goto_if_trainer_defeated) is a relative branch, so its destination has to be registered as a label
+    private static final IntPredicate isCallCommand = commandID -> (commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B) || commandID == GOTO_IF_TRAINER_DEFEATED;
+    // 0x15 is endstd (yield to parent context), which terminates the current run of commands just like end/goto/return
+    private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x15 || commandId == 0x16 || commandId == 0x1B;
+    // 225 is NOT a comparator command - per Scrcmd_Hg.txt it takes a single relative destination and no comparator byte
+    private static final IntPredicate isDoIfCommand = commandID -> commandID == 28 || commandID == 29;
     private static final IntPredicate isMovementCommand = commandID -> commandID == 0x5E;
     private static final IntPredicate isEndMovementCommand = commandID -> commandID == 0xFE;
 //    private static final IntPredicate isOverworldObjectCommand
@@ -37,17 +42,60 @@ public class FieldScriptData extends GenericScriptData
         comparators.put(5, "DIFFERENT");
     }
 
+    /**
+     * Determines whether the given macro parameter name identifies a branch destination which has to be
+     * resolved to a label
+     * @param parameterName a <code>String</code> containing the name of a parameter as declared by its macro
+     * @return a <code>boolean</code>
+     */
+    private static boolean isLabelParameterName(String parameterName)
+    {
+        return parameterName.contains("dest") || parameterName.contains("sub") || parameterName.equals("arg0");
+    }
+
     private List<ScriptLabel> scripts;
+
+    private int fileIndex = -1;
 
     public FieldScriptData(BytesDataContainer files)
     {
         super(files);
     }
 
+    public FieldScriptData(BytesDataContainer files, int fileIndex)
+    {
+        super();
+        this.fileIndex = fileIndex;
+        setData(files);
+    }
+
     public FieldScriptData()
     {
         super();
         scripts = new ArrayList<>();
+    }
+
+    /**
+     * Gets the index of this script file within the field scripts narc, or -1 if it is not known
+     * @return an <code>int</code>
+     */
+    public int getFileIndex()
+    {
+        return fileIndex;
+    }
+
+    /**
+     * Sets the index of this script file within the field scripts narc (used purely for error reporting)
+     * @param fileIndex an <code>int</code>
+     */
+    public void setFileIndex(int fileIndex)
+    {
+        this.fileIndex = fileIndex;
+    }
+
+    private String describeFile()
+    {
+        return "script file " + (fileIndex >= 0 ? String.valueOf(fileIndex) : "?");
     }
 
     @Override
@@ -93,7 +141,7 @@ public class FieldScriptData extends GenericScriptData
             for (int i = 0; i < labelOffsets.size(); i++)
             {
                 if (!actionOffsets.contains(labelOffsets.get(i)))
-                    readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, false);
+                    readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, actionMap, false);
             }
         }
         while (lastSize != labelOffsets.size());
@@ -102,7 +150,7 @@ public class FieldScriptData extends GenericScriptData
         for (int i = 0; i < labelOffsets.size(); i++)
         {
             if (!actionOffsets.contains(labelOffsets.get(i)))
-                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, true);
+                readAtOffset(dataBuf, globalScriptOffsets, labelOffsets, actionOffsets, visitedOffsets, labelOffsets.get(i), labelMap, actionMap, true);
             else
                 readActionAtOffset(dataBuf, actionOffsets, visitedOffsets, actionMap, labelOffsets.get(i));
         }
@@ -127,7 +175,7 @@ public class FieldScriptData extends GenericScriptData
         scripts.sort(Comparator.comparingInt(ScriptLabel::getScriptID));
 
         if (scripts.size() != globalScriptOffsets.size())
-            throw new RuntimeException(String.format("the expected number of scripts (%d) does not match the actual located amount (%d)", globalScriptOffsets.size(), globalScriptOffsets.size()));
+            throw new RuntimeException(String.format("%s: the expected number of scripts (%d) does not match the actual located amount (%d)", describeFile(), globalScriptOffsets.size(), scripts.size()));
 
         for (ScriptComponent component : this)
         {
@@ -138,7 +186,7 @@ public class FieldScriptData extends GenericScriptData
                     for (int i = 0; i < command.parameters.length; i++)
                     {
                         String paramName = command.commandMacro.getParameters()[i];
-                        if ((paramName.contains("dest") || paramName.contains("sub")))
+                        if (isLabelParameterName(paramName))
                         {
                             command.parameters[i] = "label_" + labels.indexOf(labelMap.get((Integer) command.parameters[i]));
                         }
@@ -149,7 +197,7 @@ public class FieldScriptData extends GenericScriptData
                     for (int i = 0; i < command.parameters.length; i++)
                     {
                         String paramName = command.commandMacro.getParameters()[i];
-                        if ((paramName.contains("dest") || paramName.contains("sub")))
+                        if (isLabelParameterName(paramName))
                         {
                             command.parameters[i] = "action_" + actions.indexOf(actionMap.get((Integer) command.parameters[i]));
                         }
@@ -176,7 +224,7 @@ public class FieldScriptData extends GenericScriptData
 //        }
     }
 
-    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, boolean finalRun)
+    private void readAtOffset(MemBuf dataBuf, ArrayList<Integer> globalScriptOffsets, ArrayList<Integer> labelOffsets, ArrayList<Integer> actionOffsets, ArrayList<Integer> visitedOffsets, int offset, HashMap<Integer, ScriptLabel> labelMap, HashMap<Integer, ActionLabel> actionMap, boolean finalRun)
     {
         MemBuf.MemBufReader reader = dataBuf.reader();
         if (visitedOffsets.contains(offset)) {
@@ -186,8 +234,10 @@ public class FieldScriptData extends GenericScriptData
         reader.setPosition(offset);
 
         int currentPosition;
+        int end = dataBuf.writer().getPosition();
 
-        while (reader.getPosition() < dataBuf.writer().getPosition())
+        // a command is at least a 2 byte id, so stop as soon as a whole id no longer fits
+        while (reader.getPosition() + 2 <= end)
         {
             currentPosition = reader.getPosition();
             if (finalRun && !visitedOffsets.contains(currentPosition))
@@ -219,6 +269,7 @@ public class FieldScriptData extends GenericScriptData
                 else if (actionOffsets.contains(currentPosition))
                 {
                     ActionLabel actionLabel = new ActionLabel("action_" + Integer.toHexString(currentPosition));
+                    actionMap.putIfAbsent(currentPosition, actionLabel);
                     add(actionLabel);
                 }
             }
@@ -230,13 +281,18 @@ public class FieldScriptData extends GenericScriptData
 //			System.err.println(commandID);
             CommandMacro commandMacro = FieldScriptParser.nativeCommands.get(commandID);
             if (commandMacro == null) {
-                throw new RuntimeException("Invalid command ID: " + commandID);
+                throw new RuntimeException(describeFile() + ": Invalid command ID: " + commandID + " at offset 0x" + Integer.toHexString(currentPosition));
             }
 
             ScriptCommand command = new ScriptCommand(commandMacro);
             command.name = commandMacro.getName();
 
-            command.parameters = commandMacro.readParameters(reader);
+            try {
+                command.parameters = commandMacro.readParameters(reader);
+            }
+            catch (IllegalStateException e) {
+                throw new RuntimeException(String.format("%s: the command \"%s\" at offset 0x%s runs past the end of the file", describeFile(), commandMacro.getName(), Integer.toHexString(currentPosition)), e);
+            }
 
 //            if (command.parameters != null)
 //            {
@@ -307,7 +363,11 @@ public class FieldScriptData extends GenericScriptData
 
         reader.setPosition(offset);
 
-        while (reader.getPosition() < dataBuf.writer().getPosition())
+        int end = dataBuf.writer().getPosition();
+        boolean terminated = false;
+
+        // each movement is a 2 byte id plus a 2 byte parameter, so stop as soon as a whole record no longer fits
+        while (reader.getPosition() + 4 <= end)
         {
             if (!visitedOffsets.contains(reader.getPosition()))
             {
@@ -331,6 +391,7 @@ public class FieldScriptData extends GenericScriptData
 
             if (isEndMovementCommand.test(commandID))
             {
+                terminated = true;
                 break;
             }
 
@@ -343,6 +404,11 @@ public class FieldScriptData extends GenericScriptData
 //            command.name = commandMacro.getName();
 //
 //            command.parameters = commandMacro.readParameters(reader);
+        }
+
+        if (!terminated)
+        {
+            throw new RuntimeException(String.format("%s: the action sequence at offset 0x%s runs off the end of the file without an end-movement command", describeFile(), Integer.toHexString(offset)));
         }
     }
 
@@ -454,7 +520,7 @@ public class FieldScriptData extends GenericScriptData
                 idx++;
             }
 
-            return 0;
+            throw new RuntimeException(String.format("%s: the label \"%s\" could not be resolved to an offset - it is referenced by a branch but never defined", describeFile(), labelName));
         };
 
         for (ScriptComponent component : this)
@@ -753,9 +819,11 @@ public class FieldScriptData extends GenericScriptData
             {
                 if (parameters[i] instanceof Integer val)
                 {
-                    if (val >= 0x4000)
+                    // ScriptFile.g4's NUMBER token has no sign, so a negative value has to be emitted in
+                    // hexadecimal or it cannot be lexed back in
+                    if (val >= 0x4000 || val < 0)
                     {
-                        parameterStrings[i] = "0x" + Integer.toHexString((int) parameters[i]);
+                        parameterStrings[i] = "0x" + Integer.toHexString(val);
                     }
                     else
                     {
@@ -841,7 +909,18 @@ public class FieldScriptData extends GenericScriptData
         public ActionCommand(int id, int parameter)
         {
             this.name = String.valueOf(id);
+            this.id = id;
             this.parameter = parameter;
+        }
+
+        public int getId()
+        {
+            return id;
+        }
+
+        public int getParameter()
+        {
+            return parameter;
         }
 
         @Override

@@ -3,7 +3,6 @@ package io.github.turtleisaac.pokeditor.formats;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import io.github.turtleisaac.nds4j.Narc;
-import io.github.turtleisaac.nds4j.NintendoDsRom;
 import io.github.turtleisaac.nds4j.binaries.CodeBinary;
 import io.github.turtleisaac.pokeditor.formats.encounters.JohtoEncounterData;
 import io.github.turtleisaac.pokeditor.formats.encounters.SinnohEncounterData;
@@ -12,18 +11,15 @@ import io.github.turtleisaac.pokeditor.formats.items.ItemData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.formats.moves.MoveData;
 import io.github.turtleisaac.pokeditor.formats.personal.PersonalData;
+import io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData;
 import io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData;
-import io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData;
-import io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData;
 import io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser;
 import io.github.turtleisaac.pokeditor.formats.text.TextBankData;
 import io.github.turtleisaac.pokeditor.formats.trainers.TrainerData;
 import io.github.turtleisaac.pokeditor.gamedata.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ParserTests
 {
-    public static class PersonalTests extends GenericParserTest<PersonalData>
+    @Nested
+    class PersonalTests extends GenericParserTest<PersonalData>
     {
         @Override
         protected GenericParser<PersonalData> createParser()
@@ -42,7 +39,8 @@ public class ParserTests
         }
     }
 
-    public static class LearnsetsTests extends GenericParserTest<LearnsetData>
+    @Nested
+    class LearnsetsTests extends GenericParserTest<LearnsetData>
     {
         @Override
         protected GenericParser<LearnsetData> createParser()
@@ -51,7 +49,8 @@ public class ParserTests
         }
     }
 
-    public static class EvolutionsTests extends GenericParserTest<EvolutionData>
+    @Nested
+    class EvolutionsTests extends GenericParserTest<EvolutionData>
     {
         @Override
         protected GenericParser<EvolutionData> createParser()
@@ -60,7 +59,8 @@ public class ParserTests
         }
     }
 
-    public static class TrainersTests extends GenericParserTest<TrainerData>
+    @Nested
+    class TrainersTests extends GenericParserTest<TrainerData>
     {
         @Override
         protected GenericParser<TrainerData> createParser()
@@ -69,7 +69,8 @@ public class ParserTests
         }
     }
 
-    public static class MovesTests extends GenericParserTest<MoveData>
+    @Nested
+    class MovesTests extends GenericParserTest<MoveData>
     {
         @Override
         protected GenericParser<MoveData> createParser()
@@ -78,7 +79,8 @@ public class ParserTests
         }
     }
 
-    public static class SinnohEncountersTests extends GenericParserTest<SinnohEncounterData>
+    @Nested
+    class SinnohEncountersTests extends GenericParserTest<SinnohEncounterData>
     {
         @Override
         protected GenericParser<SinnohEncounterData> createParser()
@@ -87,7 +89,8 @@ public class ParserTests
         }
     }
 
-    public static class JohtoEncountersTests extends GenericParserTest<JohtoEncounterData>
+    @Nested
+    class JohtoEncountersTests extends GenericParserTest<JohtoEncounterData>
     {
         @Override
         protected GenericParser<JohtoEncounterData> createParser()
@@ -95,21 +98,15 @@ public class ParserTests
             return injector.getInstance(Key.get(new TypeLiteral<>() {}));
         }
 
-        @BeforeEach
         @Override
-        protected void setup()
+        protected String romFileName()
         {
-            parser = createParser();
-            rom = NintendoDsRom.fromFile("HeartGold.nds");
-            Game game = Game.parseBaseRom(rom.getGameCode());
-            GameFiles.initialize(game);
-            TextFiles.initialize(game);
-            GameCodeBinaries.initialize(game);
-            Tables.initialize(game);
+            return System.getProperty(HEARTGOLD_ROM_PROPERTY, DEFAULT_HEARTGOLD_ROM);
         }
     }
 
-    public static class ItemsTests extends GenericParserTest<ItemData>
+    @Nested
+    class ItemsTests extends GenericParserTest<ItemData>
     {
         @Override
         protected GenericParser<ItemData> createParser()
@@ -118,10 +115,21 @@ public class ParserTests
         }
     }
 
-    public static class TextBankTests extends GenericParserTest<TextBankData>
+    @Nested
+    class TextBankTests extends GenericParserTest<TextBankData>
     {
         @Override
         protected GenericParser<TextBankData> createParser()
+        {
+            return injector.getInstance(Key.get(new TypeLiteral<>() {}));
+        }
+    }
+
+    @Nested
+    class PokemonSpriteTests extends GenericParserTest<PokemonSpriteData>
+    {
+        @Override
+        protected GenericParser<PokemonSpriteData> createParser()
         {
             return injector.getInstance(Key.get(new TypeLiteral<>() {}));
         }
@@ -136,23 +144,18 @@ public class ParserTests
             return new FieldScriptParser();
         }
 
-        @BeforeEach
         @Override
-        protected void setup()
+        protected String romFileName()
         {
-            parser = createParser();
-            rom = NintendoDsRom.fromFile("HeartGold.nds");
-            Game game = Game.parseBaseRom(rom.getGameCode());
-            GameFiles.initialize(game);
-            TextFiles.initialize(game);
-            GameCodeBinaries.initialize(game);
-            Tables.initialize(game);
+            return System.getProperty(HEARTGOLD_ROM_PROPERTY, DEFAULT_HEARTGOLD_ROM);
         }
 
         @Test
         @Override
         void outputMatchesInput()
         {
+            loadRom();
+
             HashMap<GameFiles, Narc> map = new HashMap<>();
             for (GameFiles gameFile : parser.getRequirements()) {
                 map.put(gameFile, new Narc(rom.getFileByName(gameFile.getPath())));
@@ -164,49 +167,30 @@ public class ParserTests
             List<GenericScriptData> data = parser.generateDataList(map, codeBinaries);
             Map<GameFiles, Narc> output = parser.processDataList(data, codeBinaries);
 
-            int nonExactMatches = 0;
-
             for (GameFiles gameFile : parser.getRequirements()) {
                 Narc originalNarc = map.get(gameFile);
                 Narc outputNarc = output.get(gameFile);
+
+                assertThat(outputNarc)
+                        .as("no output narc was produced for %s", gameFile)
+                        .isNotNull();
+
+                assertThat(outputNarc.getFiles().size())
+                        .as("the number of script files changed")
+                        .isEqualTo(originalNarc.getFiles().size());
+
                 for (int idx = 0; idx < originalNarc.getFiles().size(); idx++) {
                     byte[] outputFile = outputNarc.getFile(idx);
-                    if (Arrays.equals(originalNarc.getFile(idx), outputFile))
-                    {
-                        assertThat(outputFile)
-                                .isEqualTo(originalNarc.getFile(idx));
-                    }
-                    else if (outputFile.length != 0)
-                    {
-                        BytesDataContainer container = new BytesDataContainer();
-                        container.insert(GameFiles.FIELD_SCRIPTS, null, outputFile);
 
-                        GenericScriptData scriptData;
-                        if (FieldScriptParser.testFileIsLevelScript(originalNarc.getFile(idx)))
-                            scriptData = new LevelScriptData(container);
-                        else
-                            scriptData = new FieldScriptData(container);
+                    assertThat(outputFile)
+                            .as("script file %d serialized to nothing", idx)
+                            .isNotEmpty();
 
-                        container = scriptData.save();
-                        byte[] rebuiltResult = container.get(GameFiles.FIELD_SCRIPTS, null);
-
-                        if (Arrays.equals(rebuiltResult, outputFile))
-                        {
-                            System.out.println("Valid but non-1:1 Match: File " + idx);
-                            nonExactMatches++;
-                        }
-                        else
-                        {
-                            System.err.println("File did not match original, attempted conditional rebuild but failed");
-                        }
-
-                        assertThat(rebuiltResult)
-                                .isEqualTo(outputFile);
-                    }
+                    assertThat(outputFile)
+                            .as("script file %d", idx)
+                            .isEqualTo(originalNarc.getFile(idx));
                 }
             }
-
-            System.out.printf("In total, there were %d valid but non-1:1 matching rebuilt field script files (%d 1:1 matches).\n", nonExactMatches, data.size()-nonExactMatches);
         }
     }
 }

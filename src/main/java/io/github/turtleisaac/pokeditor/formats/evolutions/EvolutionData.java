@@ -11,6 +11,8 @@ import java.util.Map;
 
 public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> implements GenericFileData
 {
+    private int fileSize = FIXED_FILE_SIZE;
+
     public EvolutionData(BytesDataContainer files)
     {
         super();
@@ -30,7 +32,11 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         MemBuf dataBuf = MemBuf.create(file);
         MemBuf.MemBufReader reader = dataBuf.reader();
 
-        for (int i = 0; i < file.length / 6; i++)
+        fileSize = Math.max(file.length, FIXED_FILE_SIZE);
+
+        // everything the file holds is read - dropping entries here would silently discard them on save
+        int numEntries = file.length / 6;
+        for (int i = 0; i < numEntries; i++)
         {
             add(new EvolutionEntry(reader.readShort(), reader.readShort(), reader.readShort()));
         }
@@ -42,6 +48,11 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
+        if (size() > MAX_NUM_ENTRIES)
+        {
+            throw new RuntimeException("An evolution file can hold at most " + MAX_NUM_ENTRIES + " entries. Provided: " + size());
+        }
+
         for(EvolutionEntry entry : this)
         {
             writer.writeShort((short) entry.getMethod());
@@ -50,6 +61,13 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         }
 
         writer.writeShort((short) 0);
+
+        // the game reads a fixed-size record regardless of how many evolutions are actually populated,
+        // so the subfile must always be emitted at its full length
+        if (writer.getPosition() < fileSize)
+        {
+            writer.writeByteNumTimes((byte) 0, fileSize - writer.getPosition());
+        }
 
         return new BytesDataContainer(GameFiles.EVOLUTIONS, null, dataBuf.reader().getBuffer());
     }
@@ -106,4 +124,5 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
     }
 
     public static final int MAX_NUM_ENTRIES = 7;
+    public static final int FIXED_FILE_SIZE = MAX_NUM_ENTRIES * 6 + 2;
 }

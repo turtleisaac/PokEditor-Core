@@ -15,7 +15,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
     @Override
     public T visitId_line(MacrosParser.Id_lineContext ctx)
     {
-        boolean foundShort = false;
+        int idDataType = -1;
         boolean foundValue = false;
         int idNumber = -1;
         for (int i = 0; i < ctx.getChildCount(); i++)
@@ -25,7 +25,7 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
             int type = ((TerminalNodeImpl) c).symbol.getType();
             if (type == MacrosLexer.SHORT || type == MacrosLexer.WORD)
             {
-                foundShort = true;
+                idDataType = type;
             }
             else if (type == MacrosLexer.NUMBER) {
                 foundValue = true;
@@ -34,14 +34,14 @@ public abstract class CommandMacroVisitor<T> extends MacrosBaseVisitor<T>
             }
         }
 
-        if (foundShort && foundValue) {
-            return idLineAction(idNumber);
+        if (idDataType != -1 && foundValue) {
+            return idLineAction(idNumber, idDataType);
         }
 
         return null;
     }
 
-    protected T idLineAction(int idNumber) {
+    protected T idLineAction(int idNumber, int dataType) {
         return null;
     }
 

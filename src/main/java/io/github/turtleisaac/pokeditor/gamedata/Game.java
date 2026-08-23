@@ -24,7 +24,14 @@ public enum Game
     public final String[] sheetList;
     public final String[] editorList;
 
-    private Region region;
+    /**
+     * @deprecated the region of the ROM currently being worked with is not a property of the game, it is a
+     * property of the individual ROM. This only exists so that callers of the deprecated
+     * {@link #getRegion()} keep working, and will be removed alongside it - use the
+     * {@link BaseRomInfo} returned by {@link #parseBaseRom(String)} instead.
+     */
+    @Deprecated
+    private static Region lastParsedRegion;
 
     Game(String[] sheetList, String[] editorList)
     {
@@ -32,12 +39,29 @@ public enum Game
         this.editorList= editorList;
     }
 
+    /**
+     * Gets the region of the most recently parsed base ROM.
+     *
+     * @return a <code>Region</code>, or <code>null</code> if no base ROM has been parsed yet
+     * @deprecated the region belongs to the ROM, not to the <code>Game</code> constant, which is shared by
+     * every ROM opened in this process. Use the {@link BaseRomInfo} returned by
+     * {@link #parseBaseRom(String)} and pass its region around explicitly instead.
+     */
+    @Deprecated
     public Region getRegion()
     {
-        return region;
+        return lastParsedRegion;
     }
 
-    public static Game parseBaseRom(String baseRomGameCode)
+    /**
+     * The game and region identified by a base ROM's game code
+     *
+     * @param game a <code>Game</code>
+     * @param region a <code>Region</code>
+     */
+    public record BaseRomInfo(Game game, Region region) {}
+
+    public static BaseRomInfo parseBaseRom(String baseRomGameCode)
     {
         Game game = switch (baseRomGameCode.substring(0, 3)) {
             case "ADA" -> Game.Diamond;
@@ -48,8 +72,9 @@ public enum Game
             default -> throw new RuntimeException("Invalid game");
         };
 
-        game.region = Region.getRegion(baseRomGameCode.charAt(3));
-        return game;
+        Region region = Region.getRegion(baseRomGameCode.charAt(3));
+        lastParsedRegion = region;
+        return new BaseRomInfo(game, region);
     }
 
     public enum Region
@@ -63,7 +88,7 @@ public enum Game
         EUROPE,
         SPAIN;
 
-        static Region getRegion(char c)
+        public static Region getRegion(char c)
         {
             return switch (c)
             {
