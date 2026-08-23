@@ -327,6 +327,12 @@ public class PersonalData implements GenericFileData
         this.spDef = spDef;
     }
 
+    /**
+     * How many Pokemon types the game defines. Generation 4 has 18, numbered 0 to 17; a ROM
+     * with expanded types would need this and PokeditorManager.typeColors raised together.
+     */
+    public static final int NUMBER_OF_TYPES = 18;
+
     public int getType1()
     {
         return type1;
@@ -334,8 +340,12 @@ public class PersonalData implements GenericFileData
 
     public void setType1(int type1)
     {
-        if (type1 >= 19)  // TODO have a way to know for certain the number of types
-            throw new RuntimeException("Maximum type value is 18. Provided: " + type1);
+        // Generation 4 defines 18 types, numbered 0 to 17, and PokeditorManager.typeColors
+        // holds exactly 18 entries - so 18 is one past the end, not the last valid value. The
+        // bound used to be 19, which admitted a type that nothing could draw.
+        if (type1 >= NUMBER_OF_TYPES)
+            throw new RuntimeException("Type values run from 0 to " + (NUMBER_OF_TYPES - 1)
+                    + ". Provided: " + type1);
         this.type1 = type1;
     }
 
@@ -346,8 +356,12 @@ public class PersonalData implements GenericFileData
 
     public void setType2(int type2)
     {
-        if (type2 >= 19)  // TODO have a way to know for certain the number of types
-            throw new RuntimeException("Maximum type value is 18. Provided: " + type2);
+        // Generation 4 defines 18 types, numbered 0 to 17, and PokeditorManager.typeColors
+        // holds exactly 18 entries - so 18 is one past the end, not the last valid value. The
+        // bound used to be 19, which admitted a type that nothing could draw.
+        if (type2 >= NUMBER_OF_TYPES)
+            throw new RuntimeException("Type values run from 0 to " + (NUMBER_OF_TYPES - 1)
+                    + ". Provided: " + type2);
         this.type2 = type2;
     }
 
