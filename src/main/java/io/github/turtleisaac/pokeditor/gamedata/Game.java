@@ -24,14 +24,6 @@ public enum Game
     public final String[] sheetList;
     public final String[] editorList;
 
-    /**
-     * @deprecated the region of the ROM currently being worked with is not a property of the game, it is a
-     * property of the individual ROM. This only exists so that callers of the deprecated
-     * {@link #getRegion()} keep working, and will be removed alongside it - use the
-     * {@link BaseRomInfo} returned by {@link #parseBaseRom(String)} instead.
-     */
-    @Deprecated
-    private static Region lastParsedRegion;
 
     Game(String[] sheetList, String[] editorList)
     {
@@ -47,11 +39,6 @@ public enum Game
      * every ROM opened in this process. Use the {@link BaseRomInfo} returned by
      * {@link #parseBaseRom(String)} and pass its region around explicitly instead.
      */
-    @Deprecated
-    public Region getRegion()
-    {
-        return lastParsedRegion;
-    }
 
     /**
      * The game and region identified by a base ROM's game code
@@ -72,9 +59,9 @@ public enum Game
             default -> throw new RuntimeException("Invalid game");
         };
 
-        Region region = Region.getRegion(baseRomGameCode.charAt(3));
-        lastParsedRegion = region;
-        return new BaseRomInfo(game, region);
+        // the region travels with the result rather than being stashed anywhere: a field on the
+        // enum, static or per-constant, is shared by every ROM opened in the process
+        return new BaseRomInfo(game, Region.getRegion(baseRomGameCode.charAt(3)));
     }
 
     public enum Region

@@ -34,18 +34,6 @@ public enum Tables
         return pointerOffset;
     }
 
-    /**
-     * Initializes the table pointers for the given base ROM
-     *
-     * @param baseROM a <code>Game</code>
-     * @deprecated use {@link #initialize(Game, Game.Region)} - relying on
-     * {@link Game#getRegion()} means the region of a previously opened ROM can leak into this one
-     */
-    @Deprecated
-    public static void initialize(Game baseROM)
-    {
-        initialize(baseROM, baseROM.getRegion());
-    }
 
     public static void initialize(Game baseROM, Game.Region region)
     {

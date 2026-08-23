@@ -36,7 +36,7 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         fileSize = Math.max(file.length, FIXED_FILE_SIZE);
 
         // everything the file holds is read - dropping entries here would silently discard them on save
-        int numEntries = file.length / 6;
+        int numEntries = file.length / ENTRY_SIZE;
         for (int i = 0; i < numEntries; i++)
         {
             // unsigned: these are species and item IDs, which run past 0x7FFF in expanded ROMs.
@@ -52,9 +52,16 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        if (size() > MAX_NUM_ENTRIES)
+        // the cap is what THIS file can hold, not what a retail one holds. setData deliberately
+        // reads every entry present so an expanded table is not silently truncated, and fileSize
+        // is kept at the input's length for the same reason - refusing to write those entries back
+        // would parse a hacked ROM cleanly and then abort the whole NARC on save.
+        int capacity = (fileSize - TERMINATOR_SIZE) / ENTRY_SIZE;
+        if (size() > capacity)
         {
-            throw new RuntimeException("An evolution file can hold at most " + MAX_NUM_ENTRIES + " entries. Provided: " + size());
+            throw new RuntimeException("This evolution file holds " + capacity + " entries ("
+                    + fileSize + " bytes). Provided: " + size()
+                    + ". Remove an evolution, or expand the file first.");
         }
 
         for(EvolutionEntry entry : this)
@@ -127,6 +134,14 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         }
     }
 
+    /** bytes per entry: method, requirement and result species, each a u16 */
+    public static final int ENTRY_SIZE = 6;
+
+    /** the trailing u16 terminator every evolution file carries */
+    public static final int TERMINATOR_SIZE = 2;
+
+    /** how many entries a retail-sized file holds; an expanded file holds more */
     public static final int MAX_NUM_ENTRIES = 7;
-    public static final int FIXED_FILE_SIZE = MAX_NUM_ENTRIES * 6 + 2;
+
+    public static final int FIXED_FILE_SIZE = MAX_NUM_ENTRIES * ENTRY_SIZE + TERMINATOR_SIZE;
 }

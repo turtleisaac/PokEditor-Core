@@ -328,8 +328,13 @@ public class PersonalData implements GenericFileData
     }
 
     /**
-     * How many Pokemon types the game defines. Generation 4 has 18, numbered 0 to 17; a ROM
-     * with expanded types would need this and PokeditorManager.typeColors raised together.
+     * How many Pokemon types an unmodified Generation 4 game defines: 18, numbered 0 to 17.
+     * <p>
+     * This is what retail data contains, not a limit on what the field can hold - the type is
+     * stored in a whole byte, and ROM hacks with more than 18 types are exactly the thing this
+     * library exists to edit. The setters therefore do not enforce it; only the byte width is
+     * enforced, at save. A user interface that can only name or colour 18 types should say so
+     * itself rather than have the data layer refuse the value.
      */
     public static final int NUMBER_OF_TYPES = 18;
 
@@ -340,12 +345,6 @@ public class PersonalData implements GenericFileData
 
     public void setType1(int type1)
     {
-        // Generation 4 defines 18 types, numbered 0 to 17, and PokeditorManager.typeColors
-        // holds exactly 18 entries - so 18 is one past the end, not the last valid value. The
-        // bound used to be 19, which admitted a type that nothing could draw.
-        if (type1 >= NUMBER_OF_TYPES)
-            throw new RuntimeException("Type values run from 0 to " + (NUMBER_OF_TYPES - 1)
-                    + ". Provided: " + type1);
         this.type1 = type1;
     }
 
@@ -356,12 +355,6 @@ public class PersonalData implements GenericFileData
 
     public void setType2(int type2)
     {
-        // Generation 4 defines 18 types, numbered 0 to 17, and PokeditorManager.typeColors
-        // holds exactly 18 entries - so 18 is one past the end, not the last valid value. The
-        // bound used to be 19, which admitted a type that nothing could draw.
-        if (type2 >= NUMBER_OF_TYPES)
-            throw new RuntimeException("Type values run from 0 to " + (NUMBER_OF_TYPES - 1)
-                    + ". Provided: " + type2);
         this.type2 = type2;
     }
 

@@ -1,5 +1,6 @@
 package io.github.turtleisaac.pokeditor.formats;
 
+import io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import org.junit.jupiter.api.DisplayName;
@@ -78,6 +79,69 @@ class FieldWidthTest
                     .hasMessageContaining("Move ID")
                     .hasMessageContaining("512")
                     .hasMessageContaining("511");
+        }
+    }
+
+    @Nested
+    @DisplayName("expanded files")
+    class Expanded
+    {
+        /**
+         * Users of this tool routinely open ROMs with tables larger than retail. setData reads
+         * every entry a file contains, on purpose, so save has to be able to write them back.
+         * A cap fixed at the retail count parses such a file cleanly and then aborts the whole
+         * NARC write, which loses the edit and every other file in it.
+         */
+        private EvolutionData evolutionsFromFileOf(int entries)
+        {
+            byte[] file = new byte[entries * EvolutionData.ENTRY_SIZE + EvolutionData.TERMINATOR_SIZE];
+            return new EvolutionData(new BytesDataContainer(GameFiles.EVOLUTIONS, null, file));
+        }
+
+        @Test
+        void aRetailSizedEvolutionFileRoundTrips()
+        {
+            EvolutionData data = evolutionsFromFileOf(EvolutionData.MAX_NUM_ENTRIES);
+            assertThat(data).hasSize(EvolutionData.MAX_NUM_ENTRIES);
+            assertThatCode(data::save).doesNotThrowAnyException();
+        }
+
+        @Test
+        void anExpandedEvolutionFileSavesEveryEntryItWasReadWith()
+        {
+            // the property: whatever setData accepted, save must be able to write. Anything else
+            // means the file could be opened but not closed again.
+            for (int entries : new int[] {8, 10, 20, 50})
+            {
+                EvolutionData data = evolutionsFromFileOf(entries);
+                assertThat(data).as("a file sized for %d entries", entries).hasSize(entries);
+                assertThatCode(data::save)
+                        .as("a file sized for %d entries must save the %d entries it was read with",
+                                entries, entries)
+                        .doesNotThrowAnyException();
+            }
+        }
+
+        @Test
+        void addingMoreEntriesThanTheFileHoldsIsStillRefused()
+        {
+            // the cap is not gone, it is derived: a retail file still cannot take an eighth
+            // evolution, and the message says how many it holds rather than quoting a constant
+            EvolutionData data = evolutionsFromFileOf(EvolutionData.MAX_NUM_ENTRIES);
+            data.add(new EvolutionData.EvolutionEntry(1, 2, 3));
+
+            assertThatThrownBy(data::save)
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining(String.valueOf(EvolutionData.MAX_NUM_ENTRIES));
+        }
+
+        @Test
+        void anExpandedFileRefusesOnlyPastItsOwnCapacity()
+        {
+            EvolutionData data = evolutionsFromFileOf(20);
+            data.add(new EvolutionData.EvolutionEntry(1, 2, 3));
+
+            assertThatThrownBy(data::save).isInstanceOf(RuntimeException.class);
         }
     }
 
