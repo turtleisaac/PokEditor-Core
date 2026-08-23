@@ -2,6 +2,7 @@ package io.github.turtleisaac.pokeditor.formats.personal;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.FieldWidth;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -150,11 +151,22 @@ public class PersonalData implements GenericFileData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        writer.writeBytes(hp, atk, def, speed, spAtk, spDef, type1, type2, catchRate, baseExp);
+        // the setters guard only the upper bound, so a negative reached this point and was
+        // narrowed by writeBytes into a large positive one - setHp(-1) was stored as 255
+        writer.writeBytes(FieldWidth.u8(hp, "HP"), FieldWidth.u8(atk, "Attack"),
+                FieldWidth.u8(def, "Defense"), FieldWidth.u8(speed, "Speed"),
+                FieldWidth.u8(spAtk, "Sp. Attack"), FieldWidth.u8(spDef, "Sp. Defense"),
+                FieldWidth.u8(type1, "Type 1"), FieldWidth.u8(type2, "Type 2"),
+                FieldWidth.u8(catchRate, "Catch rate"), FieldWidth.u8(baseExp, "Base experience"));
         writer.writeShort(getCombinedEvShort());
-        writer.writeShort((short)uncommonItem);
-        writer.writeShort((short)rareItem);
-        writer.writeBytes(genderRatio,hatchMultiplier,baseHappiness,expRate,eggGroup1,eggGroup2,ability1,ability2,runChance,getCombinedColorFlip());
+        writer.writeShort((short) FieldWidth.u16(uncommonItem, "Uncommon held item"));
+        writer.writeShort((short) FieldWidth.u16(rareItem, "Rare held item"));
+        writer.writeBytes(FieldWidth.u8(genderRatio, "Gender ratio"),
+                FieldWidth.u8(hatchMultiplier, "Hatch multiplier"),
+                FieldWidth.u8(baseHappiness, "Base happiness"), FieldWidth.u8(expRate, "Exp rate"),
+                FieldWidth.u8(eggGroup1, "Egg group 1"), FieldWidth.u8(eggGroup2, "Egg group 2"),
+                FieldWidth.u8(ability1, "Ability 1"), FieldWidth.u8(ability2, "Ability 2"),
+                FieldWidth.u8(runChance, "Run chance"), getCombinedColorFlip());
         writer.write(padding != null ? padding : new byte[NUMBER_PADDING_BYTES]);
 
         int[] tmLearnsetData = new int[16];

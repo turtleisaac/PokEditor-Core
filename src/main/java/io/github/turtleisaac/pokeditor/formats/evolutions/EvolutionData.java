@@ -2,6 +2,7 @@ package io.github.turtleisaac.pokeditor.formats.evolutions;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.FieldWidth;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -38,7 +39,10 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
         int numEntries = file.length / 6;
         for (int i = 0; i < numEntries; i++)
         {
-            add(new EvolutionEntry(reader.readShort(), reader.readShort(), reader.readShort()));
+            // unsigned: these are species and item IDs, which run past 0x7FFF in expanded ROMs.
+            // readShort() sign extended them, so a species above 32767 came back negative and the
+            // sheet's declared 0..65535 range was a value the read path could not reproduce.
+            add(new EvolutionEntry(reader.readUInt16(), reader.readUInt16(), reader.readUInt16()));
         }
     }
 
@@ -55,9 +59,9 @@ public class EvolutionData extends ArrayList<EvolutionData.EvolutionEntry> imple
 
         for(EvolutionEntry entry : this)
         {
-            writer.writeShort((short) entry.getMethod());
-            writer.writeShort((short) entry.getRequirement());
-            writer.writeShort((short) entry.getResultSpecies());
+            writer.writeShort((short) FieldWidth.u16(entry.getMethod(), "Evolution method"));
+            writer.writeShort((short) FieldWidth.u16(entry.getRequirement(), "Evolution requirement"));
+            writer.writeShort((short) FieldWidth.u16(entry.getResultSpecies(), "Evolution result species"));
         }
 
         writer.writeShort((short) 0);

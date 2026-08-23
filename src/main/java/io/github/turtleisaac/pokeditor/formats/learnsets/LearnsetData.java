@@ -2,6 +2,7 @@ package io.github.turtleisaac.pokeditor.formats.learnsets;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.FieldWidth;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -105,7 +106,24 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
 
     private static int produceLearnData(LearnsetEntry entry)
     {
-        return ((entry.getLevel() & 0x7f) << 9) | (entry.getMoveID() & 0x1ff);
+        // the two fields share one 16 bit word: 7 bits of level, 9 of move. masking instead of
+        // checking is what turned move 512 into move 0 and level 200 into level 72, silently.
+        int level = FieldWidth.bits(entry.getLevel(), 7, "Level");
+        int moveID = FieldWidth.bits(entry.getMoveID(), 9, "Move ID");
+        int packed = (level << 9) | moveID;
+
+        // both fields are individually in range here, but this one combination packs to the
+        // same 0xFFFF the file uses to mark the end of the list. saving it writes a
+        // terminator, so the entry - and every entry after it - vanishes on reload.
+        if (packed == TERMINATOR)
+        {
+            throw new IllegalArgumentException(String.format(
+                    "Move %d at level %d cannot be stored: the two together are indistinguishable "
+                            + "from the end-of-learnset marker, so the entry would disappear when the "
+                            + "file is read back. Use a different move or level.",
+                    moveID, level));
+        }
+        return packed;
     }
 
     public void sortLearnset()
@@ -166,4 +184,7 @@ public class LearnsetData extends ArrayList<LearnsetData.LearnsetEntry> implemen
     }
 
     public static final int MAX_NUM_ENTRIES = 20;
+
+    /** the 16 bit value marking the end of the entry list; no real entry may pack to it */
+    private static final int TERMINATOR = 0xFFFF;
 }

@@ -21,6 +21,7 @@ package io.github.turtleisaac.pokeditor.formats.moves;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.FieldWidth;
 import io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
@@ -111,19 +112,24 @@ public class MoveData implements GenericFileData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        writer.writeShort((short) effect);
-        writer.writeBytes(category, power, type, accuracy, pp, effectChance);
+        // every one of these is narrowed on the way out - a short cast or writeBytes' i2b -
+        // so a value that does not fit is stored as a different value with nothing reported
+        writer.writeShort((short) FieldWidth.u16(effect, "Effect"));
+        writer.writeBytes(FieldWidth.u8(category, "Category"), FieldWidth.u8(power, "Power"),
+                FieldWidth.u8(type, "Type"), FieldWidth.u8(accuracy, "Accuracy"),
+                FieldWidth.u8(pp, "PP"), FieldWidth.u8(effectChance, "Effect chance"));
 
-        writer.writeShort((short) target);
+        writer.writeShort((short) FieldWidth.u16(target, "Target"));
 
-        writer.writeBytes(priority);
+        writer.writeBytes(FieldWidth.s8(priority, "Priority"));
 
         int composite = 0;
         for (int i = 0; i < NUM_MOVE_FLAGS; i++)
         {
             composite |= ((flags[i] ? 1 : 0) << i);
         }
-        writer.writeBytes(composite, contestEffect, contestType, 0, 0);
+        writer.writeBytes(composite, FieldWidth.u8(contestEffect, "Contest effect"),
+                FieldWidth.u8(contestType, "Contest type"), 0, 0);
 
         return new BytesDataContainer(GameFiles.MOVES, null, dataBuf.reader().getBuffer());
     }
