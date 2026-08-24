@@ -31,14 +31,6 @@ public enum Game
         this.editorList= editorList;
     }
 
-    /**
-     * Gets the region of the most recently parsed base ROM.
-     *
-     * @return a <code>Region</code>, or <code>null</code> if no base ROM has been parsed yet
-     * @deprecated the region belongs to the ROM, not to the <code>Game</code> constant, which is shared by
-     * every ROM opened in this process. Use the {@link BaseRomInfo} returned by
-     * {@link #parseBaseRom(String)} and pass its region around explicitly instead.
-     */
 
     /**
      * The game and region identified by a base ROM's game code

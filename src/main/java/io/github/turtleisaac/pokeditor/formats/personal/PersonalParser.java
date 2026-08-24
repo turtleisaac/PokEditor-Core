@@ -38,8 +38,11 @@ import java.util.Map;
 
 public class PersonalParser implements GenericParser<PersonalData>
 {
-    // this parser is a singleton, so none of this may be static - otherwise the TM/HM table read out of
-    // ROM A would be written into ROM B
+    // Instance state rather than static, which is where per-parser state belongs. Note this
+    // buys no isolation between ROMs on its own: the parser is bound as a Guice singleton, so
+    // there is exactly one instance for the lifetime of the process and instance fields are as
+    // process-global as static ones were. What actually keeps one ROM's data out of another is
+    // DataManager discarding its caches when the ROM changes.
     private final int[] tmMoveIdNumbers = new int[PersonalData.NUMBER_TMS_HMS];
     private final int[] tmMoveTypes = new int[PersonalData.NUMBER_TMS_HMS];
     // the palette index exactly as it was read, so that indices this editor does not recognize survive a save

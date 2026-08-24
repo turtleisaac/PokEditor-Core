@@ -24,8 +24,8 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 
     private static final int NUM_PARTY_ICON_STARTING_FILES = 7;
 
-    // this parser is a singleton, so these must NOT be static - otherwise the files read out of ROM A
-    // would be written into ROM B
+    // Instance state rather than static. As in PersonalParser, this is not what isolates one
+    // ROM from another - the parser is a Guice singleton - it is simply where the state belongs.
     private List<byte[]> partyIconStartingFiles;
     private int partyIconPaletteTableLength = -1;
 
