@@ -17,8 +17,10 @@ public class FieldScriptData extends GenericScriptData
 
     // 225 (goto_if_trainer_defeated) is a relative branch, so its destination has to be registered as a label
     private static final IntPredicate isCallCommand = commandID -> (commandID >= 0x16 && commandID <= 0x1D && commandID != 0x1B) || commandID == GOTO_IF_TRAINER_DEFEATED;
-    // 0x15 is endstd (yield to parent context), which terminates the current run of commands just like end/goto/return
-    private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x15 || commandId == 0x16 || commandId == 0x1B;
+    // 0x2 (End), 0x16 (Jump) and 0x1B (Return) terminate the current run of commands.
+    // 0x15 (endstd/LocalScript) does NOT: verified against retail HeartGold and SoulSilver, treating it as a
+    // terminator drops the commands that follow it (round-trips one fewer script and re-emits shorter files).
+    private static final IntPredicate isEndCommand = commandId -> commandId == 0x2 || commandId == 0x16 || commandId == 0x1B;
     // 225 is NOT a comparator command - per Scrcmd_Hg.txt it takes a single relative destination and no comparator byte
     private static final IntPredicate isDoIfCommand = commandID -> commandID == 28 || commandID == 29;
     private static final IntPredicate isMovementCommand = commandID -> commandID == 0x5E;

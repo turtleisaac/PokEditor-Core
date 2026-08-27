@@ -91,7 +91,7 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         }
         partyIconPaletteTableLength = partyIconPaletteIndices.length;
 
-        Palette partyIconPalette = new Palette(partyIcons.getFile(0), 4);
+        Palette partyIconPalette = new Palette(partyIcons.getFile(0), 0); // read the file's own bit depth
         partyIconStartingFiles = new ArrayList<>();
         for (int i = 0; i < NUM_PARTY_ICON_STARTING_FILES; i++)
         {

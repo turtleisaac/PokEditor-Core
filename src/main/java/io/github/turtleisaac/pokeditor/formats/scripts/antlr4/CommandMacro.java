@@ -57,7 +57,11 @@ public class CommandMacro
                 Object param = parameterValues[idx++];
                 if (param == null)
                 {
-                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was not provided a value", parameter, name));
+                    // A conditional/variable-length macro (.if-guarded, defaulted args) legitimately leaves
+                    // some declared parameters unread, so a null here is not necessarily an error. The writer
+                    // only visits a parameter when its branch is actually taken, and raises a precise error at
+                    // that point if a genuinely-required parameter turns out to be missing. See CommandWriter.
+                    continue;
                 }
                 else if (param instanceof Number number)
                     parameterToValueMap.put(parameter, number);
@@ -94,7 +98,7 @@ public class CommandMacro
             throw new RuntimeException(String.format("The command \"%s\" takes no parameters but %d were provided", name, parameterValues.length));
         }
 
-        CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap);
+        CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap, this);
         commandWriter.visitEntry(entryContext);
     }
 

@@ -114,10 +114,12 @@ public class PokemonSpriteData implements GenericFileData
         paletteEmpty = paletteFile.length == 0;
         shinyPaletteEmpty = shinyPaletteFile.length == 0;
 
+        // 0 = read the file's own bit depth. Forcing 4 mislabels the occasional 8bpp palette
+        // (its 0x4 marker gets re-emitted as 0x3), corrupting it on a plain load/save round-trip.
         if (!paletteEmpty)
-            palette = new Palette(paletteFile, 4);
+            palette = new Palette(paletteFile, 0);
         if (!shinyPaletteEmpty)
-            shinyPalette = new Palette(shinyPaletteFile, 4);
+            shinyPalette = new Palette(shinyPaletteFile, 0);
 
         if (femaleBackFile.length != 0)
             femaleBack = new IndexedImage(femaleBackFile, 0, 0, 1, 1, scanFrontToBack);

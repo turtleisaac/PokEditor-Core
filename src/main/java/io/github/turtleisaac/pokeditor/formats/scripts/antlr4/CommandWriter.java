@@ -27,11 +27,17 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
     private int parameterType;
     private boolean compareMode;
 
-    public CommandWriter(MemBuf.MemBufWriter writer, LabelOffsetObtainer offsetObtainer, Map<String, Object> parameterToValueMap)
+    public CommandWriter(MemBuf.MemBufWriter writer, LabelOffsetObtainer offsetObtainer, Map<String, Object> parameterToValueMap, CommandMacro macro)
     {
         this.writer = writer;
         this.parameterToValueMap = parameterToValueMap;
         this.offsetObtainer = offsetObtainer;
+        this.macro = macro;
+    }
+
+    private String commandName()
+    {
+        return macro != null ? macro.getName() : "?";
     }
 
     @Override
@@ -73,6 +79,12 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
             if (!compareMode) { // writing arg value to file
 
                 Object value = parameterToValueMap.get(text);
+                if (value == null)
+                {
+                    // This parameter is actually being emitted but the reader never gave it a value -
+                    // a genuinely required parameter is missing (as opposed to one a .if branch skips).
+                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was not provided a value", text, commandName()));
+                }
                 int valueToWrite;
 
                 if (value instanceof Number number)
@@ -90,7 +102,12 @@ public class CommandWriter extends CommandMacroVisitor<Integer>
             }
             else // this is a calculation which requires an already read value
             {
-                return (int) parameterToValueMap.get(text);
+                Object value = parameterToValueMap.get(text);
+                if (value == null)
+                {
+                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was used in a condition but not provided a value", text, commandName()));
+                }
+                return (int) value;
             }
         } else if (terminalNode.symbol.getType() == MacrosLexer.NUMBER) {
             return Integer.decode(terminalNode.getText());
