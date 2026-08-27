@@ -20,9 +20,15 @@ import java.util.*;
 public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 {
 
-    private static final int MAX_PARTY_ICON_PALETTE_VALUE = 2;
+    public static final int MAX_PARTY_ICON_PALETTE_VALUE = 2;
 
-    private static List<byte[]> partyIconStartingFiles;
+    private static final int NUM_PARTY_ICON_STARTING_FILES = 7;
+
+    // Instance state rather than static. As in PersonalParser, this is not what isolates one
+    // ROM from another - the parser is a Guice singleton - it is simply where the state belongs.
+    private List<byte[]> partyIconStartingFiles;
+    private List<byte[]> partyIconTrailingFiles;
+    private int partyIconPaletteTableLength = -1;
 
     @Override
     public List<PokemonSpriteData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
@@ -58,11 +64,6 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         }
 
         MainCodeFile arm9 = (MainCodeFile) codeBinaries.get(GameCodeBinaries.ARM9);
-        MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
-        arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
-        int offset = arm9Reader.readInt();
-        arm9Reader.setPosition(offset - arm9.getRamStartAddress());
-
 
         Narc sprites = narcs.get(GameFiles.BATTLE_SPRITES);
         Narc spriteHeights = narcs.get(GameFiles.BATTLE_SPRITE_HEIGHT);
@@ -70,9 +71,30 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         Narc partyIcons = narcs.get(GameFiles.PARTY_ICONS);
         ArrayList<PokemonSpriteData> data = new ArrayList<>();
 
-        Palette partyIconPalette = new Palette(partyIcons.getFile(0), 4);
+        PokemonSpriteData.BattleSpriteNarcPattern[] spritesNarcPattern = PokemonSpriteData.BattleSpriteNarcPattern.values();
+        PokemonSpriteData.BattleSpriteHeightOffsetsPattern[] spriteHeightOffsetsPattern = PokemonSpriteData.BattleSpriteHeightOffsetsPattern.values();
+
+        int numSpecies = sprites.getFiles().size() / spritesNarcPattern.length;
+
+        // read the entire party icon palette index table up front so the shared arm9 buffer is only
+        // touched while its lock is held
+        int[] partyIconPaletteIndices;
+        arm9.lock();
+        try {
+            MemBuf.MemBufReader arm9Reader = arm9.getPhysicalAddressBuffer().reader();
+            arm9Reader.setPosition(Tables.PARTY_ICON_PALETTE.getPointerOffset());
+            int offset = arm9Reader.readInt();
+            arm9Reader.setPosition(offset - arm9.getRamStartAddress());
+            partyIconPaletteIndices = arm9Reader.readBytesI(numSpecies);
+        }
+        finally {
+            arm9.unlock();
+        }
+        partyIconPaletteTableLength = partyIconPaletteIndices.length;
+
+        Palette partyIconPalette = new Palette(partyIcons.getFile(0), 0); // read the file's own bit depth
         partyIconStartingFiles = new ArrayList<>();
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < NUM_PARTY_ICON_STARTING_FILES; i++)
         {
             partyIconStartingFiles.add(partyIcons.getFile(i));
         }
@@ -80,16 +102,14 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
         MemBuf spriteMetadataBuffer = MemBuf.create(spriteMetadata.getFile(0));
         MemBuf.MemBufReader spriteMetadataReader = spriteMetadataBuffer.reader();
 
-        PokemonSpriteData.BattleSpriteNarcPattern[] spritesNarcPattern = PokemonSpriteData.BattleSpriteNarcPattern.values();
-        PokemonSpriteData.BattleSpriteHeightOffsetsPattern[] spriteHeightOffsetsPattern = PokemonSpriteData.BattleSpriteHeightOffsetsPattern.values();
-        for (int i = 0; i < sprites.getFiles().size() / spritesNarcPattern.length; i++)
+        for (int i = 0; i < numSpecies; i++)
         {
             BytesDataContainer container = new BytesDataContainer();
             for (PokemonSpriteData.BattleSpriteNarcPattern entry : spritesNarcPattern)
             {
                 container.insert(GameFiles.BATTLE_SPRITES, entry, sprites.getFile((i*spritesNarcPattern.length) + entry.getIndex()));
             }
-            container.insert(GameFiles.PARTY_ICONS, null, partyIcons.getFile(i + 7));
+            container.insert(GameFiles.PARTY_ICONS, null, partyIcons.getFile(i + NUM_PARTY_ICON_STARTING_FILES));
             container.insert(GameFiles.BATTLE_SPRITE_METADATA, null, spriteMetadataReader.readBytes(89));
             for (PokemonSpriteData.BattleSpriteHeightOffsetsPattern entry : spriteHeightOffsetsPattern)
             {
@@ -98,11 +118,20 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
 
             PokemonSpriteData species = new PokemonSpriteData(container);
             species.getPartyIcon().setPalette(partyIconPalette);
-            int val = arm9Reader.readUInt8();
-            if (val <= MAX_PARTY_ICON_PALETTE_VALUE)
-                species.setPartyIconPaletteIndex(val);
+            // the raw value is stored even when it is out of the range the editor knows about, otherwise
+            // simply loading and saving a ROM would rewrite the table
+            species.setPartyIconPaletteIndex(partyIconPaletteIndices[i]);
 
             data.add(species);
+        }
+
+        // Party icons after the per-species block (alternate forms, egg/substitute icons, etc.) are not part
+        // of the per-species editing model. Preserve them verbatim, as with the leading files, so that loading
+        // and saving a ROM round-trips the whole narc instead of dropping them.
+        partyIconTrailingFiles = new ArrayList<>();
+        for (int i = NUM_PARTY_ICON_STARTING_FILES + numSpecies; i < partyIcons.getFiles().size(); i++)
+        {
+            partyIconTrailingFiles.add(partyIcons.getFile(i));
         }
 
         return data;
@@ -140,11 +169,15 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
             MemBuf spriteMetadataBuffer = MemBuf.create();
             MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
 
-            if (partyIconStartingFiles != null)
-                partyIconSubfiles.addAll(partyIconStartingFiles);
-
-            for (PokemonSpriteData entry : data)
+            if (partyIconStartingFiles == null || partyIconTrailingFiles == null)
             {
+                throw new IllegalStateException("The party icon narc's leading/trailing files are not known - generateDataList() must be run on this parser instance before processDataList()");
+            }
+            partyIconSubfiles.addAll(partyIconStartingFiles);
+
+            for (int idx = 0; idx < data.size(); idx++)
+            {
+                PokemonSpriteData entry = data.get(idx);
                 BytesDataContainer saveResults = entry.save();
 
                 spritesSubfiles.add(saveResults.get(GameFiles.BATTLE_SPRITES, PokemonSpriteData.BattleSpriteNarcPattern.FEMALE_BACK));
@@ -162,8 +195,13 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
                 spriteMetadataWriter.write(saveResults.get(GameFiles.BATTLE_SPRITE_METADATA, null));
 
                 partyIconSubfiles.add(saveResults.get(GameFiles.PARTY_ICONS, null));
-                arm9Writer.writeBytes(entry.getPartyIconPaletteIndex());
+                // the arm9 table is a fixed size - writing more entries than it holds would run over
+                // whatever follows it
+                if (idx < partyIconPaletteTableLength)
+                    arm9Writer.writeBytes(entry.getPartyIconPaletteIndex() & 0xff);
             }
+
+            partyIconSubfiles.addAll(partyIconTrailingFiles);
 
             metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
 

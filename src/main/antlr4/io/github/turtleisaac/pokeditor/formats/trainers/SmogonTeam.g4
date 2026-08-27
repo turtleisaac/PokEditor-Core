@@ -8,7 +8,7 @@ team: (speciesEntry)+ EOF?;
 
 move: '-' WHITESPACE+ nameWithSpace WHITESPACE*? NEWLINE? ;
 
-speciesEntry : NEWLINE*? species ability? level? shiny? effortValues? nature? individualValues? move move? move? move? NEWLINE*? ;
+speciesEntry : NEWLINE*? species ability? level? shiny? effortValues? nature? individualValues? move? move? move? move? NEWLINE*? ;
 
 species: NEWLINE NAME WHITESPACE+? item? WHITESPACE*? NEWLINE ;
 item: '@' WHITESPACE+ nameWithSpace ;

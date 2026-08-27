@@ -47,9 +47,17 @@ public class LearnsetParser implements GenericParser<LearnsetData>
         Narc learnsets = narcs.get(GameFiles.LEVEL_UP_LEARNSETS);
         ArrayList<LearnsetData> data = new ArrayList<>();
 
-        for (byte[] subfile : learnsets.getFiles())
+        List<byte[]> subfiles = learnsets.getFiles();
+        for (int idx = 0; idx < subfiles.size(); idx++)
         {
-            data.add(new LearnsetData(new BytesDataContainer(GameFiles.LEVEL_UP_LEARNSETS, null, subfile)));
+            try
+            {
+                data.add(new LearnsetData(new BytesDataContainer(GameFiles.LEVEL_UP_LEARNSETS, null, subfiles.get(idx))));
+            }
+            catch (RuntimeException e)
+            {
+                throw new RuntimeException("Failed to parse level-up learnset entry " + idx + ": " + e.getMessage(), e);
+            }
         }
 
         return data;

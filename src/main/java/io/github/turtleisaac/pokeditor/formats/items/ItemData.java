@@ -27,6 +27,7 @@ public class ItemData implements GenericFileData
     int fieldFunction; // u8
     int battleFunction; // u8
     int workType; // u8
+    int unknownPad; // u8 - unused byte at 0x0D, preserved verbatim
 
     //sleep, poison, burn, freeze, paralyze, confuse, attract, guard spec
     boolean[] statusRecoveries; // bitfield in this u8
@@ -49,6 +50,9 @@ public class ItemData implements GenericFileData
     int ppRecoveryAmount;
 
     int[] friendshipChangeAmounts;
+
+    int unknownBitfield2Bits; // upper nibble of the byte at 0x14, preserved verbatim
+    byte[] trailingPad; // trailing bytes of the entry, preserved verbatim
 
     public ItemData(BytesDataContainer files)
     {
@@ -84,7 +88,7 @@ public class ItemData implements GenericFileData
         fieldFunction = reader.readUInt8();
         battleFunction = reader.readUInt8();
         workType = reader.readUInt8();
-        reader.skip(1);
+        unknownPad = reader.readUInt8();
 
         statusRecoveries = new boolean[NUM_STATUS_RECOVERIES];
         int recovery = reader.readUInt8();
@@ -135,6 +139,8 @@ public class ItemData implements GenericFileData
         int bitfield2 = reader.readUInt8();
         evYieldToggles[NUM_EV_YIELDS - 1] = (bitfield2 & 1) == 1;
 
+        unknownBitfield2Bits = bitfield2 & 0xf0;
+
         friendshipChangeToggles = new boolean[NUM_FRIENDSHIP_CHANGE_FIELDS];
         for (int i = 0; i < NUM_FRIENDSHIP_CHANGE_FIELDS; i++)
         {
@@ -144,17 +150,20 @@ public class ItemData implements GenericFileData
         evYields = new int[NUM_EV_YIELDS];
         for (int i = 0; i < NUM_EV_YIELDS; i++)
         {
-            evYields[i] = reader.readByte(); // s8
+            evYields[i] = (byte) reader.readByte(); // s8
         }
 
-        hpRecoveryAmount = reader.readByte();
-        ppRecoveryAmount = reader.readByte();
+        hpRecoveryAmount = reader.readByte() & 0xFF;
+        ppRecoveryAmount = reader.readByte() & 0xFF;
 
         friendshipChangeAmounts = new int[NUM_FRIENDSHIP_CHANGE_FIELDS];
         for (int i = 0; i < NUM_FRIENDSHIP_CHANGE_FIELDS; i++)
         {
-            friendshipChangeAmounts[i] = reader.readByte();
+            friendshipChangeAmounts[i] = (byte) reader.readByte(); // s8: bitter berries lower friendship
         }
+
+        // getBuffer() returns everything between the read and write positions - i.e. the unread remainder
+        trailingPad = reader.getBuffer();
     }
 
     @Override
@@ -175,7 +184,7 @@ public class ItemData implements GenericFileData
         writer.writeShort((short) composite);
 
         writer.writeBytes(fieldFunction, battleFunction, workType);
-        writer.skip(1);
+        writer.writeBytes(unknownPad);
 
         composite = 0;
         for (int i = 0; i < statusRecoveries.length; i++)
@@ -194,11 +203,11 @@ public class ItemData implements GenericFileData
 
         for (int i = 1; i < 4; i += 2)
         {
-            composite = (statBoosts[i] & 0xf) | ((statBoosts[i + 1] & 0x3) << 4);
+            composite = (statBoosts[i] & 0xf) | ((statBoosts[i + 1] & 0xf) << 4);
             writer.writeBytes(composite);
         }
 
-        composite = (statBoosts[5] & 0xf) | ((statBoosts[6] & 0xf) << 4);
+        composite = (statBoosts[5] & 0xf) | ((statBoosts[6] & 0x3) << 4);
         composite |= (ppUpEffects[0] ? 1 : 0) << 6;
         composite |= (ppUpEffects[1] ? 1 : 0) << 7;
         writer.writeBytes(composite);
@@ -221,13 +230,21 @@ public class ItemData implements GenericFileData
         {
             composite |= (friendshipChangeToggles[i] ? 1 : 0) << i + 1;
         }
+        composite |= unknownBitfield2Bits & 0xf0;
         writer.writeBytes(composite);
 
         writer.writeBytes(evYields);
-        writer.writeBytes(hpRecoveryAmount, ppRecoveryAmount);
+        writer.writeBytes(hpRecoveryAmount & 0xFF, ppRecoveryAmount & 0xFF);
         writer.writeBytes(friendshipChangeAmounts);
 
-        writer.writeByteNumTimes((byte) 0, 2);
+        if (trailingPad != null && trailingPad.length != 0)
+        {
+            writer.write(trailingPad);
+        }
+        else
+        {
+            writer.writeByteNumTimes((byte) 0, 2);
+        }
 
         return new BytesDataContainer(GameFiles.ITEMS, null, dataBuf.reader().getBuffer());
     }
@@ -417,6 +434,20 @@ public class ItemData implements GenericFileData
 
     public void setStatBoosts(int[] statBoosts)
     {
+        if (statBoosts == null || statBoosts.length != NUM_STAT_BOOSTS)
+        {
+            throw new IllegalArgumentException("Stat boosts array must contain exactly " + NUM_STAT_BOOSTS + " entries");
+        }
+
+        for (int i = 0; i < NUM_STAT_BOOSTS; i++)
+        {
+            int max = (i == NUM_STAT_BOOSTS - 1) ? 0x3 : 0xf;
+            if (statBoosts[i] < 0 || statBoosts[i] > max)
+            {
+                throw new IllegalArgumentException("Stat boost at index " + i + " must be between 0 and " + max + " (got " + statBoosts[i] + ")");
+            }
+        }
+
         this.statBoosts = statBoosts;
     }
 

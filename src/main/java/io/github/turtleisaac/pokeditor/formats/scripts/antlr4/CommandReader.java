@@ -120,7 +120,7 @@ public class CommandReader extends CommandMacroVisitor<Integer>
                 return (int) parameterToValueMap.get(terminalNode.getText().substring(1));
             }
         } else if (terminalNode.symbol.getType() == MacrosLexer.NUMBER) {
-            return Integer.parseInt(terminalNode.getText());
+            return Integer.decode(terminalNode.getText());
         } else if (terminalNode.symbol.getType() == MacrosLexer.CURRENT_OFFSET) {
             return reader.getPosition() - 4;
         }

@@ -263,8 +263,10 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
 
                 if (type == ScriptFileLexer.NUMBER)
                 {
+                    // negative word parameters are emitted as their unsigned hexadecimal representation,
+                    // which does not fit in a signed parse
                     if (text.contains("0x"))
-                        return Integer.parseInt(text.substring(2), 16);
+                        return Integer.parseUnsignedInt(text.substring(2), 16);
                     else
                         return Integer.parseInt(text);
                 }
@@ -273,7 +275,7 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
                     if (text.startsWith("0x"))
                     {
                         try {
-                            return Integer.parseInt(text.substring(2), 16);
+                            return Integer.parseUnsignedInt(text.substring(2), 16);
                         } catch(NumberFormatException ignored) {}
                     }
                     return text;
@@ -291,6 +293,66 @@ public class ScriptDataProducer extends ScriptFileBaseVisitor<Void>
     @Override
     public Void visitAction_command(ScriptFileParser.Action_commandContext ctx)
     {
+        List<String> parameters = new ArrayList<>();
+
+        for (ParseTree child : ctx.children)
+        {
+            if (child instanceof ScriptFileParser.Action_parametersContext actionParametersContext)
+            {
+                if (actionParametersContext.children == null)
+                    continue;
+
+                for (ParseTree parametersChild : actionParametersContext.children)
+                {
+                    if (parametersChild instanceof ScriptFileParser.Action_parameterContext parameterContext)
+                        parameters.add(parameterContext.getText().trim());
+                }
+            }
+        }
+
+        if (parameters.size() != 2)
+        {
+            scriptCompilationException.addSuppressed(new ScriptCompilationException(String.format("An action requires a movement and a duration, but %d parameter(s) were provided: \"%s\"", parameters.size(), ctx.getText().trim())));
+            return null;
+        }
+
+        String movement = parameters.get(0);
+
+        Integer id = null;
+        String name = null;
+        for (Map.Entry<Integer, String> entry : FieldScriptParser.movementNames.entrySet())
+        {
+            if (entry.getValue().equalsIgnoreCase(movement))
+            {
+                id = entry.getKey();
+                name = entry.getValue();
+                break;
+            }
+        }
+
+        if (id == null)
+        {
+            // Movements_Hg.json does not name every opcode, so a movement may legitimately be written as a number
+            try {
+                id = Integer.decode(movement);
+            }
+            catch (NumberFormatException e) {
+                scriptCompilationException.addSuppressed(new ScriptCompilationException(String.format("\"%s\" is not a valid movement name or id", movement)));
+                return null;
+            }
+        }
+
+        int parameter;
+        try {
+            parameter = Integer.decode(parameters.get(1));
+        }
+        catch (NumberFormatException e) {
+            scriptCompilationException.addSuppressed(new ScriptCompilationException(String.format("\"%s\" is not a valid duration for the movement \"%s\"", parameters.get(1), movement)));
+            return null;
+        }
+
+        data.add(name != null ? new FieldScriptData.ActionCommand(name, id, parameter) : new FieldScriptData.ActionCommand(id, parameter));
+
         return super.visitAction_command(ctx);
     }
 

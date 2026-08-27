@@ -1,5 +1,7 @@
 package io.github.turtleisaac.pokeditor.gamedata;
 
+import java.util.Objects;
+
 public enum Tables
 {
     PARTY_ICON_PALETTE,
@@ -9,21 +11,43 @@ public enum Tables
     TM_HM_MOVES
     ;
 
+    private static final int UNSET_POINTER_OFFSET = -1;
+
     private GameCodeBinaries pointerLocation;
-    private int pointerOffset;
+    private int pointerOffset = UNSET_POINTER_OFFSET;
 
     public GameCodeBinaries getPointerLocation()
     {
+        if (pointerLocation == null)
+        {
+            throw new IllegalStateException("The code binary containing the " + name() + " table is not known for the base ROM which is currently loaded");
+        }
         return pointerLocation;
     }
 
     public int getPointerOffset()
     {
+        if (pointerOffset == UNSET_POINTER_OFFSET)
+        {
+            throw new IllegalStateException("The offset of the " + name() + " table is not known for the base ROM which is currently loaded");
+        }
         return pointerOffset;
     }
 
-    public static void initialize(Game baseROM)
+
+    public static void initialize(Game baseROM, Game.Region region)
     {
+        Objects.requireNonNull(baseROM, "A base ROM must be provided in order to initialize the table pointers");
+        Objects.requireNonNull(region, "The region of the base ROM must be provided in order to initialize the table pointers - it comes from Game.parseBaseRom()");
+
+        // every constant is reset first, otherwise switching between ROMs leaves the previous ROM's
+        // pointers in place for any table the new ROM does not assign
+        for (Tables table : values())
+        {
+            table.pointerLocation = null;
+            table.pointerOffset = UNSET_POINTER_OFFSET;
+        }
+
         switch (baseROM) {
             case Platinum -> {
                 PARTY_ICON_PALETTE.pointerLocation = GameCodeBinaries.ARM9;
@@ -31,7 +55,7 @@ public enum Tables
                 TRAINER_CLASS_PRIZE_MONEY.pointerLocation = GameCodeBinaries.BATTLE;
                 TM_HM_MOVES.pointerLocation = GameCodeBinaries.ARM9;
                 ITEMS.pointerLocation = GameCodeBinaries.ARM9;
-                switch (baseROM.getRegion()) {
+                switch (region) {
                     case USA -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x079f80;
                         TRAINER_CLASS_PRIZE_MONEY.pointerOffset = 0x816c;
@@ -88,7 +112,7 @@ public enum Tables
                 TRAINER_CLASS_GENDER.pointerLocation = GameCodeBinaries.ARM9;
                 TM_HM_MOVES.pointerLocation = GameCodeBinaries.ARM9;
                 ITEMS.pointerLocation = GameCodeBinaries.ARM9;
-                switch (baseROM.getRegion()) {
+                switch (region) {
                     case USA -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x074408;
                         TRAINER_CLASS_GENDER.pointerOffset = 0x073600;
@@ -126,7 +150,7 @@ public enum Tables
                 TRAINER_CLASS_GENDER.pointerLocation = GameCodeBinaries.ARM9;
                 TM_HM_MOVES.pointerLocation = GameCodeBinaries.ARM9;
                 ITEMS.pointerLocation = GameCodeBinaries.ARM9;
-                switch (baseROM.getRegion()) {
+                switch (region) {
                     case USA -> {
                         PARTY_ICON_PALETTE.pointerOffset = 0x074408;
                         TRAINER_CLASS_GENDER.pointerOffset = 0x073600;
@@ -177,6 +201,7 @@ public enum Tables
                     }
                 }
             }
+            default -> throw new UnsupportedOperationException("Unsupported base ROM: " + baseROM);
         }
     }
 }

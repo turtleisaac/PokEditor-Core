@@ -24,11 +24,31 @@ public class SmogonTeamImporter extends SmogonTeamBaseVisitor<Void>
     {
         SmogonTeamImporter importer = new SmogonTeamImporter(stringReplacementFunction);
 
-        SmogonTeamLexer lexer = new SmogonTeamLexer(CharStreams.fromString(text));
+        // the grammar requires each species entry to start on a fresh line and the paste to end with one
+        String normalized = text;
+        if (!normalized.startsWith("\n") && !normalized.startsWith("\r"))
+            normalized = "\n" + normalized;
+        if (!normalized.endsWith("\n"))
+            normalized = normalized + "\n";
+
+        SmogonTeamLexer lexer = new SmogonTeamLexer(CharStreams.fromString(normalized));
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         SmogonTeamParser parser = new SmogonTeamParser(tokens);
-        importer.visitTeam(parser.team());
+        SmogonTeamParser.TeamContext team = parser.team();
+
+        int syntaxErrors = parser.getNumberOfSyntaxErrors();
+        if (syntaxErrors != 0)
+        {
+            throw new SmogonImportException(String.format("The provided team could not be understood - %d syntax error(s) were found in it", syntaxErrors));
+        }
+
+        importer.visitTeam(team);
+
+        if (importer.trainerPartyEntries.size() > TrainerData.MAX_NUMBER_TRAINER_MONS)
+        {
+            throw new SmogonImportException(String.format("A trainer can have at most %d Pokemon, but the provided team contains %d", TrainerData.MAX_NUMBER_TRAINER_MONS, importer.trainerPartyEntries.size()));
+        }
 
         return importer.trainerPartyEntries;
     }
@@ -125,6 +145,34 @@ public class SmogonTeamImporter extends SmogonTeamBaseVisitor<Void>
     }
 
     @Override
+    public Void visitIndividualValues(SmogonTeamParser.IndividualValuesContext ctx)
+    {
+        // the gen 4 trainer format has a single "difficulty" byte rather than per-stat IVs, and the exporter
+        // writes the same value out for every stat, so the first entry is the one which matters
+        for (ParseTree child : ctx.children)
+        {
+            if (child instanceof SmogonTeamParser.EffortValueEntryContext entryContext)
+            {
+                for (ParseTree entryChild : entryContext.children)
+                {
+                    if (entryChild instanceof TerminalNodeImpl terminalNode && terminalNode.symbol.getType() == SmogonTeamLexer.NUMBER)
+                    {
+                        int iv = Integer.parseInt(terminalNode.getText());
+                        if (iv < 0 || iv > MAX_IV)
+                        {
+                            throw new SmogonImportException("An IV must be between 0 and " + MAX_IV + ". Provided: " + iv);
+                        }
+                        current.setDifficultyValue(iv * MAX_DIFFICULTY_VALUE / MAX_IV);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public Void visitNature(SmogonTeamParser.NatureContext ctx)
     {
         return super.visitNature(ctx);
@@ -149,6 +197,27 @@ public class SmogonTeamImporter extends SmogonTeamBaseVisitor<Void>
         }
 
         return null;
+    }
+
+    /**
+     * The largest value an individual value can hold
+     */
+    public static final int MAX_IV = 31;
+
+    /**
+     * The largest value a trainer party entry's difficulty byte can hold
+     */
+    public static final int MAX_DIFFICULTY_VALUE = 255;
+
+    /**
+     * Thrown when a pasted Smogon team cannot be turned into a trainer's party
+     */
+    public static class SmogonImportException extends RuntimeException
+    {
+        public SmogonImportException(String message)
+        {
+            super(message);
+        }
     }
 
     public enum SmogonStringSources

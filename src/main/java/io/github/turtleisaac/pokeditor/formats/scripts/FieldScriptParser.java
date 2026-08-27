@@ -130,9 +130,10 @@ public class FieldScriptParser implements GenericParser<GenericScriptData>
         Narc scripts = narcs.get(GameFiles.FIELD_SCRIPTS);
         ArrayList<GenericScriptData> data = new ArrayList<>();
 
-//        int i = 0;
-        for (byte[] subfile : scripts.getFiles())
+        List<byte[]> subfiles = scripts.getFiles();
+        for (int fileIndex = 0; fileIndex < subfiles.size(); fileIndex++)
         {
+            byte[] subfile = subfiles.get(fileIndex);
 //            System.out.print(i);
 //            if (i == 271) {
 //                System.currentTimeMillis();
@@ -145,9 +146,8 @@ public class FieldScriptParser implements GenericParser<GenericScriptData>
             else
             {
 //                System.out.println(" (Normal)");
-                data.add(new FieldScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile)));
+                data.add(new FieldScriptData(new BytesDataContainer(GameFiles.FIELD_SCRIPTS, null, subfile), fileIndex));
             }
-//            i++;
         }
 
         return data;

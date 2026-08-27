@@ -41,6 +41,8 @@ public class TrainerData implements GenericFileData
     int[] items;
 
     boolean[] ai;
+    int unknownFlagBits;
+    long unknownAiBits;
     int battleType2;
     short unknown1;
     short unknown2;
@@ -82,6 +84,7 @@ public class TrainerData implements GenericFileData
         int flag = reader.readUInt8();
         movesEnabled = (flag & 1) == 1;
         itemEnabled = ((flag >> 1) & 1) == 1;
+        unknownFlagBits = flag & ~0b11;
 
         trainerClass = reader.readUInt8();
         battleType = reader.readUInt8();
@@ -101,6 +104,7 @@ public class TrainerData implements GenericFileData
         {
             ai[i] = ((aiComposite >> i) & 1) == 1;
         }
+        unknownAiBits = aiComposite & ~((1L << NUMBER_AI_FLAGS) - 1) & 0xffffffffL;
 
         battleType2 = reader.readUInt8();
         unknown1 = reader.readUInt8();
@@ -121,7 +125,7 @@ public class TrainerData implements GenericFileData
 
             int combinedMon = reader.readUInt16();
             entry.setSpecies(combinedMon & 0x3ff);
-            entry.setAltForm(combinedMon >> 10);
+            entry.setAltForm((combinedMon >> 10) & 0x3f);
 
             if (itemEnabled)
             {
@@ -144,7 +148,19 @@ public class TrainerData implements GenericFileData
 
     public void setTeamFromSmogon(String text, BiFunction<SmogonTeamImporter.SmogonStringSources, String, Integer> stringReplacementFunction)
     {
-        trainerPartyEntries = SmogonTeamImporter.importSmogonTeam(text, stringReplacementFunction);
+        ArrayList<TrainerPartyEntry> imported = SmogonTeamImporter.importSmogonTeam(text, stringReplacementFunction);
+
+        if (imported.size() > MAX_NUMBER_TRAINER_MONS)
+        {
+            throw new SmogonTeamImporter.SmogonImportException(String.format("A trainer can have at most %d Pokemon, but the provided team contains %d", MAX_NUMBER_TRAINER_MONS, imported.size()));
+        }
+
+        if (imported.size() < MIN_NUMBER_TRAINER_MONS)
+        {
+            throw new SmogonTeamImporter.SmogonImportException(String.format("A trainer must have at least %d Pokemon, but the provided team contains %d", MIN_NUMBER_TRAINER_MONS, imported.size()));
+        }
+
+        trainerPartyEntries = imported;
     }
 
     @Override
@@ -154,7 +170,7 @@ public class TrainerData implements GenericFileData
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
         // trdata
-        int compositeFlags = (movesEnabled ? 1 : 0) | (itemEnabled ? 0b10 : 0);
+        int compositeFlags = (movesEnabled ? 1 : 0) | (itemEnabled ? 0b10 : 0) | (unknownFlagBits & ~0b11);
         writer.writeBytes(compositeFlags, trainerClass, battleType, trainerPartyEntries.size());
         for (int i = 0; i < NUMBER_TRAINER_ITEMS; i++)
         {
@@ -166,6 +182,7 @@ public class TrainerData implements GenericFileData
         {
             compositeAiFlags |= ((ai[i] ? 1 : 0) << i);
         }
+        compositeAiFlags |= (int) unknownAiBits;
         writer.writeInt(compositeAiFlags);
         writer.writeBytes(battleType2, unknown1, unknown2, unknown3);
 
@@ -179,7 +196,7 @@ public class TrainerData implements GenericFileData
         {
             writer.writeBytes(entry.getDifficultyValue(), entry.getAbility());
             writer.writeShort((short) entry.getLevel());
-            writer.writeShort((short)( ( (entry.getAltForm() & 0x7) << 10) | (entry.getSpecies() & 0x3ff) ) );
+            writer.writeShort((short)( ( (entry.getAltForm() & 0x3f) << 10) | (entry.getSpecies() & 0x3ff) ) );
 
             if (itemEnabled)
             {
@@ -388,8 +405,8 @@ public class TrainerData implements GenericFileData
         return sb.toString().trim();
     }
 
-    private static final int MIN_NUMBER_TRAINER_MONS = 1;
-    private static final int MAX_NUMBER_TRAINER_MONS = 6;
+    public static final int MIN_NUMBER_TRAINER_MONS = 1;
+    public static final int MAX_NUMBER_TRAINER_MONS = 6;
     private static final int NUMBER_MOVES = 4;
     private static final int NUMBER_TRAINER_ITEMS = 4;
     private static final int NUMBER_AI_FLAGS = 14;
@@ -510,15 +527,16 @@ public class TrainerData implements GenericFileData
             {
                 sb.append(String.format(" @ %s", intReplacementFunction.apply(SmogonTeamImporter.SmogonStringSources.ITEMS, heldItem)));
             }
-            sb.append("\n").append("Level: ").append(level).append("\n");
+            // the grammar requires whitespace between the species line's contents and the newline
+            sb.append(" \n").append("Level: ").append(level).append("\n");
 
-            int ivs = difficultyValue * 31 / 255;
+            int ivs = difficultyValue * SmogonTeamImporter.MAX_IV / SmogonTeamImporter.MAX_DIFFICULTY_VALUE;
             sb.append("IVs: ");
             for (int i = 0; i < statNames.length; i++)
             {
-                sb.append(ivs).append(" ").append(statNames[i]).append(" ");
-                if (i != 5)
-                    sb.append("/");
+                if (i != 0)
+                    sb.append(" / ");
+                sb.append(ivs).append(" ").append(statNames[i]);
             }
             sb.append("\n");
 

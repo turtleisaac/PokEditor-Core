@@ -2,6 +2,7 @@ package io.github.turtleisaac.pokeditor.formats.personal;
 
 import io.github.turtleisaac.nds4j.framework.MemBuf;
 import io.github.turtleisaac.pokeditor.formats.BytesDataContainer;
+import io.github.turtleisaac.pokeditor.formats.FieldWidth;
 import io.github.turtleisaac.pokeditor.gamedata.GameFiles;
 import io.github.turtleisaac.pokeditor.formats.GenericFileData;
 
@@ -40,6 +41,8 @@ public class PersonalData implements GenericFileData
     private int runChance; // u8
 
     private int dexColor; // u8:7
+    private byte[] padding; // 2 bytes of padding, preserved verbatim so a save round-trips
+    private int unknownEvYieldBits; // bits 12-15 of the ev yield halfword, preserved verbatim
     private boolean flip;  // u8:1
 
     private boolean[] tmCompatibility; // u8[16], each TM is a single bit
@@ -106,6 +109,7 @@ public class PersonalData implements GenericFileData
         baseExp = reader.readUInt8();
 
         int evYields = reader.readUInt16();
+        unknownEvYieldBits = evYields & 0xF000;
         hpEvYield = getHpEv(evYields);
         atkEvYield = getAtkEv(evYields);
         defEvYield = getDefEv(evYields);
@@ -131,7 +135,7 @@ public class PersonalData implements GenericFileData
         dexColor = colorFlip & 0x7F;
         flip = ((colorFlip & 0x80) >> 7) == 1;
 
-        reader.skip(2); // 2 bytes padding
+        padding = reader.readBytes(NUMBER_PADDING_BYTES); // 2 bytes padding, preserved verbatim
         byte[] tmLearnset = reader.readBytes(16);
 
         this.tmCompatibility = new boolean[NUMBER_TM_HM_BITS];
@@ -147,12 +151,23 @@ public class PersonalData implements GenericFileData
         MemBuf dataBuf = MemBuf.create();
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
-        writer.writeBytes(hp, atk, def, speed, spAtk, spDef, type1, type2, catchRate, baseExp);
+        // the setters guard only the upper bound, so a negative reached this point and was
+        // narrowed by writeBytes into a large positive one - setHp(-1) was stored as 255
+        writer.writeBytes(FieldWidth.u8(hp, "HP"), FieldWidth.u8(atk, "Attack"),
+                FieldWidth.u8(def, "Defense"), FieldWidth.u8(speed, "Speed"),
+                FieldWidth.u8(spAtk, "Sp. Attack"), FieldWidth.u8(spDef, "Sp. Defense"),
+                FieldWidth.u8(type1, "Type 1"), FieldWidth.u8(type2, "Type 2"),
+                FieldWidth.u8(catchRate, "Catch rate"), FieldWidth.u8(baseExp, "Base experience"));
         writer.writeShort(getCombinedEvShort());
-        writer.writeShort((short)uncommonItem);
-        writer.writeShort((short)rareItem);
-        writer.writeBytes(genderRatio,hatchMultiplier,baseHappiness,expRate,eggGroup1,eggGroup2,ability1,ability2,runChance,getCombinedColorFlip());
-        writer.skip(2);
+        writer.writeShort((short) FieldWidth.u16(uncommonItem, "Uncommon held item"));
+        writer.writeShort((short) FieldWidth.u16(rareItem, "Rare held item"));
+        writer.writeBytes(FieldWidth.u8(genderRatio, "Gender ratio"),
+                FieldWidth.u8(hatchMultiplier, "Hatch multiplier"),
+                FieldWidth.u8(baseHappiness, "Base happiness"), FieldWidth.u8(expRate, "Exp rate"),
+                FieldWidth.u8(eggGroup1, "Egg group 1"), FieldWidth.u8(eggGroup2, "Egg group 2"),
+                FieldWidth.u8(ability1, "Ability 1"), FieldWidth.u8(ability2, "Ability 2"),
+                FieldWidth.u8(runChance, "Run chance"), getCombinedColorFlip());
+        writer.write(padding != null ? padding : new byte[NUMBER_PADDING_BYTES]);
 
         int[] tmLearnsetData = new int[16];
         for (int i = 0; i < NUMBER_TM_HM_BITS; i++)
@@ -224,19 +239,20 @@ public class PersonalData implements GenericFileData
     private short getCombinedEvShort()
     {
         int val = 0;
-        val |= hpEvYield;
-        val |= (atkEvYield << 2);
-        val |= (defEvYield << 4);
-        val |= (speedEvYield << 6);
-        val |= (spAtkEvYield << 8);
-        val |= (spDefEvYield << 10);
+        val |= (hpEvYield & 0x03);
+        val |= ((atkEvYield & 0x03) << 2);
+        val |= ((defEvYield & 0x03) << 4);
+        val |= ((speedEvYield & 0x03) << 6);
+        val |= ((spAtkEvYield & 0x03) << 8);
+        val |= ((spDefEvYield & 0x03) << 10);
+        val |= (unknownEvYieldBits & 0xF000);
 
         return (short) val;
     }
 
     private int getCombinedColorFlip()
     {
-        return dexColor | (flip ? 0x80 : 0);
+        return (dexColor & 0x7F) | (flip ? 0x80 : 0);
     }
 
     public int getHp()
@@ -311,6 +327,17 @@ public class PersonalData implements GenericFileData
         this.spDef = spDef;
     }
 
+    /**
+     * How many Pokemon types an unmodified Generation 4 game defines: 18, numbered 0 to 17.
+     * <p>
+     * This is what retail data contains, not a limit on what the field can hold - the type is
+     * stored in a whole byte, and ROM hacks with more than 18 types are exactly the thing this
+     * library exists to edit. The setters therefore do not enforce it; only the byte width is
+     * enforced, at save. A user interface that can only name or colour 18 types should say so
+     * itself rather than have the data layer refuse the value.
+     */
+    public static final int NUMBER_OF_TYPES = 18;
+
     public int getType1()
     {
         return type1;
@@ -318,8 +345,6 @@ public class PersonalData implements GenericFileData
 
     public void setType1(int type1)
     {
-        if (type1 >= 19)  // TODO have a way to know for certain the number of types
-            throw new RuntimeException("Maximum type value is 18. Provided: " + type1);
         this.type1 = type1;
     }
 
@@ -330,8 +355,6 @@ public class PersonalData implements GenericFileData
 
     public void setType2(int type2)
     {
-        if (type2 >= 19)  // TODO have a way to know for certain the number of types
-            throw new RuntimeException("Maximum type value is 18. Provided: " + type2);
         this.type2 = type2;
     }
 
@@ -366,8 +389,8 @@ public class PersonalData implements GenericFileData
 
     public void setHpEvYield(int hpEvYield)
     {
-        if (hpEvYield >= 5)
-            throw new RuntimeException("Maximum HP EV yield value is 4. Provided: " + hpEvYield);
+        if (hpEvYield < 0 || hpEvYield > 3)
+            throw new RuntimeException("Maximum HP EV yield value is 3. Provided: " + hpEvYield);
         this.hpEvYield = hpEvYield;
     }
 
@@ -378,8 +401,8 @@ public class PersonalData implements GenericFileData
 
     public void setAtkEvYield(int atkEvYield)
     {
-        if (atkEvYield >= 5)
-            throw new RuntimeException("Maximum Attack EV yield value is 4. Provided: " + atkEvYield);
+        if (atkEvYield < 0 || atkEvYield > 3)
+            throw new RuntimeException("Maximum Attack EV yield value is 3. Provided: " + atkEvYield);
         this.atkEvYield = atkEvYield;
     }
 
@@ -390,8 +413,8 @@ public class PersonalData implements GenericFileData
 
     public void setDefEvYield(int defEvYield)
     {
-        if (defEvYield >= 5)
-            throw new RuntimeException("Maximum Defense EV yield value is 4. Provided: " + defEvYield);
+        if (defEvYield < 0 || defEvYield > 3)
+            throw new RuntimeException("Maximum Defense EV yield value is 3. Provided: " + defEvYield);
         this.defEvYield = defEvYield;
     }
 
@@ -402,8 +425,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpeedEvYield(int speedEvYield)
     {
-        if (speedEvYield >= 5)
-            throw new RuntimeException("Maximum Speed EV yield value is 4. Provided: " + speedEvYield);
+        if (speedEvYield < 0 || speedEvYield > 3)
+            throw new RuntimeException("Maximum Speed EV yield value is 3. Provided: " + speedEvYield);
         this.speedEvYield = speedEvYield;
     }
 
@@ -414,8 +437,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpAtkEvYield(int spAtkEvYield)
     {
-        if (spAtkEvYield >= 5)
-            throw new RuntimeException("Maximum Special Attack EV yield value is 4. Provided: " + spAtkEvYield);
+        if (spAtkEvYield < 0 || spAtkEvYield > 3)
+            throw new RuntimeException("Maximum Special Attack EV yield value is 3. Provided: " + spAtkEvYield);
         this.spAtkEvYield = spAtkEvYield;
     }
 
@@ -426,8 +449,8 @@ public class PersonalData implements GenericFileData
 
     public void setSpDefEvYield(int spDefEvYield)
     {
-        if (spDefEvYield >= 5)
-            throw new RuntimeException("Maximum Special Defense EV yield value is 4. Provided: " + spDefEvYield);
+        if (spDefEvYield < 0 || spDefEvYield > 3)
+            throw new RuntimeException("Maximum Special Defense EV yield value is 3. Provided: " + spDefEvYield);
         this.spDefEvYield = spDefEvYield;
     }
 
@@ -570,8 +593,8 @@ public class PersonalData implements GenericFileData
 
     public void setDexColor(int dexColor)
     {
-        if (dexColor >= 129)
-            throw new RuntimeException("Maximum dex color value is 128. Provided: " + dexColor);
+        if (dexColor < 0 || dexColor > 0x7F)
+            throw new RuntimeException("Maximum dex color value is 127. Provided: " + dexColor);
         this.dexColor = dexColor;
     }
 
@@ -596,6 +619,7 @@ public class PersonalData implements GenericFileData
     }
 
     private static final int NUMBER_TM_HM_BITS = 128;
+    private static final int NUMBER_PADDING_BYTES = 2;
     protected static final int NUMBER_TMS_HMS = 100;
 
     private static int getHpEv(int x)

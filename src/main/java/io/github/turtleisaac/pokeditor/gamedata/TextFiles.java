@@ -13,9 +13,19 @@ public enum TextFiles
     TRAINER_TEXT,
     TYPE_NAMES;
 
+    // 0 is a valid bank index, so an unknown bank has to be represented by something which isn't
+    static final int UNKNOWN_BANK = -1;
+
     private int value;
 
-    public int getValue() {return value;}
+    public int getValue()
+    {
+        if (value == UNKNOWN_BANK)
+        {
+            throw new IllegalStateException("The " + name() + " text bank index is not known for the base ROM which is currently loaded");
+        }
+        return value;
+    }
 
     public static void initialize(Game baseROM)
     {
@@ -50,6 +60,7 @@ public enum TextFiles
                 TRAINER_TEXT.value = HGSS_TRAINER_TEXT.value;
                 TYPE_NAMES.value = HGSS_TYPE_NAMES.value;
             }
+            default -> throw new UnsupportedOperationException("Unsupported base ROM: " + baseROM);
         }
     }
 
@@ -83,11 +94,11 @@ public enum TextFiles
         PLAT_TRAINER_CLASS_NAMES(619),
         HGSS_TRAINER_CLASS_NAMES(730),
 
-        DP_TRAINER_TEXT(0), //TODO change
+        DP_TRAINER_TEXT(TextFiles.UNKNOWN_BANK), //TODO find the real bank index
         PLAT_TRAINER_TEXT(617), //TODO change
         HGSS_TRAINER_TEXT(728),
 
-        DP_TYPE_NAMES(0), //TODO change
+        DP_TYPE_NAMES(TextFiles.UNKNOWN_BANK), //TODO find the real bank index
         PLAT_TYPE_NAMES(624),
         HGSS_TYPE_NAMES(735);
 

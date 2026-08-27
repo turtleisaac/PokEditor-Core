@@ -46,10 +46,24 @@ public class CommandMacro
 
         if (parameters.length != 0)
         {
+            int providedCount = parameterValues == null ? 0 : parameterValues.length;
+            if (providedCount != parameters.length)
+            {
+                throw new RuntimeException(String.format("The command \"%s\" expects %d parameter(s) %s but %d were provided", name, parameters.length, Arrays.toString(parameters), providedCount));
+            }
+
             int idx = 0;
             for (String parameter : parameters) {
                 Object param = parameterValues[idx++];
-                if (param instanceof Number number)
+                if (param == null)
+                {
+                    // A conditional/variable-length macro (.if-guarded, defaulted args) legitimately leaves
+                    // some declared parameters unread, so a null here is not necessarily an error. The writer
+                    // only visits a parameter when its branch is actually taken, and raises a precise error at
+                    // that point if a genuinely-required parameter turns out to be missing. See CommandWriter.
+                    continue;
+                }
+                else if (param instanceof Number number)
                     parameterToValueMap.put(parameter, number);
                 else if (param instanceof String str)
                 {
@@ -73,10 +87,18 @@ public class CommandMacro
                             throw new RuntimeException(String.format("An invalid parameter was provided (%s) in \"%s\"", str, this));
                     }
                 }
+                else
+                {
+                    throw new RuntimeException(String.format("The parameter \"%s\" of the command \"%s\" was provided a value of an unsupported type (%s): %s", parameter, name, param.getClass().getName(), param));
+                }
             }
         }
+        else if (parameterValues != null && parameterValues.length != 0)
+        {
+            throw new RuntimeException(String.format("The command \"%s\" takes no parameters but %d were provided", name, parameterValues.length));
+        }
 
-        CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap);
+        CommandWriter commandWriter = new CommandWriter(memBuf.writer(), offsetObtainer, parameterToValueMap, this);
         commandWriter.visitEntry(entryContext);
     }
 

@@ -38,10 +38,45 @@ import java.util.Map;
 
 public class PersonalParser implements GenericParser<PersonalData>
 {
-    public static final int[] tmMoveIdNumbers = new int[PersonalData.NUMBER_TMS_HMS];
-    public static final int[] tmMoveTypes = new int[PersonalData.NUMBER_TMS_HMS];
-    private static boolean hasReadTmMoveIds = false;
-    private static boolean hasReadTmMoveTypes = false;
+    // Instance state rather than static, which is where per-parser state belongs. Note this
+    // buys no isolation between ROMs on its own: the parser is bound as a Guice singleton, so
+    // there is exactly one instance for the lifetime of the process and instance fields are as
+    // process-global as static ones were. What actually keeps one ROM's data out of another is
+    // DataManager discarding its caches when the ROM changes.
+    private final int[] tmMoveIdNumbers = new int[PersonalData.NUMBER_TMS_HMS];
+    private final int[] tmMoveTypes = new int[PersonalData.NUMBER_TMS_HMS];
+    // the palette index exactly as it was read, so that indices this editor does not recognize survive a save
+    private final int[] tmMovePaletteIndices = new int[PersonalData.NUMBER_TMS_HMS];
+    private boolean hasReadTmMoveIds = false;
+    private boolean hasReadTmMoveTypes = false;
+
+    /**
+     * Gets the move ID assigned to each TM/HM in the currently loaded ROM
+     * @return an <code>int[]</code>
+     */
+    public int[] getTmMoveIdNumbers()
+    {
+        return tmMoveIdNumbers;
+    }
+
+    /**
+     * Gets the move ID assigned to the given TM/HM in the currently loaded ROM
+     * @param tmID an <code>int</code>
+     * @return an <code>int</code>
+     */
+    public int getTmMoveIdNumber(int tmID)
+    {
+        return tmMoveIdNumbers[tmID];
+    }
+
+    /**
+     * Gets the type of the move assigned to each TM/HM in the currently loaded ROM
+     * @return an <code>int[]</code>
+     */
+    public int[] getTmMoveTypes()
+    {
+        return tmMoveTypes;
+    }
 
     @Override
     public List<PersonalData> generateDataList(Map<GameFiles, Narc> narcs, Map<GameCodeBinaries, CodeBinary> codeBinaries)
@@ -84,7 +119,8 @@ public class PersonalParser implements GenericParser<PersonalData>
             for (int i = 0; i < PersonalData.NUMBER_TMS_HMS; i++)
             {
                 reader.skip(4);
-                tmMoveTypes[i] = tmHmPaletteIndexToType(reader.readUInt16());
+                tmMovePaletteIndices[i] = reader.readUInt16();
+                tmMoveTypes[i] = tmHmPaletteIndexToType(tmMovePaletteIndices[i]);
                 reader.skip(2);
             }
 
@@ -147,7 +183,12 @@ public class PersonalParser implements GenericParser<PersonalData>
                 for (int i = 0; i < PersonalData.NUMBER_TMS_HMS; i++)
                 {
                     writer.skip(4);
-                    writer.writeShort((short) typeToTmHmPaletteIndex(tmMoveTypes[i]));
+                    // if the type has not been changed, the index which was read is written straight back,
+                    // so an index this editor does not recognize is not silently rewritten to Normal
+                    int paletteIndex = tmHmPaletteIndexToType(tmMovePaletteIndices[i]) == tmMoveTypes[i]
+                            ? tmMovePaletteIndices[i]
+                            : typeToTmHmPaletteIndex(tmMoveTypes[i]);
+                    writer.writeShort((short) paletteIndex);
                     writer.skip(2);
                 }
             } finally {
@@ -217,6 +258,8 @@ public class PersonalParser implements GenericParser<PersonalData>
             case 0x19C -> 5; // rock
             case 0x19D -> 2; // flying
             case 0x262 -> 6; // bug
+            // an unrecognized index is reported as Normal, but the raw index is kept by the caller so that
+            // it can be written straight back out rather than rewritten to Normal's index
             default -> 0;
             //todo figure out how to handle ???/fairy
         };
@@ -242,13 +285,18 @@ public class PersonalParser implements GenericParser<PersonalData>
             case 5 -> 0x19C; // rock
             case 2 -> 0x19D; // flying
             case 6 -> 0x262; // bug
-            case 9 -> 0x191; // ???/fairy
-            default -> 0x192;
+            // NOTE: this mapping is deliberately NOT a bijection. Type 9 (???/fairy) has no TM/HM palette of
+            // its own, so it shares Psychic's index and therefore reads back as Psychic (14). The same is
+            // true of every unrecognized type, which shares Normal's index. Callers which need to preserve
+            // an index they did not change must write the original index back instead of round-tripping it
+            // through these two methods.
+            case 9 -> 0x191; // ???/fairy - shares Psychic's palette, reads back as Psychic
+            default -> 0x192; // shares Normal's palette, reads back as Normal
             //todo figure out how to handle ???/fairy
         };
     }
 
-    public static void updateTmType(int tmID, int moveID, List<MoveData> moves)
+    public void updateTmType(int tmID, int moveID, List<MoveData> moves)
     {
         tmMoveIdNumbers[tmID] = moveID;
         tmMoveTypes[tmID] = moves.get(moveID).getType();

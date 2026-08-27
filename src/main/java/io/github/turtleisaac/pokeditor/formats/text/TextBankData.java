@@ -42,10 +42,42 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
 
     private int seed;
 
+    private int bankIndex = -1;
+
     public TextBankData(BytesDataContainer files)
     {
         super();
         setData(files);
+    }
+
+    public TextBankData(BytesDataContainer files, int bankIndex)
+    {
+        super();
+        this.bankIndex = bankIndex;
+        setData(files);
+    }
+
+    /**
+     * Gets the index of this text bank within the text narc, or -1 if it is not known
+     * @return an <code>int</code>
+     */
+    public int getBankIndex()
+    {
+        return bankIndex;
+    }
+
+    /**
+     * Sets the index of this text bank within the text narc (used purely for error reporting)
+     * @param bankIndex an <code>int</code>
+     */
+    public void setBankIndex(int bankIndex)
+    {
+        this.bankIndex = bankIndex;
+    }
+
+    private String describe(int messageIdx)
+    {
+        return "text bank " + (bankIndex >= 0 ? String.valueOf(bankIndex) : "?") + ", message " + messageIdx;
     }
 
     @Override
@@ -56,7 +88,8 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
             throw new RuntimeException("Text file not provided to editor");
         }
 
-        MemBuf dataBuf = MemBuf.create(files.get(GameFiles.TEXT, null));
+        byte[] file = files.get(GameFiles.TEXT, null);
+        MemBuf dataBuf = MemBuf.create(file);
         MemBuf.MemBufReader reader = dataBuf.reader();
 
         int numEntries = reader.readUInt16();
@@ -73,6 +106,19 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
             key = ((seed * (i + 1) * 0x2fd) & 0xffff) | ((seed * (i + 1) * 0x2fd0000) & 0xffff0000);
             offsets[i] = reader.readInt() ^ key;
             sizes[i] = reader.readInt() ^ key;
+
+            if (sizes[i] < 0)
+            {
+                throw new TextEncodingException(describe(i) + " declares a negative length (" + sizes[i] + ")");
+            }
+            if (offsets[i] < 0 || offsets[i] > file.length)
+            {
+                throw new TextEncodingException(describe(i) + " declares an out of bounds offset (" + offsets[i] + ", file is " + file.length + " bytes)");
+            }
+            if (offsets[i] + sizes[i] * 2L > file.length)
+            {
+                throw new TextEncodingException(describe(i) + " runs past the end of the file (offset " + offsets[i] + ", length " + sizes[i] + " halfwords, file is " + file.length + " bytes)");
+            }
         }
 
 
@@ -108,13 +154,26 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
                 else if (c == 0xfffe)
                 {
                     // if the character is 0xfffe, then it's a special VAR case
+                    int[] binaryString = binaryStrings[messageIdx];
+
+                    if (j + 2 >= binaryString.length)
+                    {
+                        throw new TextEncodingException(describe(messageIdx) + " contains a truncated VAR() - the variable id and argument count run past the end of the message");
+                    }
+
                     text.append("VAR(");
                     StringBuilder args = new StringBuilder();
-                    args.append(binaryStrings[messageIdx][++j]);
-                    int argNum = binaryStrings[messageIdx][++j];
+                    args.append(binaryString[++j]);
+                    int argNum = binaryString[++j];
+
+                    if (argNum < 0 || j + argNum >= binaryString.length)
+                    {
+                        throw new TextEncodingException(describe(messageIdx) + " contains a VAR() declaring " + argNum + " argument(s), which runs past the end of the message");
+                    }
+
                     for (int k = 0; k < argNum; k++) {
                         args.append(", ");
-                        args.append(binaryStrings[messageIdx][++j]);
+                        args.append(binaryString[++j]);
                     }
                     args.append(")");
                     text.append(args);
@@ -145,8 +204,9 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
         ArrayList<List<Integer>> binaryStrings = new ArrayList<>();
 
         // encode text and write it
-        for (Message msg : this)
+        for (int messageIdx = 0; messageIdx < size(); messageIdx++)
         {
+            Message msg = get(messageIdx);
             String message = msg.text;
             tmpBinaryString = new ArrayList<>();
 
@@ -156,13 +216,29 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
                 String sub = message.substring(j, Math.min(j + 4, message.length()));
                 if (message.charAt(j) == '\\')
                 {
+                    if (j + 1 >= message.length())
+                    {
+                        throw new TextEncodingException(describe(messageIdx) + " ends with a lone '\\' escape character");
+                    }
+
                     switch (message.charAt(j + 1))
                     {
                         case 'r' -> tmpBinaryString.add(0x25bc);
                         case 'n' -> tmpBinaryString.add(0xe000);
                         case 'f' -> tmpBinaryString.add(0x25bd);
                         default -> {
-                            tmpBinaryString.add(Integer.parseInt(message.substring(j + 2, j + 6), 16));
+                            if (j + 6 > message.length())
+                            {
+                                throw new TextEncodingException(describe(messageIdx) + " contains a truncated escape sequence \"" + message.substring(j) + "\" - four hexadecimal digits are required");
+                            }
+
+                            String hex = message.substring(j + 2, j + 6);
+                            try {
+                                tmpBinaryString.add(Integer.parseInt(hex, 16));
+                            }
+                            catch (NumberFormatException e) {
+                                throw new TextEncodingException(describe(messageIdx) + " contains a malformed escape sequence \"" + message.substring(j, j + 6) + "\"", e);
+                            }
                             j += 4;
                         }
                     }
@@ -172,38 +248,47 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
                 {
                     int endOfVar = message.indexOf(')', j);
                     if (endOfVar == -1) {
-                        throw new RuntimeException("Could not find end of VAR()");
+                        throw new TextEncodingException(describe(messageIdx) + ": could not find end of VAR()");
                     }
 
                     String[] args = message.substring(j + 4, endOfVar).split(",");
                     tmpBinaryString.add(0xfffe);
-                    tmpBinaryString.add(Integer.parseInt(args[0].trim()));
-                    tmpBinaryString.add(args.length - 1);
+                    try {
+                        tmpBinaryString.add(Integer.parseInt(args[0].trim()));
+                        tmpBinaryString.add(args.length - 1);
 
-                    for (int x = 1; x < args.length; x++)
-                    {
-                        tmpBinaryString.add(Integer.parseInt(args[x].trim()));
+                        for (int x = 1; x < args.length; x++)
+                        {
+                            tmpBinaryString.add(Integer.parseInt(args[x].trim()));
+                        }
+                    }
+                    catch (NumberFormatException e) {
+                        throw new TextEncodingException(describe(messageIdx) + " contains a VAR() with a non-numeric argument: \"" + message.substring(j, endOfVar + 1) + "\"", e);
                     }
 
                     j = endOfVar;
                 }
                 else
                 {
-                    int val = 0;
-                    try {
-                        val = characters.get("getInt").get(String.valueOf(message.charAt(j))).asInt();
-                    }
-                    catch(NullPointerException e) {
-                        e.printStackTrace();
+                    char c = message.charAt(j);
+                    JsonNode node = characters.get("getInt").get(String.valueOf(c));
+                    if (node == null)
+                    {
+                        throw new TextEncodingException(String.format("%s contains the character '%c' (U+%04X) at index %d, which has no Pokemon Gen 4 character encoding", describe(messageIdx), c, (int) c, j));
                     }
 
-                    tmpBinaryString.add(val);
+                    tmpBinaryString.add(node.asInt());
                 }
             }
 
             if (msg.compressed)
             {
-                binaryStrings.add(compress(tmpBinaryString.toArray(Integer[]::new)));
+                try {
+                    binaryStrings.add(compress(tmpBinaryString.toArray(Integer[]::new)));
+                }
+                catch (RuntimeException e) {
+                    throw new TextEncodingException(describe(messageIdx) + " is marked as 9-bit compressed but " + e.getMessage(), e);
+                }
             }
             else
             {
@@ -366,9 +451,12 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
 
         for (int c : uncompressedString)
         {
-            if ( (c >> 9) == 1)
+            // only 9 bits are available per character, and all-ones (0x1ff) is reserved as the terminator
+            // by decompress(), so anything outside 0x000-0x1fe would silently overwrite the characters
+            // which follow it
+            if (c < 0 || c >= 0x1ff)
             {
-                throw new RuntimeException(String.format("%04x cannot be compressed", c));
+                throw new RuntimeException(String.format("character %04x cannot be represented in the 9-bit compressed encoding", c));
             }
 
             container |= c << bitshift;
@@ -416,6 +504,23 @@ public class TextBankData extends ArrayList<TextBankData.Message> implements Gen
         for (Message message : this)
             output.add(message.text);
         return output;
+    }
+
+    /**
+     * Thrown when a text bank cannot be decoded from or encoded to the Pokemon Gen 4 text format.
+     * The message names the offending bank and message so the caller can report it to the user.
+     */
+    public static class TextEncodingException extends RuntimeException
+    {
+        public TextEncodingException(String message)
+        {
+            super(message);
+        }
+
+        public TextEncodingException(String message, Throwable cause)
+        {
+            super(message, cause);
+        }
     }
 
     public static class Message {

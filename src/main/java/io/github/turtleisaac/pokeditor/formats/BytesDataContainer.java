@@ -39,7 +39,8 @@ public class BytesDataContainer extends HashMap<GameFiles, Map<BytesDataContaine
 
     public boolean containsPatternKey(GameFiles file, PatternIndex key)
     {
-        return get(file).containsKey(key);
+        Map<PatternIndex, byte[]> m = super.get(file);
+        return m != null && m.containsKey(Objects.requireNonNullElse(key, Default.NO_GROUPING));
     }
 
     public interface PatternIndex {

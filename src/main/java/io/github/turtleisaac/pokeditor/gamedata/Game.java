@@ -24,7 +24,6 @@ public enum Game
     public final String[] sheetList;
     public final String[] editorList;
 
-    private Region region;
 
     Game(String[] sheetList, String[] editorList)
     {
@@ -32,12 +31,16 @@ public enum Game
         this.editorList= editorList;
     }
 
-    public Region getRegion()
-    {
-        return region;
-    }
 
-    public static Game parseBaseRom(String baseRomGameCode)
+    /**
+     * The game and region identified by a base ROM's game code
+     *
+     * @param game a <code>Game</code>
+     * @param region a <code>Region</code>
+     */
+    public record BaseRomInfo(Game game, Region region) {}
+
+    public static BaseRomInfo parseBaseRom(String baseRomGameCode)
     {
         Game game = switch (baseRomGameCode.substring(0, 3)) {
             case "ADA" -> Game.Diamond;
@@ -48,8 +51,9 @@ public enum Game
             default -> throw new RuntimeException("Invalid game");
         };
 
-        game.region = Region.getRegion(baseRomGameCode.charAt(3));
-        return game;
+        // the region travels with the result rather than being stashed anywhere: a field on the
+        // enum, static or per-constant, is shared by every ROM opened in the process
+        return new BaseRomInfo(game, Region.getRegion(baseRomGameCode.charAt(3)));
     }
 
     public enum Region
@@ -63,7 +67,7 @@ public enum Game
         EUROPE,
         SPAIN;
 
-        static Region getRegion(char c)
+        public static Region getRegion(char c)
         {
             return switch (c)
             {

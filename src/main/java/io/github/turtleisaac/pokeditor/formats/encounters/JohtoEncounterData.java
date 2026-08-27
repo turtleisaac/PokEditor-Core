@@ -18,9 +18,33 @@ public class JohtoEncounterData extends GenericEncounterData
 
     int[] swarmSpecies;
 
+    // 2 bytes of padding after the rates - preserved verbatim so a save round-trips
+    byte[] ratePadding;
+
     public JohtoEncounterData(BytesDataContainer files)
     {
         super(files);
+    }
+
+    private JohtoEncounterData()
+    {
+        super();
+        fieldSpecies = new int[NUM_FIELD_ENCOUNTER_SETS][NUM_BASE_FIELD_ENCOUNTER_SLOTS];
+        hoennSoundSpecies = new int[NUM_SOUND_SMASH_ENCOUNTER_SLOTS];
+        sinnohSoundSpecies = new int[NUM_SOUND_SMASH_ENCOUNTER_SLOTS];
+        swarmSpecies = new int[NUM_SWARM_ENCOUNTER_SLOTS];
+        smashEncounterSet = new WaterEncounterSet(NUM_SMASH_SLOTS);
+        ratePadding = new byte[NUM_RATE_PADDING_BYTES];
+
+        for (int i = 0; i < waterEncounters.length; i++)
+        {
+            waterEncounters[i] = new WaterEncounterSet(WaterEncounterSet.NUM_WATER_SLOTS);
+        }
+    }
+
+    public static JohtoEncounterData create()
+    {
+        return new JohtoEncounterData();
     }
 
     @Override
@@ -42,7 +66,7 @@ public class JohtoEncounterData extends GenericEncounterData
         oldRodRate = reader.readUInt8();
         goodRodRate = reader.readUInt8();
         superRodRate = reader.readUInt8();
-        reader.skip(2);
+        ratePadding = reader.readBytes(NUM_RATE_PADDING_BYTES);
 
         for (int i = 0; i < NUM_BASE_FIELD_ENCOUNTER_SLOTS; i++)
         {
@@ -103,7 +127,7 @@ public class JohtoEncounterData extends GenericEncounterData
         MemBuf.MemBufWriter writer = dataBuf.writer();
 
         writer.writeBytes(fieldRate, surfRate, smashRate, oldRodRate, goodRodRate, superRodRate);
-        writer.skip(2);
+        writer.write(ratePadding != null ? ratePadding : new byte[NUM_RATE_PADDING_BYTES]);
 
         writer.writeBytes(fieldLevels);
 
@@ -149,6 +173,7 @@ public class JohtoEncounterData extends GenericEncounterData
         }
     }
 
+    private static final int NUM_RATE_PADDING_BYTES = 2;
     private static final int NUM_SOUND_SMASH_ENCOUNTER_SLOTS = 2;
     private static final int NUM_SMASH_SLOTS = 2;
     private static final int NUM_SWARM_ENCOUNTER_SLOTS = 4;
