@@ -27,6 +27,7 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
     // Instance state rather than static. As in PersonalParser, this is not what isolates one
     // ROM from another - the parser is a Guice singleton - it is simply where the state belongs.
     private List<byte[]> partyIconStartingFiles;
+    private List<byte[]> partyIconTrailingFiles;
     private int partyIconPaletteTableLength = -1;
 
     @Override
@@ -124,6 +125,15 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
             data.add(species);
         }
 
+        // Party icons after the per-species block (alternate forms, egg/substitute icons, etc.) are not part
+        // of the per-species editing model. Preserve them verbatim, as with the leading files, so that loading
+        // and saving a ROM round-trips the whole narc instead of dropping them.
+        partyIconTrailingFiles = new ArrayList<>();
+        for (int i = NUM_PARTY_ICON_STARTING_FILES + numSpecies; i < partyIcons.getFiles().size(); i++)
+        {
+            partyIconTrailingFiles.add(partyIcons.getFile(i));
+        }
+
         return data;
     }
 
@@ -159,9 +169,9 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
             MemBuf spriteMetadataBuffer = MemBuf.create();
             MemBuf.MemBufWriter spriteMetadataWriter = spriteMetadataBuffer.writer();
 
-            if (partyIconStartingFiles == null)
+            if (partyIconStartingFiles == null || partyIconTrailingFiles == null)
             {
-                throw new IllegalStateException("The party icon narc's leading files are not known - generateDataList() must be run on this parser instance before processDataList()");
+                throw new IllegalStateException("The party icon narc's leading/trailing files are not known - generateDataList() must be run on this parser instance before processDataList()");
             }
             partyIconSubfiles.addAll(partyIconStartingFiles);
 
@@ -190,6 +200,8 @@ public class PokemonSpriteParser implements GenericParser<PokemonSpriteData>
                 if (idx < partyIconPaletteTableLength)
                     arm9Writer.writeBytes(entry.getPartyIconPaletteIndex() & 0xff);
             }
+
+            partyIconSubfiles.addAll(partyIconTrailingFiles);
 
             metadataSubfiles.add(spriteMetadataBuffer.reader().getBuffer());
 
