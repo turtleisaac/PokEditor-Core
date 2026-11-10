@@ -5,8 +5,13 @@
 <!--
   Tab-indented files and one file with no final newline, already in the tree.
   New and edited files are still checked. These are not rewritten here.
+
+  ANTLR output under src/main/generated-sources is generated and gitignored.
+  Spotless excludes that tree. Suppress it here too: the plugin's excludes
+  are relative to each source root, so they cannot name this directory.
 -->
 <suppressions>
+    <suppress checks=".*" files="[/\\]src[/\\]main[/\\]generated-sources[/\\]"/>
     <suppress checks="FileTabCharacter" files="[/\\]GameFiles\.java$"/>
     <suppress checks="FileTabCharacter" files="[/\\]TrainerAiParser\.java$"/>
     <suppress checks="FileTabCharacter" files="[/\\]TrainerAiData\.java$"/>
