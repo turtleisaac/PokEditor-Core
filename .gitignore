@@ -40,3 +40,8 @@ build/
 *.nds
 .idea
 src/main/generated-sources/
+
+# Quality-gate tools and reports. Baselines under .quality/ are committed.
+.quality/py/
+__pycache__/
+*.pyc

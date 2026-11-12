@@ -166,6 +166,69 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              GitHub's Maven resolves Surefire 3.5.4, which runs JUnit 5.
+              The 2.12 default from older Maven reports zero tests, so PIT has nothing to kill.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+            </plugin>
+            <!-- JaCoCo instruction coverage. crapper reads target/site/jacoco/jacoco.xml. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+              PIT stays off the default build. CI runs pitest:mutationCoverage.
+              Generated ANTLR is excluded. failWhenNoMutations rejects an empty run.
+            -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.30.2</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.3</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <targetClasses>
+                        <param>io.github.turtleisaac.pokeditor.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>io.github.turtleisaac.pokeditor.*</param>
+                    </targetTests>
+                    <excludedClasses>
+                        <param>io.github.turtleisaac.pokeditor.formats.scripts.ScriptFile*</param>
+                        <param>io.github.turtleisaac.pokeditor.formats.scripts.macros.Macros*</param>
+                        <param>io.github.turtleisaac.pokeditor.formats.trainers.SmogonTeam*</param>
+                    </excludedClasses>
+                    <outputFormats>
+                        <outputFormat>XML</outputFormat>
+                    </outputFormats>
+                    <timestampedReports>false</timestampedReports>
+                    <failWhenNoMutations>true</failWhenNoMutations>
+                </configuration>
+            </plugin>
         </plugins>
 <!--        </pluginManagement>-->
     </build>
