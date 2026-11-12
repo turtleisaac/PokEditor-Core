@@ -1,0 +1,591 @@
+{
+  "version": 1,
+  "score": {
+    "killedAndTimedOut": "counted as detected",
+    "excluded": [
+      "NON_VIABLE",
+      "EQUIVALENT",
+      "COMPILE_ERROR",
+      "IGNORED"
+    ]
+  },
+  "java": {
+    "tool": "pitest",
+    "totals": {
+      "killed": 96,
+      "timedOut": 0,
+      "survived": 157,
+      "noCoverage": 1614,
+      "other": 0
+    },
+    "classes": {
+      "io.github.turtleisaac.pokeditor.formats.text.TextBankData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 175,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.items.ItemData": {
+        "killed": 46,
+        "timedOut": 0,
+        "survived": 92,
+        "noCoverage": 35,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.personal.PersonalData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 161,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 156,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.trainers.TrainerData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 91,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 84,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.ScriptDataProducer": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 71,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 67,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandReader": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 65,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandWriter": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 60,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 53,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.SinnohEncounterData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 50,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 48,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.personal.PersonalParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 48,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.JohtoEncounterData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 40,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacroVisitor": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 8,
+        "noCoverage": 31,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.trainers.antlr.SmogonTeamImporter": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 35,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData$ScriptCommand": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 34,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$AiScriptCommand": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 29,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.moves.MoveData": {
+        "killed": 6,
+        "timedOut": 0,
+        "survived": 8,
+        "noCoverage": 11,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 1,
+        "noCoverage": 22,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData$VariableValueTrigger": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 22,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData": {
+        "killed": 15,
+        "timedOut": 0,
+        "survived": 5,
+        "noCoverage": 2,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 21,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.trainers.TrainerData$TrainerPartyEntry": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 16,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 4,
+        "noCoverage": 11,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.text.TextBankData$Message": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 14,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData$ActionCommand": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 14,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 14,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.FieldWidth": {
+        "killed": 14,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData": {
+        "killed": 8,
+        "timedOut": 0,
+        "survived": 4,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData$LevelScriptTrigger": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 12,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.trainers.TrainerParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 9,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.BytesDataContainer": {
+        "killed": 5,
+        "timedOut": 0,
+        "survived": 1,
+        "noCoverage": 3,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.GenericEncounterData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 8,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 8,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.babies.BabyFormData": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 8,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer$3": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 5,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 6,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.text.TextBankParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 6,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.items.ItemParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 5,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.LevelScriptData$MapScreenLoadTrigger": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 5,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.GenericScriptData$ScriptLabel": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 5,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$pokemon_type": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$lookup_type": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.GenericEncounterParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$side_condition": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$pokemon_stat": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$pokemon_side": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$move_effectiveness": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer$ConvenienceCommandDiscoverer": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 1,
+        "noCoverage": 3,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.ScriptDataProducer$1": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.moves.MoveParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandReader$1": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.Tables": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 4,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer$2": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 3,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.evolutions.EvolutionData$EvolutionEntry": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 3,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$TableEntry": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 3,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.TextFiles": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 2,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.GameFiles": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 2,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.FieldScriptData$ActionLabel": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 2,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro$OntoIntegerUppercaseStringMap": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 2,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.learnsets.LearnsetData$LearnsetEntry": {
+        "killed": 2,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.Game": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.GameCodeBinaries": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandDiscoverer$1": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 1,
+        "noCoverage": 0,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.gamedata.Game$Region": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.SinnohEncounterParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteNarcPattern$6": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteNarcPattern$3": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteNarcPattern$2": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteNarcPattern$5": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteNarcPattern$4": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteHeightOffsetsPattern$2": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteHeightOffsetsPattern$3": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.pokemon_sprites.PokemonSpriteData$BattleSpriteHeightOffsetsPattern$4": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.JohtoEncounterParser": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.TrainerAiData$TableLabel": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.encounters.GenericEncounterData$WaterEncounterSet": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      },
+      "io.github.turtleisaac.pokeditor.formats.scripts.antlr4.CommandMacro$ConvenienceCommandMacro": {
+        "killed": 0,
+        "timedOut": 0,
+        "survived": 0,
+        "noCoverage": 1,
+        "other": 0
+      }
+    }
+  }
+}
